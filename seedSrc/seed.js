@@ -1,9 +1,10 @@
 console.log("seedSrc npm hit");
 
-;
+const cryptographyExporter = require("./cryptography.js");
 
-const cryptohelper = require("./cryptography.js").createCryptographyUnitTests();
-console.log(cryptohelper);
+const cryptographyHelper = cryptographyExporter.createCryptographyHelper();
+const cryptographyUnitTests = cryptographyExporter.createCryptographyUnitTests();
+
 cryptohelper.RunTests();
 
 console.log("Test Complete");

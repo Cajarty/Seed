@@ -1,48 +1,19 @@
-require("./sjcl.js");
+const crypto = require("crypto")
+const transactionHelper = require("./transaction.js");
+const sha256Hasher = crypto.createHash("sha256");
 
 module.exports = {
-    createCryptographyHelper: function() {
+    newCryptographyHelper: function() {
        return new CryptographyHelper();
     },
-    createCryptographyUnitTests: function() {
+    newCryptographyUnitTests: function() {
         return new CryptographyUnitTests();
     }
  }
 
-class Transaction {
-    constructor() {
-        this.transactionHash = "";
-        this.merkelDAGHash = "";
-        this.work = [];
-        this.moduleName = "";
-        this.signature = "";
-        this.merkelData = "";
-    }
-}
-
-//NO TESTS
-class Account {
-    constructor(privateKey, cryptographyHelper) {
-        this.privateKey = privateKey;
-        this.publicHash = cryptographyHelper.PrivateKeyToPublicHash(this.privateKey);
-        this.publicKey = cryptographyHelper.PublicHashToPublicKey(this.publicHash);
-        this.accountAddress = cryptographyHelper.PublicKeyToAccountID(this.accountAddress);
-        this.cryptographyHelper = cryptographyHelper;
-    }
-
-    signTransaction(transactionToSign) {
-        return this.cryptographyHelper.signTransaction(this, transactionToSign);
-    }
-
-    isValid() {
-        return this.cryptographyHelper.IsValidPrivateKey(this.privateKey) && this.cryptographyHelper.IsValidPublicAddress(this.accountAddress);
-    }
-}
-
 class CrytographyHelper {
-
     PrivateKeyToPublicHash(privateKey) {
-
+        
     }
 
     PublicHashToPublicKey(publicHash) {
