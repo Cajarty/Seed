@@ -1,5 +1,13 @@
+require("./sjcl.js");
 
-require("sjcl.js");
+module.exports = {
+    createCryptographyHelper: function() {
+       return new CryptographyHelper();
+    },
+    createCryptographyUnitTests: function() {
+        return new CryptographyUnitTests();
+    }
+ }
 
 class Transaction {
     constructor() {
@@ -31,7 +39,7 @@ class Account {
     }
 }
 
-class Crytography {
+class CrytographyHelper {
 
     PrivateKeyToPublicHash(privateKey) {
 
@@ -84,8 +92,11 @@ class Crytography {
 
 class CryptographyUnitTests {
     constructor() {
-        this.cryptography = new Crytography()
+        this.cryptography = new CrytographyHelper()
+    }
 
+    RunTests() {
+        console.log("UnitTest::Cryptography::Begin");
         ////SHA256 WORKS AS EXPECTED
         ProveSHA256GivesProperHashes();
         ProveSHA256GivesDifferentHashesForDifferentInputs();
@@ -113,6 +124,7 @@ class CryptographyUnitTests {
         ProveTwoValidPrivateKeysDontGenerateTheSameSignatureForTheSameTransaction();
         ProveTwoTransactionsDontGenerateTheSameSignatureForTheSamePrivateKey();
         ProveInvalidPrivateKeysThrowOnSigning();
+        console.log("UnitTest::Cryptography::Complete");
     }
 
     Assert(expression) {
