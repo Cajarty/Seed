@@ -1,0 +1,23 @@
+{
+  "name": "seed",
+  "version": "0.0.1",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "Electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CarsonRoscoe/Seed.git"
+  },
+  "author": "Carson Roscoe",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CarsonRoscoe/Seed/issues"
+  },
+  "homepage": "https://github.com/CarsonRoscoe/Seed#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^1.8.1"
+  }
+}
