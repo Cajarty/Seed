@@ -1,6 +1,11 @@
+//https://nodejs.org/api/crypto.html
+//https://github.com/cryptocoinjs/bs58
+
 const crypto = require("crypto")
 const transactionHelper = require("./transaction.js");
-const sha256Hasher = crypto.createHash("sha256");
+//const base58Encoder = require('base58') //base58Encoder.encode(stuff) //decode
+const base58Encoder = require('bs58');
+const stringToUInt8ArrayEncoder = new TextEncoder("utf-8");
 
 module.exports = {
     newCryptographyHelper: function() {
@@ -11,163 +16,139 @@ module.exports = {
     }
  }
 
-class CrytographyHelper {
-    PrivateKeyToPublicHash(privateKey) {
+class CryptographyHelper {
+    SHA256(toHash) {
+        const sha256Hasher = crypto.createHash("sha256");
+        sha256Hasher.update(toHash);
+        const result = sha256Hasher.digest("hex");
+        return result;
+    }
+
+    GeneratePrivateKey() {
         
     }
 
-    PublicHashToPublicKey(publicHash) {
+    PrivateKeyToPublicHash(privateKey) {
+        return this.SHA256(stringToUInt8ArrayEncoder.encode(privateKey));
+    }
 
+    PublicHashToPublicKey(publicHash) {
+        return this.SHA256(this.SHA256(publicHash));
     }
 
     PublicKeyToPublicAddress(publicKey) {
-
+        const bytes = Buffer.from(publicKey, 'hex')
+        return base58Encoder.encode(bytes);
     }
 
     SignTransaction(privateKey, transactionHash) {
+        const sign = crypto.createSign("SHA256");
+        sign.update(transactionHash);
+        let result = sign.sign(privateKey, "utf8");
+        sign.end();
+        return result;
+    }
 
+    VerifyTransaction(publicKey, signature, dataSigned) {
+        const verify = crypto.createVerify('SHA256');
+        verify.write(dataSigned);
+        let result = verify.verify(publicKey, signature);
+        verify.end();
+        return result;
     }
 
     IsValidPrivateKey(privateKey) {
-
     }
 
     IsValidPublicAddress(publicAddress) {
         
     }
-
-    SHA256(toHash) {
-
-    }
-
-    Base56Encoding(toEncode) {
-
-    }
-
-    Base56Decoding(toDecode) {
-
-    }
-
-    Checksum(toGetChecksomeFrom) {
-        //LACKING TESTS
-    }
-
-    Base56CheckEncoding(toCheckEncode) {
-        //LACKING TESTS
-    }
-
-    Base56CheckDecoding(toCheckDecode) {
-        //LACKING TESTS
-    }
 }
 
 class CryptographyUnitTests {
     constructor() {
-        this.cryptography = new CrytographyHelper()
+        this.cryptography = new CryptographyHelper()
+        
+        this.privateKey1 = "UNITTESTPRIVATEKEY";
+        this.publicHash1 = "193580dc409c83527610bec05830f2a23ef96f30d49b2993de18d2c407c6894a";
+        this.publicKey1 = "f15787b4fcf1b74e40572b877c1573cf565f377ba2ae7498435955dbb2bd6e7d";
+        this.publicAddress1 = "HF6fhZTvVryti9ebLjZkQyYqkyEmPLwJubynNEZA8Uda";
+
+        this.privateKey2 = "UnitTestPrivateKey";
+        this.publicHash2 = "7a3d09ea9b0cc1e9332411dc0f0578b3b04bd869cd4491ff39e616c0c2bcaa04";
+        this.publicKey2 = "0ff57e4e97ab75a0ae06b47aedb71db8f98c3c677e82759a01c4cb45dac32447";
+        this.publicAddress2 = "25JEQHzmFmWyX4o5GKKPJacM99jvHA9TSjpSsEaAmNP8";
+        
+        console.log(this.cryptography.VerifyTransaction(this.publicKey1, this.cryptography.SignTransaction(this.privateKey1, this.cryptography.SHA256("ToHash")), this.cryptography.SHA256("ToHash") ));
     }
 
-    RunTests() {
-        console.log("UnitTest::Cryptography::Begin");
-        ////SHA256 WORKS AS EXPECTED
-        ProveSHA256GivesProperHashes();
-        ProveSHA256GivesDifferentHashesForDifferentInputs();
-
-        ////BASE56 ENCODING WORKS AS EXPECTED
-        ProvateBASE56EncodesAndDecodes();
-
-        ////PRIVATE KEY -> PUBLIC HASH
-        ProveValidPrivateKeyMakesProperPublicHash();
-        ProveTwoValidPrivateKeysDontMakeTheSamePublicHash();
-        ProveInvalidPrivateKeyThrowsOnToPublicHash();
-
-        ////PUBLIC HASH -> PUBLIC KEY
-        ProvePublicHashCreatesProperPublicKey();
-        ProveTwoPublicHashesDontGenerateTheSamePublicKey();
-        ProvePrivateKeyGeneratesProperPublicKey();
-
-        ////PUBLIC KEY -> PUBLIC ADDRESS
-        ProvePublicKeyGeneratesProperPublicAddress();
-        ProveTwoPublicKeysDontGenerateTheSamePublicAddress();
-        ProvePrivateKeyGeneratesProperPublicAddress();
-
-        ////TRANSACTION SIGNING
-        ProveValidPrivateKeyCanSignTransaction();
-        ProveTwoValidPrivateKeysDontGenerateTheSameSignatureForTheSameTransaction();
-        ProveTwoTransactionsDontGenerateTheSameSignatureForTheSamePrivateKey();
-        ProveInvalidPrivateKeysThrowOnSigning();
-        console.log("UnitTest::Cryptography::Complete");
+    AssertAreEqual(first, second) {
+        if (first != second) {
+            throw new Error("ASSERT-EQUALITY FAILED: [" + first + "] and [" + second + "]");
+        }
     }
 
     Assert(expression) {
         if (!expression) {
-            throw "ASSERT FAILED";
+            throw new Error("ASSERT FAILED");
         }
     }
 
     ////SHA256
     ProveSHA256GivesProperHashes() {
-        var toHash = "[To hash]";
-        var properResult = "[proper result]";
+        let toHash = "[To hash]";
+        let properResult = "[proper result]";
 
-        var result = this.cryptography.SHA256(toHash);
+        let result = this.cryptography.SHA256(toHash);
 
-        Assert(toHash == properResult);
+        this.AssertAreEqual(toHash, properResult);
     }
 
     ProveSHA256GivesDifferentHashesForDifferentInputs() {
-        var toHash1 = "[To hash]";
-        var toHash2 = "[To hash]";
-        var properResult1 = "[proper result]";
-        var properResult2 = "[proper result]";
+        let toHash1 = "[To hash]";
+        let toHash2 = "[To hash]";
+        let properResult1 = "[proper result]";
+        let properResult2 = "[proper result]";
 
-        var result1 = this.cryptography.SHA256(toHash1);
-        var result2 = this.cryptography.SHA256(toHash2);
+        let result1 = this.cryptography.SHA256(toHash1);
+        let result2 = this.cryptography.SHA256(toHash2);
 
-        Assert(result1 != result2);
-        Assert(toHash1 == properResult1);
-        Assert(toHash2 == properResult2);
+        this.Assert(result1 != result2);
+        this.AssertAreEqual(toHash1, properResult1);
+        this.AssertAreEqual(toHash2, properResult2);
     }
 
     ////BASE56 Encoding/Decoding
     ProvateBASE56EncodesAndDecodes() {
-        var toEncode = "[To encode]";
-        var properEncoded = "[idea value]";
+        let toEncode = "[To encode]";
+        let properEncoded = "[idea value]";
 
-        var encodedValue = this.cryptography.Base56Encoding(toEncode);
-        var decodedValue = this.cryptography.Base56Decoding(encodedValue);
+        let encodedValue = this.cryptography.Base56Encoding(toEncode);
+        let decodedValue = this.cryptography.Base56Decoding(encodedValue);
 
-        Assert(properEncoded == encodedValue);
-        Assert(toEncode == decodedValue);
+        this.AssertAreEqual(properEncoded, encodedValue);
+        this.AssertAreEqual(toEncode, decodedValue);
     }
 
     ////PRIVATE KEY -> PUBLIC HASH
     ProveValidPrivateKeyMakesProperPublicHash() {
-        var validPrivateKey = "[Replace with valid private key]";
-        var properPublicHash = "[Replace with publicHash we should get]";
-        var createdPublicHash = this.cryptography.PrivateKeyToPublicHash(validPrivateKey);
-
-        Assert(createdPublicHash == properPublicHash);
+        let createdPublicHash = this.cryptography.PrivateKeyToPublicHash(this.privateKey1);
+        this.AssertAreEqual(createdPublicHash, this.publicHash1);
     }
 
     ProveTwoValidPrivateKeysDontMakeTheSamePublicHash() {
-        var validPrivateKey1 = "[Replace with valid private key]";
-        var validPrivateKey2 = "[Replace with valid private key]";
-        
-        var properPublicHash1 = "[Replace with publicHash we should get]";
-        var properPublicHash2 = "[Replace with publicHash we should get]";
+        let createdPublicHash1 = this.cryptography.PrivateKeyToPublicHash(this.privateKey1);
+        let createdPublicHash2 = this.cryptography.PrivateKeyToPublicHash(this.privateKey2);
 
-        var createdPublicHash1 = this.cryptography.PrivateKeyToPublicHash(validPrivateKey1);
-        var createdPublicHash2 = this.cryptography.PrivateKeyToPublicHash(validPrivateKey2);
-
-        Assert(createdPublicHash1 != createdPublicHash2);
-        Assert(createdPublicHash1 == properPublicHash1);
-        Assert(createdPublicHash2 == properPublicHash2);
+        this.Assert(createdPublicHash1 != createdPublicHash2);
+        this.AssertAreEqual(createdPublicHash1, this.publicHash1);
+        this.AssertAreEqual(createdPublicHash2, this.publicHash2);
     }
 
     ProveInvalidPrivateKeyThrowsOnToPublicHash() {
-        var invalidPrivateKey = "[Replace with invalid private key]";
+        let invalidPrivateKey = "[Replace with invalid private key]";
 
-        var pass = false;
+        let pass = false;
 
         try {
             this.cryptography.PrivateKeyToPublicHash(invalidPrivateKey);
@@ -175,142 +156,141 @@ class CryptographyUnitTests {
             pass = true;
         }
 
-        Assert(pass);
+        this.Assert(pass);
     }
 
     ////PUBLIC HASH -> PUBLIC KEY
     ProvePublicHashCreatesProperPublicKey() {
-        var publicHash = "[Replace with valid publicHash]";
-        var properPublicKey = "[Replace with publicKey we should get]";
-
-        var createdPublicKey = this.cryptography.PublicHashToPublicKey(publicHash);
-
-        Assert(properPublicKey == createdPublicKey);
+        let createdPublicKey = this.cryptography.PublicHashToPublicKey(this.publicHash1);
+        this.AssertAreEqual(this.publicKey1, createdPublicKey);
     }
 
     ProveTwoPublicHashesDontGenerateTheSamePublicKey() {
-        var publicHash1 = "[Replace with valid publicHash]";
-        var publicHash2 = "[Replace with valid publicHash]";
+        let createdPublicKey1 = this.cryptography.PublicHashToPublicKey(this.publicHash1);
+        let createdPublicKey2 = this.cryptography.PublicHashToPublicKey(this.publicHash2);
 
-        var properPublicKey1 = "[Replace with publicKey we should get]";
-        var properPublicKey2 = "[Replace with publicKey we should get]";
-
-        var createdPublicKey1 = this.cryptography.PublicHashToPublicKey(publicHash1);
-        var createdPublicKey2 = this.cryptography.PublicHashToPublicKey(publicHash2);
-
-        Assert(createdPublicKey1 != createdPublicKey2);
-        Assert(properPublicKey1 == createdPublicKey1);
-        Assert(properPublicKey2 == createdPublicKey2);
+        this.Assert(createdPublicKey1 != createdPublicKey2);
+        this.AssertAreEqual(this.publicKey1, createdPublicKey1);
+        this.AssertAreEqual(this.publicKey2, createdPublicKey2);
     }
 
     ProvePrivateKeyGeneratesProperPublicKey() {
-        var privateKey = "[Insert valid private key]";
-        var properPublicKey = "[Insert public key for the private key]";
+        let createdPublicKey = this.cryptography.PublicHashToPublicKey(this.cryptography.PrivateKeyToPublicHash(this.privateKey1));
 
-        var createdPublicKey = this.cryptography.PublicHashToPublicKey(this.cryptography.PrivateKeyToPublicHash(privateKey));
-
-        Assert(properPublicKey == createdPublicKey);
+        this.AssertAreEqual(this.publicKey1, createdPublicKey);
     }
 
     ////PUBLIC KEY -> PUBLIC ADDRESS
     ProvePublicKeyGeneratesProperPublicAddress() {
-        var publicKey = "[Insert public key]";
-        var properPublicAddress = "[Insert public address for public key]";
+        let createdPublicAddress = this.cryptography.PublicKeyToPublicAddress(this.publicKey1);
 
-        var createdPublicAddress = this.cryptography.PublicKeyToPublicAddress(publicKey);
-
-        Assert(properPublicAddress == createdPublicAddress);
+        this.AssertAreEqual(this.publicAddress1, createdPublicAddress);
     }
 
     ProveTwoPublicKeysDontGenerateTheSamePublicAddress() {
-        var publicKey1 = "[Insert public key]";
-        var publicKey2 = "[Insert public key]";
-        var properPublicAddress1 = "[Insert public address for public key]";
-        var properPublicAddress2 = "[Insert public address for public key]";
+        let createdPublicAddress1 = this.cryptography.PublicKeyToPublicAddress(this.publicKey1);
+        let createdPublicAddress2 = this.cryptography.PublicKeyToPublicAddress(this.publicKey2);
 
-        var createdPublicAddress1 = this.cryptography.PublicKeyToPublicAddress(publicKey1);
-        var createdPublicAddress2 = this.cryptography.PublicKeyToPublicAddress(publicKey2);
-
-        Assert(createdPublicAddress1 != createdPublicAddress2);
-        Assert(createdPublicAddress1 == properPublicAddress1);
-        Assert(createdPublicAddress2 == properPublicAddress2);
-
+        this.Assert(createdPublicAddress1 != createdPublicAddress2);
+        this.AssertAreEqual(createdPublicAddress1, this.publicAddress1);
+        this.AssertAreEqual(createdPublicAddress2, this.publicAddress2);
     }
 
     ProvePrivateKeyGeneratesProperPublicAddress() {
-        var privateKey = "[Insert valid private key]";
-        var properPublicAddress = "[Public address for private key]";
+        let publicHash = this.cryptography.PrivateKeyToPublicHash(this.privateKey1);
+        let publicKey = this.cryptography.PublicHashToPublicKey(publicHash);
+        let publicAddress = this.cryptography.PublicKeyToPublicAddress(publicKey);
 
-        var publicHash = this.cryptography.PrivateKeyToPublicHash(privateKey);
-        var publicKey = this.cryptography.PublicHashToPublicKey(publicHash);
-        var publicAddress = this.cryptography.PublicKeyToPublicAddress(publicKey);
-
-        Assert(properPublicAddress == publicAddress);
+        this.AssertAreEqual(this.publicAddress1, publicAddress);
     }
 
     ////TRANSACTION SIGNING
     ProveValidPrivateKeyCanSignTransaction() {
-        var privateKey = "[Insert valid private key]";
-        var transaction = "[Transaction]";
-        var properSignature = "[Proper signature]";
+        let transaction = "SignThisData";
+        let properSignature = "[Proper signature]";
 
-        var signature = this.cryptography.SignTransaction(privateKey, transaction);
+        let signature = this.cryptography.SignTransaction(this.privateKey1, transaction);
 
-        Assert(properSignature == signature);
+        this.AssertAreEqual(properSignature, signature);
     }
 
     ProveTwoValidPrivateKeysDontGenerateTheSameSignatureForTheSameTransaction() {
-        var privateKey1 = "[Insert valid private key]";
-        var privateKey2 = "[Insert valid private key]";
-        var transaction = "[Transaction]";
+        let privateKey1 = "[Insert valid private key]";
+        let privateKey2 = "[Insert valid private key]";
+        let transaction = "[Transaction]";
 
-        var properSignature1 = "[Proper signature]";
-        var properSignature2 = "[Proper signature]";
+        let properSignature1 = "[Proper signature]";
+        let properSignature2 = "[Proper signature]";
 
-        var signature1 = this.cryptography.SignTransaction(privateKey1, transaction);
-        var signature2 = this.cryptography.SignTransaction(privateKey2, transaction);
+        let signature1 = this.cryptography.SignTransaction(privateKey1, transaction);
+        let signature2 = this.cryptography.SignTransaction(privateKey2, transaction);
 
-        Assert(signature1 != signature2);
-        Assert(properSignature1 == signature1);
-        Assert(properSignature2 == signature2);
+        this.Assert(signature1 != signature2);
+        this.AssertAreEqual(properSignature1, signature1);
+        this.AssertAreEqual(properSignature2, signature2);
     }
 
     ProveTwoTransactionsDontGenerateTheSameSignatureForTheSamePrivateKey() {
-        var privateKey = "[Insert valid private key]";
-        var transaction1 = "[Transaction]";
-        var transaction2 = "[Transaction]";
+        let privateKey = "[Insert valid private key]";
+        let transaction1 = "[Transaction]";
+        let transaction2 = "[Transaction]";
 
-        var properSignature1 = "[Proper signature]";
-        var properSignature2 = "[Proper signature]";
+        let properSignature1 = "[Proper signature]";
+        let properSignature2 = "[Proper signature]";
 
-        var signature1 = this.cryptography.SignTransaction(privateKey, transaction1);
-        var signature2 = this.cryptography.SignTransaction(privateKey, transaction2);
+        let signature1 = this.cryptography.SignTransaction(privateKey, transaction1);
+        let signature2 = this.cryptography.SignTransaction(privateKey, transaction2);
 
-        Assert(signature1 != signature2);
-        Assert(properSignature1 == signature1);
-        Assert(properSignature2 == signature2);
+        this.Assert(signature1 != signature2);
+        this.AssertAreEqual(properSignature1, signature1);
+        this.AssertAreEqual(properSignature2, signature2);
     }
 
     ProveInvalidPrivateKeysThrowOnSigning() {
-        var invalidPrivateKey = "[Insert invalid private key]";
-        var transaction = "[Transaction]";
-        var properSignature = "[Proper signature]";
+        let invalidPrivateKey = "[Insert invalid private key]";
+        let transaction = "[Transaction]";
+        let properSignature = "[Proper signature]";
 
-        var success = false;
+        let success = false;
 
         try {
-            var signature = this.cryptography.SignTransaction(invalidPrivateKey, transaction);
+            let signature = this.cryptography.SignTransaction(invalidPrivateKey, transaction);
         } catch (e) {
             success = true;
         }
 
-        Assert(success);
+        this.Assert(success);
     }
-}
 
-class AccountUnitTests {
-    //Test account gets a valid PrivateKey and generates proper PublicHash/PublicKey/PublicAddress
-    //Test account gets an invalid PrivateKey and generates an empty class
+    RunTests() {
+        console.log("UnitTest::Cryptography::Begin");
+        ////SHA256 WORKS AS EXPECTED
+        /*ProveSHA256GivesProperHashes();
+        ProveSHA256GivesDifferentHashesForDifferentInputs();*/
 
-    //Test valid account can sign a transaction and the right signature is stored on the transaction
+        ////BASE56 ENCODING WORKS AS EXPECTED
+        //ProvateBASE56EncodesAndDecodes();
+
+        ////PRIVATE KEY -> PUBLIC HASH
+        this.ProveValidPrivateKeyMakesProperPublicHash();
+        this.ProveTwoValidPrivateKeysDontMakeTheSamePublicHash();
+        //this.ProveInvalidPrivateKeyThrowsOnToPublicHash();
+        
+        ////PUBLIC HASH -> PUBLIC KEY
+        this.ProvePublicHashCreatesProperPublicKey();
+        this.ProveTwoPublicHashesDontGenerateTheSamePublicKey();
+        this.ProvePrivateKeyGeneratesProperPublicKey();
+
+        ////PUBLIC KEY -> PUBLIC ADDRESS
+        this.ProvePublicKeyGeneratesProperPublicAddress();
+        this.ProveTwoPublicKeysDontGenerateTheSamePublicAddress();
+        this.ProvePrivateKeyGeneratesProperPublicAddress();
+
+        ////TRANSACTION SIGNING
+        /*ProveValidPrivateKeyCanSignTransaction();
+        ProveTwoValidPrivateKeysDontGenerateTheSameSignatureForTheSameTransaction();
+        ProveTwoTransactionsDontGenerateTheSameSignatureForTheSamePrivateKey();
+        ProveInvalidPrivateKeysThrowOnSigning();*/
+        console.log("UnitTest::Cryptography::Complete");
+    }
 }

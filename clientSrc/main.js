@@ -8,8 +8,7 @@ const url = require('url');
 //'debug': Debug tools active, e.g. print lines
 process.env.NODE_ENV = 'development'; 
 
-
-var menuTemplate = [
+let menuTemplate = [
     {
         label: "Seed",
         submenu: [
