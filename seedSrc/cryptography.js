@@ -18,14 +18,25 @@ module.exports = {
 
 class CryptographyHelper {
     SHA256(toHash) {
-        const sha256Hasher = crypto.createHash("sha256");
-        sha256Hasher.update(toHash);
-        const result = sha256Hasher.digest("hex");
-        return result;
+        return crypto.createHash("sha256").update(toHash).digest("hex");
     }
 
-    GeneratePrivateKey() {
-        
+    GeneratePrivateKey(options) {
+        return this.GenerateKeyPair(options).privateKey;
+    }
+
+    GenerateKeyPair(options) {
+        let EC = require('elliptic').ec;
+        let ec = new EC('secp256k1');
+        let keyPair = ec.genKeyPair(options);
+        return { privateKey: keyPair.getPrivate('hex'), publicKey: keyPair.getPublic('hex') };
+    }
+
+    GetPublicKey(privateKey) {
+        let EC = require('elliptic').ec;
+        let ec = new EC('secp256k1');
+        let keyPair = ec.keyFromPrivate(privateKey, 'hex');
+        return keyPair.getPublic();
     }
 
     PrivateKeyToPublicHash(privateKey) {
@@ -41,20 +52,23 @@ class CryptographyHelper {
         return base58Encoder.encode(bytes);
     }
 
-    SignTransaction(privateKey, transactionHash) {
-        const sign = crypto.createSign("SHA256");
-        sign.update(transactionHash);
-        let result = sign.sign(privateKey, "utf8");
-        sign.end();
-        return result;
+    SignTransaction(privateKey, transactionData) {
+        let EC = require('elliptic').ec;
+        let ec = new EC('secp256k1');
+        let key = ec.keyFromPrivate(privateKey, 'hex');
+        let hash = this.SHA256(transactionData);
+        let signature = key.sign(hash);
+        // Export DER encoded signature in Array
+        let encoded = signature.toDER();
+        return signature;
     }
 
-    VerifyTransaction(publicKey, signature, dataSigned) {
-        const verify = crypto.createVerify('SHA256');
-        verify.write(dataSigned);
-        let result = verify.verify(publicKey, signature);
-        verify.end();
-        return result;
+    VerifyTransaction(publicKey, signature, transactionData) {
+        let hash = this.SHA256(transactionData);
+        let EC = require('elliptic').ec;
+        let ec = new EC('secp256k1');
+        let key = ec.keyFromPublic(publicKey, 'hex');
+        return key.verify(hash, signature);
     }
 
     IsValidPrivateKey(privateKey) {
@@ -68,10 +82,15 @@ class CryptographyHelper {
 class CryptographyUnitTests {
     constructor() {
         this.cryptography = new CryptographyHelper()
+
+        this.ProveValidKeyGenerationViaKeyPair();
+        this.keys1 = this.cryptography.GenerateKeyPair();
+        this.keys2 = this.cryptography.GenerateKeyPair();
+        console.log(this.keys1.privateKey);
+        console.log(this.keys1.publicKey);
         
-        this.privateKey1 = "UNITTESTPRIVATEKEY";
-        this.publicHash1 = "193580dc409c83527610bec05830f2a23ef96f30d49b2993de18d2c407c6894a";
-        this.publicKey1 = "f15787b4fcf1b74e40572b877c1573cf565f377ba2ae7498435955dbb2bd6e7d";
+        this.privateKey1 = "L3EhK4zVW7xtvuw5pmJyMNdJYRXdQATt2ruznAAeFMipXMj1Gg4H";
+        this.publicKey1 = "1FU6GEcUGuvBHBTNM1L9GJBJvmtcDECb1L";
         this.publicAddress1 = "HF6fhZTvVryti9ebLjZkQyYqkyEmPLwJubynNEZA8Uda";
 
         this.privateKey2 = "UnitTestPrivateKey";
@@ -79,7 +98,7 @@ class CryptographyUnitTests {
         this.publicKey2 = "0ff57e4e97ab75a0ae06b47aedb71db8f98c3c677e82759a01c4cb45dac32447";
         this.publicAddress2 = "25JEQHzmFmWyX4o5GKKPJacM99jvHA9TSjpSsEaAmNP8";
         
-        console.log(this.cryptography.VerifyTransaction(this.publicKey1, this.cryptography.SignTransaction(this.privateKey1, this.cryptography.SHA256("ToHash")), this.cryptography.SHA256("ToHash") ));
+        //console.log(this.cryptography.VerifyTransaction(this.publicKey1, this.cryptography.SignTransaction(this.privateKey1, this.cryptography.SHA256("ToHash")), this.cryptography.SHA256("ToHash") ));
     }
 
     AssertAreEqual(first, second) {
@@ -262,6 +281,41 @@ class CryptographyUnitTests {
         this.Assert(success);
     }
 
+    ////KEY GENERATION
+    ProveValidKeyGenerationViaKeyPair() {
+        let keyPair = this.cryptography.GenerateKeyPair();
+        let transactionHash = this.cryptography.SHA256("[ToSign]");
+        
+        let signature = this.cryptography.SignTransaction(keyPair.privateKey, transactionHash);
+
+        let validation = this.cryptography.VerifyTransaction(keyPair.publicKey, signature, transactionHash);
+
+        this.Assert(validation);
+    }
+
+    ProveValidKeyGenerationViaPrivateKey() {
+        let privateKey = this.cryptography.GeneratePrivateKey();
+        let publicKey = this.cryptography.GetPublicKey(privateKey);
+        let transactionHash = this.cryptography.SHA256("[ToSign]");
+        
+        let signature = this.cryptography.SignTransaction(privateKey, transactionHash);
+
+        let validation = this.cryptography.VerifyTransaction(publicKey, signature, transactionHash);
+
+        this.Assert(validation);
+    }
+
+    ProveDifferentKeyGenerationEachTime() {
+        let EC = require('elliptic').ec;
+        let ec = new EC('secp256k1');
+    }
+
+    ProveWorksWithExtraEntropy() {
+        let EC = require('elliptic').ec;
+        let ec = new EC('secp256k1');
+    }
+
+
     RunTests() {
         console.log("UnitTest::Cryptography::Begin");
         ////SHA256 WORKS AS EXPECTED
@@ -270,6 +324,10 @@ class CryptographyUnitTests {
 
         ////BASE56 ENCODING WORKS AS EXPECTED
         //ProvateBASE56EncodesAndDecodes();
+
+        ////KEY GENERATION
+        this.ProveValidKeyGenerationViaKeyPair();
+        this.ProveValidKeyGenerationViaPrivateKey();
 
         ////PRIVATE KEY -> PUBLIC HASH
         this.ProveValidPrivateKeyMakesProperPublicHash();
