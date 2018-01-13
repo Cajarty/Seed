@@ -1,0 +1,83 @@
+User:
+    constructor(privateKey):
+        //Creates with ability to sign & validate signatures
+    constructor(publicKey):
+        //Creates with ability to validate signatures
+    sign(transaction):
+        //Signs a transaction, applying their signature to it
+        //throws if not a privateKey created user
+    verify(transaction):
+        //Verifys that they did sign a transaction
+
+UserUnitTests:
+    constructor_privateKeyGeneratesValidData():
+    constructor_nullPrivateKeyThrows():
+    constructor_publicKeyGeneratesValidData():
+    constructor_nullPublicKeyThrows():
+    canSign_returnsTrueForPrivateKeyUsers():
+    canSign_returnsFalseForPublicKeyUsers():
+    sign_privateKeyUserCanSign():
+    sign_publicKeyUserThrows():
+    sign_twoUsersOneTransactionGenerateDifferentSignatures():
+    sign_oneUserTwoTransactionsGenerateDifferentSignatures():
+    verify_privateKeyUsersCanVerify():
+    verify_publicKeyUsersCanVerify():
+    verify_returnsFalseOnBadSignatures():
+    verify_cantVerifySignaturesAUserDidntSign():
+
+Transaction:
+    constructor(module, version, work, merkelData):
+        //assigns parameters data
+    signed(signature):
+        //assigns the passed in signature to a transaction
+    setMerkelHash(merkelHash):
+        //assigns the passed in merkel hash data
+    setHash(hash):
+        //assigns the hash to a transaction
+        //throws if a piece of data is empty (signature, merkelHash, etc)
+
+TransactionUnitTests:
+    constructor_assignsData():
+    constructor_throwsOnAnyEmptyData():
+    signed_setsData:
+    signed_throwsOnEmptySignature:
+    setMerkelHash_setsData:
+    setMerkelHash_throwsOnEmptyData:
+    setHash_setsData:
+    setHash_throwsOnMissingAnyData
+
+CryptoHelper:
+    SHA256(data):
+        //returns a SHA256 hash of the data. Throws if data is empty
+    GeneratePrivateKey(optionalEntropy):
+        //returns a generated privateKey for an sepk256 elliptic curve. Optional extra entropy
+    GenerateKeyPair(optionalEntropy):
+        //returns a generated privateKey and publicKey for an sepk256 elliptic curve. Optional entropy
+    GetPublicKey(privateKey):
+        //returns the public key attributed with a given private key. Throws if null or empty key
+    PublicKeyToPublicAddress(publicKey, network):
+        //returns the base58check encoded public address for a given key network (e.g. "01" test, "00" main)
+    Sign(privateKey, data):
+        //returns a signature for the given data by a given private key. Throws on empty or null privateKey or data
+    VerifySignature(publicKey, signature, data):
+        //returns a bool for whether the signature is valid. Throws for empty publicKey, signature or data
+
+CryptoHelperUnitTests:
+    SHA256_hashesValidData:
+    SHA256_hashesSmallData:
+    SHA256_hashesLargeData:
+    SHA256_throwsOnEmptyData:
+    GeneratePrivateKey_generatesProperPrivateKey:
+    GeneratePrivateKey_entropyCanBeAdded:
+    GenerateKeyPair_generatesProperKeyPair:
+    GenerateKeyPair_entropyCanBeAdded:
+    GetPublicKey_getsProperPublicKey:
+    GetPublicKey_throwsOnNullPrivate:
+    PublicKeyToPublicAddress_getsProperAddress:
+    PublicKeyToPublicAddress_throwsOnEmptyData:
+    Sign_createsProperSignature:
+    Sign_throwsOnEmptyData:
+    VerifySignature_verifiesValidSignatures:
+    VerifySignature_failsOnInvalidSignature:
+    VerifySignature_cantVerifyOtherUsersSignature:
+    

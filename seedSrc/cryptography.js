@@ -1,9 +1,5 @@
-//https://nodejs.org/api/crypto.html
-//https://github.com/cryptocoinjs/bs58
-
 const crypto = require("crypto")
 const transactionHelper = require("./transaction.js");
-//const base58Encoder = require('base58') //base58Encoder.encode(stuff) //decode
 const base58Encoder = require('bs58');
 const stringToUInt8ArrayEncoder = new TextEncoder("utf-8");
 
@@ -37,14 +33,6 @@ class CryptographyHelper {
         let ec = new EC('secp256k1');
         let keyPair = ec.keyFromPrivate(privateKey, 'hex');
         return keyPair.getPublic();
-    }
-
-    PrivateKeyToPublicHash(privateKey) {
-        return this.SHA256(stringToUInt8ArrayEncoder.encode(privateKey));
-    }
-
-    PublicHashToPublicKey(publicHash) {
-        return this.SHA256(this.SHA256(publicHash));
     }
 
     PublicKeyToPublicAddress(publicKey) {
