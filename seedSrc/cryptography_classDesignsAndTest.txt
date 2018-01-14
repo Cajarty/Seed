@@ -35,9 +35,6 @@ AccountUnitTests:
     verify_publicKeyAccountsCanVerify():
     verify_returnsFalseOnBadSignatures():
     verify_cantVerifySignaturesAAccountDidntSign():
-    accountExporter_newAccountHasNoPrivateKey():
-    accountExporter_newAccountCanStillSignWithoutPrivateKey():
-    accountExporter_logInLogsInValidAccounts():
 
 Transaction:
     constructor(module, version, work, merkelData):

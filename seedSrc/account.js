@@ -21,10 +21,9 @@ Account:
         //throws if not a privateKey created Account
     verifySignature(signature, data):
         //Verifys that they did sign a transaction
-##############################################################
- */
+##############################################################*/
 
-const cryptographyExporter = require("./cryptography.js");
+const cryptographyExporter = require("./cryptoHelper.js");
 
 //Dictionary of { publicKey : Account }'s for logged in accounts
 let loggedInAccounts = {};
@@ -59,6 +58,7 @@ module.exports = {
         }
     },
     runUnitTests: function() {
+        console.log("UnitTests :: account.js :: Begin");
         let unitTests = new AccountUnitTests();
         unitTests.constructor_privateKeyGeneratesValidData();
         unitTests.constructor_nullPrivateKeyThrows();
@@ -76,6 +76,8 @@ module.exports = {
         //unitTests.accountExporter_newAccountHasNoPrivateKey();
         //unitTests.accountExporter_newAccountCanStillSignWithoutPrivateKey();
         //unitTests.accountExporter_logInLogsInValidAccounts();
+
+        console.log("UnitTests :: account.js :: Complete");
     }
  }
 
@@ -148,8 +150,7 @@ class Account {
                 try {
                     result = cryptographyExporter.newCryptoHelper().verifySignature(this.publicKey, signature, data);
                 } catch (e) {
-                    console.log(e);
-                    return false;
+                    return false; //Failed to validate
                 }
                 return result;
             } else {
@@ -182,11 +183,7 @@ AccountUnitTests:
     verify_publicKeyAccountsCanVerify():
     verify_returnsFalseOnBadSignatures():
     verify_cantVerifySignaturesAAccountDidntSign():
-    accountExporter_newAccountHasNoPrivateKey():
-    accountExporter_newAccountCanStillSignWithoutPrivateKey():
-    accountExporter_logInLogsInValidAccounts():
-##############################################################
- */
+##############################################################*/
 
 
 class AccountUnitTests {
@@ -333,15 +330,5 @@ class AccountUnitTests {
         
         this.assert(user2.verifySignature(signature1, data) == false, "Different users validated eachothers signatures");
         this.assert(user1.verifySignature(signature2, data) == false, "Different users validated eachothers signatures");
-    }
-
-    accountExporter_newAccountHasNoPrivateKey() {
-
-    }
-    accountExporter_newAccountCanStillSignWithoutPrivateKey() {
-
-    }
-    accountExporter_logInLogsInValidAccounts() {
-
     }
 }

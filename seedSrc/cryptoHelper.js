@@ -27,7 +27,8 @@ module.exports = {
     newCryptoHelper: function() {
        return new CryptoHelper();
     },
-    runCryptoHelperUnitTests : function() {
+    runUnitTests : function() {
+        console.log("UnitTests :: cryptoHelper.js :: Begin");
         let tester = new CryptoHelperUnitTests();
         tester.SHA256_hashesValidData();
         tester.SHA256_hashesSmallData();
@@ -46,6 +47,7 @@ module.exports = {
         tester.VerifySignature_verifiesValidSignatures();
         tester.VerifySignature_failsOnInvalidSignature();
         tester.VerifySignature_cantVerifyOtherAccountsSignature();
+        console.log("UnitTests :: cryptoHelper.js :: Complete");
     }
  }
 
@@ -87,8 +89,8 @@ class CryptoHelper {
         let hash = this.sha256(data);
         let signature = key.sign(hash);
         // Export DER encoded signature in Array
-        let encoded = signature.toDER();
-        return signature;
+        let encoded = signature.toDER('hex');
+        return encoded;
     }
 
     verifySignature(publicKey, signature, data) {
@@ -212,19 +214,37 @@ class CryptoHelperUnitTests {
     }
     PublicKeyToPublicAddress_getsProperAddress() {
         let cryptoHelper = new CryptoHelper();
-        
     }
     PublicKeyToPublicAddress_throwsOnEmptyData() {
         let cryptoHelper = new CryptoHelper();
     }
     Sign_createsProperSignature() {
         let cryptoHelper = new CryptoHelper();
+        let privateKey = "4eaad9d904d152a6ec92378720a8554fde49061ffd1ec8a0806af56c38eabb29";
+        let signature = "30450221009890126d6f75445ff3eea197a5a129ac6191fe68c2e2797381f17889df2fb551022079f19c6c3613d2d48eab1816aae82858da55a23d9da26c6a3920547afa4a6501";
+        let data = "Data";
+        let publicKeyMade = cryptoHelper.getPublicKey(privateKey);
+        let newSig = cryptoHelper.sign(publicKeyMade, data);
+        this.assert(newSig == signature, "Failed to create proper signature");
     }
     Sign_throwsOnEmptyData() {
         let cryptoHelper = new CryptoHelper();
+        let pair = cryptoHelper.generateKeyPair();
+        let success = false;
+        try {
+            let newSig = cryptoHelper.sign(pair.privateKey, null);
+        } catch (e) {
+            success = true;
+        }
+        this.assert(success, "Failed to throw on null data being signed");
     }
     VerifySignature_verifiesValidSignatures() {
         let cryptoHelper = new CryptoHelper();
+        let privateKey = "4eaad9d904d152a6ec92378720a8554fde49061ffd1ec8a0806af56c38eabb29";
+        let signature = "30450221009890126d6f75445ff3eea197a5a129ac6191fe68c2e2797381f17889df2fb551022079f19c6c3613d2d48eab1816aae82858da55a23d9da26c6a3920547afa4a6501";
+        let data = "Data";
+        let publicKey = cryptoHelper.getPublicKey(privateKey);
+        this.assert(cryptoHelper.verifySignature(publicKey, signature, data), "Failed to verify proper signature");
     }
     VerifySignature_failsOnInvalidSignature() {
         let cryptoHelper = new CryptoHelper();
