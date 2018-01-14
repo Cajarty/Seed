@@ -5,54 +5,51 @@ const stringToUInt8ArrayEncoder = new TextEncoder("utf-8");
 
 module.exports = {
     newCryptoHelper: function() {
-       return new CryptographyHelper();
-    },
-    newCryptographyUnitTests: function() {
-        return new CryptographyUnitTests();
+       return new CryptoHelper();
     }
  }
 
-class CryptographyHelper {
-    SHA256(toHash) {
+class CryptoHelper {
+    sha256(toHash) {
         return crypto.createHash("sha256").update(toHash).digest("hex");
     }
 
-    GeneratePrivateKey(options) {
-        return this.GenerateKeyPair(options).privateKey;
+    generatePrivateKey(options) {
+        return this.generateKeyPair(options).privateKey;
     }
 
-    GenerateKeyPair(options) {
+    generateKeyPair(options) {
         let EC = require('elliptic').ec;
         let ec = new EC('secp256k1');
         let keyPair = ec.genKeyPair(options);
         return { privateKey: keyPair.getPrivate('hex'), publicKey: keyPair.getPublic('hex') };
     }
 
-    GetPublicKey(privateKey) {
+    getPublicKey(privateKey) {
         let EC = require('elliptic').ec;
         let ec = new EC('secp256k1');
         let keyPair = ec.keyFromPrivate(privateKey, 'hex');
-        return keyPair.getPublic();
+        return keyPair.getPublic("hex");
     }
 
-    PublicKeyToPublicAddress(publicKey) {
+    publicKeyToPublicAddress(publicKey) {
         const bytes = Buffer.from(publicKey, 'hex')
         return base58Encoder.encode(bytes);
     }
 
-    Sign(privateKey, data) {
+    sign(privateKey, data) {
         let EC = require('elliptic').ec;
         let ec = new EC('secp256k1');
         let key = ec.keyFromPrivate(privateKey, 'hex');
-        let hash = this.SHA256(data);
+        let hash = this.sha256(data);
         let signature = key.sign(hash);
         // Export DER encoded signature in Array
         let encoded = signature.toDER();
         return signature;
     }
 
-    VerifySignature(publicKey, signature, data) {
-        let hash = this.SHA256(data);
+    verifySignature(publicKey, signature, data) {
+        let hash = this.sha256(data);
         let EC = require('elliptic').ec;
         let ec = new EC('secp256k1');
         let key = ec.keyFromPublic(publicKey, 'hex');
@@ -60,7 +57,7 @@ class CryptographyHelper {
     }
 }
 
-class CryptographyUnitTests {
+/*class CryptographyUnitTests {
     constructor() {
         this.cryptography = new CryptographyHelper()
 
@@ -300,8 +297,8 @@ class CryptographyUnitTests {
     RunTests() {
         console.log("UnitTest::Cryptography::Begin");
         ////SHA256 WORKS AS EXPECTED
-        /*ProveSHA256GivesProperHashes();
-        ProveSHA256GivesDifferentHashesForDifferentInputs();*/
+        //ProveSHA256GivesProperHashes();
+        //ProveSHA256GivesDifferentHashesForDifferentInputs();
 
         ////BASE56 ENCODING WORKS AS EXPECTED
         //ProvateBASE56EncodesAndDecodes();
@@ -326,10 +323,10 @@ class CryptographyUnitTests {
         this.ProvePrivateKeyGeneratesProperPublicAddress();
 
         ////TRANSACTION SIGNING
-        /*ProveValidPrivateKeyCanSignTransaction();
-        ProveTwoValidPrivateKeysDontGenerateTheSameSignatureForTheSameTransaction();
-        ProveTwoTransactionsDontGenerateTheSameSignatureForTheSamePrivateKey();
-        ProveInvalidPrivateKeysThrowOnSigning();*/
+        //ProveValidPrivateKeyCanSignTransaction();
+        //ProveTwoValidPrivateKeysDontGenerateTheSameSignatureForTheSameTransaction();
+        //ProveTwoTransactionsDontGenerateTheSameSignatureForTheSamePrivateKey();
+        //ProveInvalidPrivateKeysThrowOnSigning();
         console.log("UnitTest::Cryptography::Complete");
     }
-}
+}*/
