@@ -4,7 +4,7 @@ const base58Encoder = require('bs58');
 const stringToUInt8ArrayEncoder = new TextEncoder("utf-8");
 
 module.exports = {
-    newCryptographyHelper: function() {
+    newCryptoHelper: function() {
        return new CryptographyHelper();
     },
     newCryptographyUnitTests: function() {
@@ -40,30 +40,23 @@ class CryptographyHelper {
         return base58Encoder.encode(bytes);
     }
 
-    SignTransaction(privateKey, transactionData) {
+    Sign(privateKey, data) {
         let EC = require('elliptic').ec;
         let ec = new EC('secp256k1');
         let key = ec.keyFromPrivate(privateKey, 'hex');
-        let hash = this.SHA256(transactionData);
+        let hash = this.SHA256(data);
         let signature = key.sign(hash);
         // Export DER encoded signature in Array
         let encoded = signature.toDER();
         return signature;
     }
 
-    VerifyTransaction(publicKey, signature, transactionData) {
-        let hash = this.SHA256(transactionData);
+    VerifySignature(publicKey, signature, data) {
+        let hash = this.SHA256(data);
         let EC = require('elliptic').ec;
         let ec = new EC('secp256k1');
         let key = ec.keyFromPublic(publicKey, 'hex');
         return key.verify(hash, signature);
-    }
-
-    IsValidPrivateKey(privateKey) {
-    }
-
-    IsValidPublicAddress(publicAddress) {
-        
     }
 }
 
