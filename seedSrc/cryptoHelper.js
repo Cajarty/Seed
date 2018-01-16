@@ -51,7 +51,9 @@ module.exports = {
     }
  }
 
+//Eliptic PublicKey Encryption, SHA256 Hashing and Base58 Encoding wrapper
 class CryptoHelper {
+    //SHA256 hash 
     sha256(toHash) {
         if (toHash == null) {
             throw new Error("Cannot hash empty data");
@@ -59,10 +61,12 @@ class CryptoHelper {
         return crypto.createHash("sha256").update(toHash).digest("hex");
     }
 
+    //options: { entropy : "ExtraEntropyRequiresAbout80ExtraBytes" }
     generatePrivateKey(options) {
         return this.generateKeyPair(options).privateKey;
     }
 
+    //options: { entropy : "ExtraEntropyRequiresAbout80ExtraBytes" }
     generateKeyPair(options) {
         let EC = require('elliptic').ec;
         let ec = new EC('secp256k1');
@@ -97,8 +101,14 @@ class CryptoHelper {
         let hash = this.sha256(data);
         let EC = require('elliptic').ec;
         let ec = new EC('secp256k1');
-        let key = ec.keyFromPublic(publicKey, 'hex');
-        return key.verify(hash, signature);
+        let key = ec.keyFromPublic(publicKey, 'hex');;
+        let result = false;
+        try {
+            result = key.verify(hash, signature);
+        } catch (e) {
+
+        }
+        return result;
     }
 }
 
@@ -214,9 +224,20 @@ class CryptoHelperUnitTests {
     }
     PublicKeyToPublicAddress_getsProperAddress() {
         let cryptoHelper = new CryptoHelper();
+        let publicKey = "04caae0f0c1c3b06081759b3a5f4c3ed1792594be080b4caef10395280e63f2613397715c67cd8047b43909c4d990908997fef303419c7d9e756de9335cd8e55c6";
+        let desiredPublicAddress = "RXTydsXRVzex9P3EmACTPPfSbTdhZ4kiUKAmVpgyDL3aDiLvZycSnkPFGKxR7wzdzyEQ32LgEikMkjHFyXw75TJ5";
+        let actualPublicAddress = cryptoHelper.publicKeyToPublicAddress(publicKey);
+        this.assert(desiredPublicAddress == actualPublicAddress, "Failed to generate the proper base58 encoded address");
     }
     PublicKeyToPublicAddress_throwsOnEmptyData() {
         let cryptoHelper = new CryptoHelper();
+        let success = false;
+        try {
+            cryptoHelper.publicKeyToPublicAddress(null);
+        } catch (e) {
+            success = true;
+        }
+        this.assert(success, "Failed to throw on empty data");
     }
     Sign_createsProperSignature() {
         let cryptoHelper = new CryptoHelper();
@@ -241,170 +262,28 @@ class CryptoHelperUnitTests {
     VerifySignature_verifiesValidSignatures() {
         let cryptoHelper = new CryptoHelper();
         let privateKey = "4eaad9d904d152a6ec92378720a8554fde49061ffd1ec8a0806af56c38eabb29";
-        let signature = "30450221009890126d6f75445ff3eea197a5a129ac6191fe68c2e2797381f17889df2fb551022079f19c6c3613d2d48eab1816aae82858da55a23d9da26c6a3920547afa4a6501";
+        let signature = "304402202c36a015e6c977f3dce025e14283a4436f1148b6dcf9e55274ae713e67a9168002203e8c78c10657f23c53a008dbcf6e69d06206f0d7ee1c80a739a68ec0edf62b7f";
         let data = "Data";
         let publicKey = cryptoHelper.getPublicKey(privateKey);
         this.assert(cryptoHelper.verifySignature(publicKey, signature, data), "Failed to verify proper signature");
     }
     VerifySignature_failsOnInvalidSignature() {
         let cryptoHelper = new CryptoHelper();
+        let privateKey = "4eaad9d904d152a6ec92378720a8554fde49061ffd1ec8a0806af56c38eabb29";
+        let signature = "BadSignature";
+        let data = "Data";
+        let publicKey = cryptoHelper.getPublicKey(privateKey);
+        this.assert(cryptoHelper.verifySignature(publicKey, signature, data) == false, "Failed to fail on bad signature");
     }
     VerifySignature_cantVerifyOtherAccountsSignature() {
         let cryptoHelper = new CryptoHelper();
+        let privateKey1 = "4eaad9d904d152a6ec92378720a8554fde49061ffd1ec8a0806af56c38eabb29";
+        let privateKey2 = cryptoHelper.generatePrivateKey();
+        let signature = "304402202c36a015e6c977f3dce025e14283a4436f1148b6dcf9e55274ae713e67a9168002203e8c78c10657f23c53a008dbcf6e69d06206f0d7ee1c80a739a68ec0edf62b7f";
+        let data = "Data";
+        let publicKey1 = cryptoHelper.getPublicKey(privateKey1);
+        let publicKey2 = cryptoHelper.getPublicKey(privateKey2);
+        this.assert(cryptoHelper.verifySignature(publicKey2, signature, data) == false, "Should fail on validating the wrong signature");
+        this.assert(cryptoHelper.verifySignature(publicKey1, signature, data), "Should validate the right signature");
     }
 }
-
-/*class CryptographyUnitTests {
-    ////PUBLIC KEY -> PUBLIC ADDRESS
-    ProvePublicKeyGeneratesProperPublicAddress() {
-        let createdPublicAddress = this.cryptography.PublicKeyToPublicAddress(this.publicKey1);
-
-        this.AssertAreEqual(this.publicAddress1, createdPublicAddress);
-    }
-
-    ProveTwoPublicKeysDontGenerateTheSamePublicAddress() {
-        let createdPublicAddress1 = this.cryptography.PublicKeyToPublicAddress(this.publicKey1);
-        let createdPublicAddress2 = this.cryptography.PublicKeyToPublicAddress(this.publicKey2);
-
-        this.Assert(createdPublicAddress1 != createdPublicAddress2);
-        this.AssertAreEqual(createdPublicAddress1, this.publicAddress1);
-        this.AssertAreEqual(createdPublicAddress2, this.publicAddress2);
-    }
-
-    ProvePrivateKeyGeneratesProperPublicAddress() {
-        let publicHash = this.cryptography.PrivateKeyToPublicHash(this.privateKey1);
-        let publicKey = this.cryptography.PublicHashToPublicKey(publicHash);
-        let publicAddress = this.cryptography.PublicKeyToPublicAddress(publicKey);
-
-        this.AssertAreEqual(this.publicAddress1, publicAddress);
-    }
-
-    ////TRANSACTION SIGNING
-    ProveValidPrivateKeyCanSignTransaction() {
-        let transaction = "SignThisData";
-        let properSignature = "[Proper signature]";
-
-        let signature = this.cryptography.SignTransaction(this.privateKey1, transaction);
-
-        this.AssertAreEqual(properSignature, signature);
-    }
-
-    ProveTwoValidPrivateKeysDontGenerateTheSameSignatureForTheSameTransaction() {
-        let privateKey1 = "[Insert valid private key]";
-        let privateKey2 = "[Insert valid private key]";
-        let transaction = "[Transaction]";
-
-        let properSignature1 = "[Proper signature]";
-        let properSignature2 = "[Proper signature]";
-
-        let signature1 = this.cryptography.SignTransaction(privateKey1, transaction);
-        let signature2 = this.cryptography.SignTransaction(privateKey2, transaction);
-
-        this.Assert(signature1 != signature2);
-        this.AssertAreEqual(properSignature1, signature1);
-        this.AssertAreEqual(properSignature2, signature2);
-    }
-
-    ProveTwoTransactionsDontGenerateTheSameSignatureForTheSamePrivateKey() {
-        let privateKey = "[Insert valid private key]";
-        let transaction1 = "[Transaction]";
-        let transaction2 = "[Transaction]";
-
-        let properSignature1 = "[Proper signature]";
-        let properSignature2 = "[Proper signature]";
-
-        let signature1 = this.cryptography.SignTransaction(privateKey, transaction1);
-        let signature2 = this.cryptography.SignTransaction(privateKey, transaction2);
-
-        this.Assert(signature1 != signature2);
-        this.AssertAreEqual(properSignature1, signature1);
-        this.AssertAreEqual(properSignature2, signature2);
-    }
-
-    ProveInvalidPrivateKeysThrowOnSigning() {
-        let invalidPrivateKey = "[Insert invalid private key]";
-        let transaction = "[Transaction]";
-        let properSignature = "[Proper signature]";
-
-        let success = false;
-
-        try {
-            let signature = this.cryptography.SignTransaction(invalidPrivateKey, transaction);
-        } catch (e) {
-            success = true;
-        }
-
-        this.Assert(success);
-    }
-
-    ////KEY GENERATION
-    ProveValidKeyGenerationViaKeyPair() {
-        let keyPair = this.cryptography.GenerateKeyPair();
-        let transactionHash = this.cryptography.SHA256("[ToSign]");
-        
-        let signature = this.cryptography.SignTransaction(keyPair.privateKey, transactionHash);
-
-        let validation = this.cryptography.VerifyTransaction(keyPair.publicKey, signature, transactionHash);
-
-        this.Assert(validation);
-    }
-
-    ProveValidKeyGenerationViaPrivateKey() {
-        let privateKey = this.cryptography.GeneratePrivateKey();
-        let publicKey = this.cryptography.GetPublicKey(privateKey);
-        let transactionHash = this.cryptography.SHA256("[ToSign]");
-        
-        let signature = this.cryptography.SignTransaction(privateKey, transactionHash);
-
-        let validation = this.cryptography.VerifyTransaction(publicKey, signature, transactionHash);
-
-        this.Assert(validation);
-    }
-
-    ProveDifferentKeyGenerationEachTime() {
-        let EC = require('elliptic').ec;
-        let ec = new EC('secp256k1');
-    }
-
-    ProveWorksWithExtraEntropy() {
-        let EC = require('elliptic').ec;
-        let ec = new EC('secp256k1');
-    }
-
-
-    RunTests() {
-        console.log("UnitTest::Cryptography::Begin");
-        ////SHA256 WORKS AS EXPECTED
-        //ProveSHA256GivesProperHashes();
-        //ProveSHA256GivesDifferentHashesForDifferentInputs();
-
-        ////BASE56 ENCODING WORKS AS EXPECTED
-        //ProvateBASE56EncodesAndDecodes();
-
-        ////KEY GENERATION
-        this.ProveValidKeyGenerationViaKeyPair();
-        this.ProveValidKeyGenerationViaPrivateKey();
-
-        ////PRIVATE KEY -> PUBLIC HASH
-        this.ProveValidPrivateKeyMakesProperPublicHash();
-        this.ProveTwoValidPrivateKeysDontMakeTheSamePublicHash();
-        //this.ProveInvalidPrivateKeyThrowsOnToPublicHash();
-        
-        ////PUBLIC HASH -> PUBLIC KEY
-        this.ProvePublicHashCreatesProperPublicKey();
-        this.ProveTwoPublicHashesDontGenerateTheSamePublicKey();
-        this.ProvePrivateKeyGeneratesProperPublicKey();
-
-        ////PUBLIC KEY -> PUBLIC ADDRESS
-        this.ProvePublicKeyGeneratesProperPublicAddress();
-        this.ProveTwoPublicKeysDontGenerateTheSamePublicAddress();
-        this.ProvePrivateKeyGeneratesProperPublicAddress();
-
-        ////TRANSACTION SIGNING
-        //ProveValidPrivateKeyCanSignTransaction();
-        //ProveTwoValidPrivateKeysDontGenerateTheSameSignatureForTheSameTransaction();
-        //ProveTwoTransactionsDontGenerateTheSameSignatureForTheSamePrivateKey();
-        //ProveInvalidPrivateKeysThrowOnSigning();
-        console.log("UnitTest::Cryptography::Complete");
-    }
-}*/

@@ -17,3 +17,10 @@ The Seed source code for the Seed npm module can be found in the /seedSrc folder
 # Client Source Code
 
 The Client source code is an Electron wallet being created for both the Seed cryptocurrency module, as well as for general interactions with the general Seed blockchain. This code can be found in the /clientSrc folder.
+
+# Cryptography Design
+
+In the /design folder a high-level explenation of the decided upon public key encryption, hashing and encoding scheme can
+be found in the Project_Design_Cryptography.pdf file.
+
+In the /seecSrc folder a text file detailing the methods and unit tests for the account.js and cryptoHelper.js files can be found. This is a lower-levle view on the details found in the Project_design_Cryptography.pdf file.

@@ -16,9 +16,7 @@
     "url": "https://github.com/CarsonRoscoe/Seed/issues"
   },
   "homepage": "https://github.com/CarsonRoscoe/Seed#readme",
-  "dependencies": {
-    "elliptic": "^6.4.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "electron": "^1.8.1"
   }
