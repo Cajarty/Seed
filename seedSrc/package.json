@@ -1,0 +1,15 @@
+{
+  "name": "seed",
+  "version": "0.0.1",
+  "description": "",
+  "main": "seed.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bs58": "^4.0.1",
+    "elliptic": "^6.4.0"
+  }
+}
