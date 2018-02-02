@@ -1,0 +1,49 @@
+TestamentBlock:
+    constructor(generation, updateData, validationWork)
+        //Creates a block with data that's all pre-processed
+
+BlockchainHelper:
+    generateMerkleTree(transactions)
+        //Generates a merkle tree out of the transactions passed in
+    isBlockProper(block)
+        //Validates that a block's validation work adds up, the updateData is valid and all is g
+    isValidationWorkProper(validationWork)
+        //Validates that a block's validation work adds up
+    isUpdateDataValid(updateData)
+        //Validates that a block's uipdate data is valid
+    hashBlock(block)
+        //SHA 256 hashes the block and its data
+    squash(updateDatas)
+        //Takes an array of updateDatas to squash
+    
+BlockchainExporter:
+    generateTestamentBlock(transactions)
+        //Generates a first generation testament block based on the transactions to squash passed in
+    generateGenerationBlock(generation, previousBlocks)
+        //Generates a 2nd generation or higher testament block based on the blocks to squash passed in based in
+    exportBlockchainHelper()
+
+BlockchainHelperUnitTests:
+    GenerateMerkleTree_generatesProperTree:
+    GenerateMerkleTree_generatesProperTreeWithLotsOfTransactions:
+    GenerateMerkleTree_generatesLeaflessTreeWithZeroTransactions:
+    GenerateMerkleTree_throwsForNullParameters:
+    GenerateMerkleTree_throwsForEmptyParameters:
+    IsProperBlock_returnsTrueForValidBlock:
+    IsProperBlock_returnsFalseForBlocksWithBadUpdateData:
+    IsProperBlock_returnsFalseForBlocksWithBadValidationWork:
+    IsProperBlock_returnsFalseForBlocksWithNegativeGenerationNumber:
+    IsProperBlock_throwsForNullParameter:
+    IsValidationWorkProper_returnsTrueForProperValidationWork:
+    IsValidationWorkProper_returnsFalseForBadValidationWork:
+    IsValidationWorkProper_returnsFalseForNullParameters:
+    IsUpdateDataValid_returnsTrueForProperUpdateData:
+    IsUpdateDataValid_returnsFalseForBadUpdateData:
+    IsUpdateDataValid_ThrowsForNullParameter:
+    HashBlock_returnsCorrectHash:
+    HashBlock_throwsNullParameter:
+    Squash_ReturnsCorrectSquashedDataForMultipleDifferentTransactions:
+    Squash_ReturnsCorrectSquashedDataForMultipleStackingTransactions:
+    Squash_ReturnsCorrectSquashedDataForOverwritingTransactionsAffectingSameUser:
+    Squash_ThrowsForInvalidData:
+    Squash_ReturnsNullForNullParameters:
