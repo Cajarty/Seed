@@ -27,6 +27,7 @@ BlockchainHelper:
 const transactionExporter = require("./transaction.js");
 const cryptoHelperExporter = require("./cryptoHelper.js");
 const blockExporter = require("./block.js");
+const merkle = require('merkle');
 
 module.exports = {
     generateTestamentBlock: function(transactions) {
