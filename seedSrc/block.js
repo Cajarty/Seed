@@ -1,7 +1,7 @@
 
 module.exports = {
-    createTransaction: function() {
-       return new Block();
+    createBlock: function(generation, merkleRoot, updateData, validationWork) {
+       return new Block(generation, merkleRoot, updateData, validationWork);
     }
  }
 
