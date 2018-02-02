@@ -22,6 +22,7 @@ BlockchainExporter:
     generateGenerationBlock(generation, previousBlocks)
         //Generates a 2nd generation or higher testament block based on the blocks to squash passed in based in
     exportBlockchainHelper()
+        //Creates a new blockchain helper
 
 BlockchainHelperUnitTests:
     GenerateMerkleTree_generatesProperTree:
@@ -42,8 +43,8 @@ BlockchainHelperUnitTests:
     IsUpdateDataValid_ThrowsForNullParameter:
     HashBlock_returnsCorrectHash:
     HashBlock_throwsNullParameter:
-    Squash_ReturnsCorrectSquashedDataForMultipleDifferentTransactions:
-    Squash_ReturnsCorrectSquashedDataForMultipleStackingTransactions:
-    Squash_ReturnsCorrectSquashedDataForOverwritingTransactionsAffectingSameUser:
-    Squash_ThrowsForInvalidData:
-    Squash_ReturnsNullForNullParameters:
+    Squash_returnsCorrectSquashedDataForMultipleDifferentTransactions:
+    Squash_returnsCorrectSquashedDataForMultipleStackingTransactions:
+    Squash_returnsCorrectSquashedDataForOverwritingTransactionsAffectingSameUser:
+    Squash_throwsForInvalidData:
+    Squash_throwsForNullParameters:
