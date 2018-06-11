@@ -14,19 +14,28 @@ module.exports = {
         this.functions = {};
         this.module = info.module;
         this.version = info.version;
+        this.data = info.data;
+        this.data["userData"] = {};
+        this.initialUserData = info.initialUserData;
     }
 
     addFunction(func) {
-        if (func.invoke != null && func.function != null && func.version != null) {
+        if (func.invoke != null && func.name != null && func.version != null) {
             let version = func.version == null ? info.version : func.version;
-            let hash = cryptoHelper.SHA256(func.function + version);
+            let hash = cryptoHelper.SHA256(func.name + version);
             this.functions[hash] = func;
+        }
+    }
+
+    addUser(user) {
+        if (this.data["userData"][user] == undefined) {
+            this.data["userData"][user] = this.initialUserData;
         }
     }
 
     getFunction(info) {
         let version = info.version == null ? this.version : info.version;
-        let hash = cryptoHelper.SHA256(info.function + version);
+        let hash = cryptoHelper.SHA256(info.name + version);
         return this.functions[hash];
     }
 
@@ -62,6 +71,50 @@ module.exports = {
     }
 }
 
+class ChangeContext {
+    constructor(moduleData, userData) {
+        this.moduleData = {};
+        this.userData = {};
+    }
+
+    ensureModuleDataCreated(module, key) {
+        this.moduleData[key] = 0;
+    }
+
+    ensureUserDataCreated(module, user, key) {
+        this.userData[key] = 0;
+    }
+
+    subtract(module, key, amount) {
+        ensureModuleDataCreated(module, key);
+        this.moduleData[key] -= amount;
+    }
+
+    subtract(module, user, key, amount) {
+        ensureUserDataCreated(module, user, key);
+        this.userData[key] -= amount;
+    }
+
+    toString() {
+        return JSON.stringify(this.moduleData) + " " + JSON.stringify(this.userData);
+    }
+}
+
+class Container {
+    constructor(module, user) {
+        this.module = module;
+        this.user = user;
+    }
+
+    getModuleData(moduleName) {
+        return this.module.data;
+    }
+
+    getUserData(moduleName) {
+        return this.module.data["userData"];
+    }
+}
+
 
 class VirtualMachine {
     constructor() {
@@ -73,6 +126,12 @@ class VirtualMachine {
         this.modules[hash] = module;
     }
 
+    addUser(moduleInfo, user) {
+        let moduleHash = cryptoHelper.SHA256(moduleInfo.module + moduleInfo.version);
+        let module = this.modules[moduleHash];
+        module.addUser(user);
+    }
+
     getModule(info) {
         let hash = cryptoHelper.SHA256(info.module + info.version);
         return this.modules[hash];
@@ -81,6 +140,19 @@ class VirtualMachine {
     getFunction(info) {
         let module = this.getModule(info);
         return module.getFunction(info);
+    }
+
+    invoke(info) {
+        let module = getModule(info);
+        let moduleFunction = module.getFunction(info);
+        let changeContext = new ChangeContext(module.data, module.data["userData"][info.user]);
+        let container = new Container(module, info.user);
+        //Container is ledger
+        //changeContext keeps track of changes
+        //let result = moduleFunction.invoke(container, changeContext, info.user);
+        let result = moduleFunction.invoke(container, changeContext, info.user);
+        //if its not a container, we have a view
+        return result;
     }
 
     isFunctionLeanInfoCorrect(info, invokeHash) {
