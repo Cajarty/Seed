@@ -13,5 +13,9 @@ let signature = newAccount.sign("dataToSign");
 
 console.log(signature);
 
+let sigVerification = newAccount.verifySignature(signature, "dataToSign");
+
+console.log(sigVerification);
+
 accountExporter.runUnitTests();
 cryptoHelperExporter.runUnitTests();

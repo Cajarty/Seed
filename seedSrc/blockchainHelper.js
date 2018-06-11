@@ -5,15 +5,15 @@ BlockchainHelper:
     generateMerkleTree(transactions)
         //Generates a merkle tree out of the transactions passed in
     isBlockProper(block)
-        //Validates that a block's validation work adds up, the updateData is valid and all is g
+        //Validates that a block's validation work adds up, the updateData is valid and all is good
     isValidationWorkProper(validationWork)
         //Validates that a block's validation work adds up
     isUpdateDataValid(updateData)
-        //Validates that a block's uipdate data is valid
+        //Validates that a block's update data is valid
     hashBlock(block)
         //SHA 256 hashes the block and its data
     squash(updateDatas)
-        //Takes an array of updateDatas to squash
+        //Takes an array of updateData's to squash
     transactionsToUpdateDatas(transactions)
         //Takes an array of transactions and extracts the update data from each into one aggregated list
     generationBlocksToUpdateDatas
@@ -27,7 +27,7 @@ BlockchainHelper:
 const transactionExporter = require("./transaction.js");
 const cryptoHelperExporter = require("./cryptoHelper.js");
 const blockExporter = require("./block.js");
-const merkle = require('merkle');
+const merkleExporter = require('merkle'); //https://www.npmjs.com/package/merkle
 
 module.exports = {
     generateTestamentBlock: function(transactions) {
@@ -69,29 +69,36 @@ module.exports = {
 class BlockchainHelper {
     //Generates a merkle tree out of the transactions passed in
     generateMerkleTree(transactions) {
-
+        let merkle = merkleExporter("sha256");
+        merkle.push()
     }
     
     //Validates that a block's validation work adds up, the updateData is valid and all is g
     isBlockProper(block) {
-
+        let result = isValidationWorkProper(extractValidationWorkFromBlocks([block])) || isUpdateDataValid(block.updateData);
+        //Any other chekcs
+        return result;
     }
         
-
     //Validates that a block's validation work adds up
     isValidationWorkProper(validationWork) {
-
+        //Make sure validationWork is an array
+        //Foreach work in the array
+            //Make sure the signature can be validated with the public key
+            //Make sure the updateHash given afterwards is a valid structured hash
     }
         
-    //Validates that a block's uipdate data is valid
+    //Validates that a block's update data is valid
     isUpdateDataValid(updateData) {
-
+        //Make sure the updateData is an array
+        //Foreach change in data
     }
         
     //SHA 256 hashes the block and its data
     hashBlock(block) {
-
+        return cryptoHelperExporter.newCryptoHelper().sha256(block.toString());
     }
+
     //Takes an array of updateDatas to squash
     squash(updateDatas) {
 
@@ -170,43 +177,59 @@ class BlockchainHelperUnitTests {
     }
 
     GenerateMerkleTree_generatesProperTree() {
+        let blockchainHelper = new BlockchainHelper();
 
     }
 
     GenerateMerkleTree_generatesProperTreeWithLotsOfTransactions() {
+        let blockchainHelper = new BlockchainHelper();
         
     }
 
     GenerateMerkleTree_generatesLeaflessTreeWithZeroTransactions() {
+        let blockchainHelper = new BlockchainHelper();
         
     }
     
     GenerateMerkleTree_throwsForNullParameters() {
+        let blockchainHelper = new BlockchainHelper();
         
     }
     
     GenerateMerkleTree_throwsForEmptyParameters() {
+        let blockchainHelper = new BlockchainHelper();
         
     }
     
     IsProperBlock_returnsTrueForValidBlock() {
+        let blockchainHelper = new BlockchainHelper();
         
     }
     
     IsProperBlock_returnsFalseForBlocksWithBadUpdateData() {
+        let blockchainHelper = new BlockchainHelper();
         
     }
     
     IsProperBlock_returnsFalseForBlocksWithBadValidationWork() {
+        let blockchainHelper = new BlockchainHelper();
         
     }
     
     IsProperBlock_returnsFalseForBlocksWithNegativeGenerationNumber() {
+        let blockchainHelper = new BlockchainHelper();
         
     }
     
     IsProperBlock_throwsForNullParameter() {
-        
+        let blockchainHelper = new BlockchainHelper();
+        let success = false;
+        try {
+            blockchainHelper.isBlockProper(null);
+        } catch (e) {
+            success = true;
+        }
+        assert(success, "Should throw for null parameter");
     }
     
     IsValidationWorkProper_returnsTrueForProperValidationWork() {
@@ -218,7 +241,14 @@ class BlockchainHelperUnitTests {
     }
     
     IsValidationWorkProper_returnsFalseForNullParameters() {
-        
+        let blockchainHelper = new BlockchainHelper();
+        let success = false;
+        try {
+            blockchainHelper.isValidationWorkProper(null);
+        } catch (e) {
+            success = true;
+        }
+        assert(success, "Should throw for null parameter");
     }
     
     IsUpdateDataValid_returnsTrueForProperUpdateData() {
@@ -230,7 +260,14 @@ class BlockchainHelperUnitTests {
     }
     
     IsUpdateDataValid_ThrowsForNullParameter() {
-        
+        let blockchainHelper = new BlockchainHelper();
+        let success = false;
+        try {
+            blockchainHelper.isUpdateDataValid(null);
+        } catch (e) {
+            success = true;
+        }
+        assert(success, "Should throw for null parameter");
     }
     
     HashBlock_returnsCorrectHash() {
@@ -238,7 +275,14 @@ class BlockchainHelperUnitTests {
     }
     
     HashBlock_throwsNullParameter() {
-        
+        let blockchainHelper = new BlockchainHelper();
+        let success = false;
+        try {
+            blockchainHelper.hashBlock(null);
+        } catch (e) {
+            success = true;
+        }
+        assert(success, "Should throw for null parameter");
     }
     
     Squash_returnsCorrectSquashedDataForMultipleDifferentTransactions() {
@@ -258,7 +302,14 @@ class BlockchainHelperUnitTests {
     }
     
     Squash_throwsForNullParameters() {
-        
+        let blockchainHelper = new BlockchainHelper();
+        let success = false;
+        try {
+            blockchainHelper.squash(null);
+        } catch (e) {
+            success = true;
+        }
+        assert(success, "Should throw for null parameter");
     }
 
     TransactionsToUpdateDatas_validTransactionsReturnsValidUpdateDatas() {
@@ -271,7 +322,14 @@ class BlockchainHelperUnitTests {
     }
 
     TransactionsToUpdateDatas_throwsOnEmptyParameters() {
-        
+        let blockchainHelper = new BlockchainHelper();
+        let success = false;
+        try {
+            blockchainHelper.transactionsToUpdateDatas([]);
+        } catch (e) {
+            success = true;
+        }
+        assert(success, "Should throw for empty parameter");
     }
 
     GenerationBlocksToUpdateDatas_validGenerationBlocksReturnsValidUpdateDatas() {
@@ -283,7 +341,14 @@ class BlockchainHelperUnitTests {
     }
 
     GenerationBlocksToUpdateDatas_throwsOnEmptyParameters() {
-        
+        let blockchainHelper = new BlockchainHelper();
+        let success = false;
+        try {
+            blockchainHelper.generationBlocksToUpdateDatas([]);
+        } catch (e) {
+            success = true;
+        }
+        assert(success, "Should throw for empty parameter");
     }
 
     ExtractValidationWorkFromTransactions_extractsAndAggregatesTransactionWork() {
@@ -295,7 +360,14 @@ class BlockchainHelperUnitTests {
     }
 
     ExtractValidationWorkFromTransactions_throwsOnEmptyParameters() {
-
+        let blockchainHelper = new BlockchainHelper();
+        let success = false;
+        try {
+            blockchainHelper.extractValidationWorkFromTransactions([]);
+        } catch (e) {
+            success = true;
+        }
+        assert(success, "Should throw for empty parameter");
     }
 
     ExtractValidationWorkFromBlocks_extractsAndAggregatesValidationWork() {
@@ -307,6 +379,13 @@ class BlockchainHelperUnitTests {
     }
 
     ExtractValidationWorkFromBlocks_throwsOnEmptyParameters() {
-
+        let blockchainHelper = new BlockchainHelper();
+        let success = false;
+        try {
+            blockchainHelper.extractValidationWorkFromBlocks([]);
+        } catch (e) {
+            success = true;
+        }
+        assert(success, "Should throw for empty parameter");
     }
 }
