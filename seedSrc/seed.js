@@ -14,9 +14,33 @@ const moduleExporter = require("./module.js");
  let createSeedModule = function() {
     let newSeedModule = moduleExporter.createModule({
         module : "Seed", 
-        version : "1",
         data : initialSeedState,
         initialUserData : initialUserState
+    });
+
+    newSeedModule.addFunction({
+        invoke : transfer, 
+        name : "transfer"
+    });
+
+    newSeedModule.addFunction({
+        invoke : transferFrom, 
+        name : "transferFrom"
+    });
+
+    newSeedModule.addFunction({
+        invoke : approve, 
+        name : "approve"
+    });
+
+    newSeedModule.addFunction({
+        invoke : balanceOf, 
+        name : "balanceOf"
+    });
+
+    newSeedModule.addFunction({
+        invoke : allowance, 
+        name : "allowance"
     });
 
     return newSeedModule;
@@ -28,7 +52,7 @@ module.exports = {
             seedModule = createSeedModule();
         }
         return seedModule;
-    } 
+    }
  }
 
 /*  ### Seed's Initial Variable State ### */
@@ -164,7 +188,7 @@ let approve = function(container, changeContext) {
  * 
  * @param {*} container - Container object that holds read-only data
  */
-let balanceOf = function(container) {
+let getBalanceOf = function(container) {
     return container.getUserData("Seed", container.args.owner).balance;
 }
 
@@ -177,6 +201,40 @@ let balanceOf = function(container) {
  * 
  * @param {*} container - Container object that holds read-only data
  */
-let allowance = function(container) {
+let getAllowance = function(container) {
     return container.getUserData("Seed", container.args.owner).allowance[container.args.spender];
+}
+
+/**
+ * Gets the total amount of SEED in circulation
+ * 
+ * args:
+ *      N/A
+ * 
+ * @param {*} container - Container object that holds read-only data
+ */
+let getTotalSupply = function(container) {
+    return container.getModuleData("Seed").totalSupply;
+}
+
+/**
+ * Gets the symbol, "SEED"
+ * 
+ * args: N/A
+ * 
+ * @param {*} container - Container object that holds read-only data
+ */
+let getSymbol = function(container) {
+    return container.getModuleData("Seed").symbol;
+}
+
+/**
+ * Gets the amount of decimals used when displaying seed
+ * 
+ * args: N/A
+ * 
+ * @param {*} container - Container object that holds read-only data
+ */
+let getDecimals = function(container) {
+    return container.getModuleData("Seed").decimals;
 }
