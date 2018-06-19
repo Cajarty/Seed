@@ -4,6 +4,7 @@ const accountExporter = require("./account.js");
 const cryptographyHelper = cryptoHelperExporter.newCryptoHelper();
 const virtualMachineExporter = require("./virtualMachine.js");
 const moduleExporter = require("./module.js");
+const seedExporter = require("./seed.js");
 
 module.exports = {
     cryptographyTest: function() {
@@ -62,5 +63,26 @@ module.exports = {
         console.info("User data after moving left the second time", vm.getModule({module : "Game"}));
 
         console.log("VM Test Complere");
+    },
+    seedModuleTest : function() {
+        console.log("SeedModuleTest::Start")
+
+        let vm = virtualMachineExporter.createVirtualMachine();
+        let seedModule = seedExporter.getSeed();
+
+        console.log("Add Seed Module To VM")
+        vm.addModule(seedModule);
+
+        console.log("Construct Seed")
+        let changes = vm.invoke({ 
+            module : "Seed", 
+            function : "constructor", 
+            user : "ABC", 
+            args : {
+                initialSeed : 1000
+            } 
+        });
+
+        console.info("getBalanceOf creator", vm.invoke({ module : "Seed", function : "getBalanceOf", user : "ABC", args : { owner : "ABC" } }));
     }
  }

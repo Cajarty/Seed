@@ -1,5 +1,6 @@
 const changeContextExporter = require("./virtualMachine/changeContext.js");
 const containerExporter = require("./virtualMachine/container.js");
+const conformHelper = require("./helpers/conformHelper.js");
 let cryptoHelper = require("./cryptoHelper.js").newCryptoHelper();
 
 module.exports = {
@@ -13,19 +14,19 @@ class VirtualMachine {
         this.modules = {};
     }
 
-    addModule(newModule) {
-        let hash = cryptoHelper.sha256(newModule.module + newModule.version);
+    addModule(newModule, creator) {
+        let hash = cryptoHelper.sha256(newModule.module);
         this.modules[hash] = newModule;
     }
 
     addUser(moduleInfo, user) {
-        let moduleHash = cryptoHelper.sha256(moduleInfo.module + moduleInfo.version);
+        let moduleHash = cryptoHelper.sha256(moduleInfo.module);
         let moduleToAddTo = this.modules[moduleHash];
         moduleToAddTo.addUser(user);
     }
 
     getModule(info) {
-        let hash = cryptoHelper.sha256(info.module + info.version);
+        let hash = cryptoHelper.sha256(info.module);
         return this.modules[hash];
     }
 
@@ -35,23 +36,38 @@ class VirtualMachine {
     }
 
     invoke(info) {
-        let moduleToInvoke = this.getModule(info);
-        console.info("Module::invoke[info,moduleToInvoke]", info, moduleToInvoke);
-        let moduleFunction = moduleToInvoke.getFunctionByName(info.function);
-        let changeContext = changeContextExporter.createChangeContext(info.user);
-        let container = containerExporter.createContainer(moduleToInvoke, info.user, info.args);
-        //Container is ledger
-        //changeContext keeps track of changes
-        //let result = moduleFunction.invoke(container, changeContext, info.user);
-        let result = moduleFunction.invoke(container, changeContext, info.user);
-        //if its not a container, we have a view
+        let result = this.simulate(info);
+        if (conformHelper.doesFullyConform(result, { moduleData : "object", userData : "object" })) {
+            this.applyChangeContext(info, result);
+        }
         return result;
     }
 
-    applyChangeContext(info, changeContext) {
-        console.info("VM::applyChangeContext[changeContext]",changeContext);
-        let moduleToUpdate = this.getModule(info);
+    simulate(info) {
+        let moduleToInvoke = this.getModule(info);
+        if (info.function == "constructor" && Object.keys(moduleToInvoke.data.userData).length != 0) {
+            throw "VirtualMachine::ERROR::simulate: Constructor can only be called if the module has not yet been used";
+        }
+        if (!moduleToInvoke.doesUserExist(info.user)) {
+            this.addUser(info, info.user);
+        }
+        let moduleFunction = moduleToInvoke.getFunctionByName(info.function);
+        let moduleFunctionArgs = conformHelper.getFunctionArgs(moduleFunction.invoke);
+        let container = containerExporter.createContainer(moduleToInvoke, info.user, info.args);
 
+        if (moduleFunctionArgs.length == 2) { //State-modifying function
+            let changeContext = changeContextExporter.createChangeContext(info.user);
+            return moduleFunction.invoke(container, changeContext); //Container is ledger, changeContext keeps track of changes
+        } else if (moduleFunctionArgs.length == 1) { //Read-Only Getter
+            return moduleFunction.invoke(container); //Container is ledger
+        } else {
+            throw "VirtualMachine::ERROR::simulate: Invalid number of parameters for a module function";
+        }
+    }
+
+    applyChangeContext(info, changeContext) {
+        //console.info("VM::applyChangeContext[changeContext]",changeContext);
+        let moduleToUpdate = this.getModule(info);
         let moduleDataKeys = Object.keys(changeContext.moduleData);
         for(let i = 0; i < moduleDataKeys.length; i++) {
             let key = moduleDataKeys[i];

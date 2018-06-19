@@ -57,7 +57,7 @@ class ChangeContext {
                 this.subtractFromUserDataDeep(amount, options);
                 break;
         }
-        console.log("subtract", amount, options);
+        //console.log("subtract", amount, options);
     }
 
     /**
@@ -93,7 +93,7 @@ class ChangeContext {
                 this.addToUserDataDeep(amount, options);
                 break;
         }
-        console.log("add", amount, options);
+        //console.log("add", amount, options);
     }
 
     /**
@@ -129,7 +129,7 @@ class ChangeContext {
                 this.setUserDataDeep(value, options);
                 break;
         }
-        console.log("set", value, options);
+        //console.log("set", value, options);
     }
 
     /* 
@@ -147,7 +147,7 @@ class ChangeContext {
      * @param {*} options.key - Key in moduleData to subtract from
      */ 
     subtractFromModuleData(amount, options) {
-        console.info("Subtract", "Seed.totalSupply -= amount");
+        //console.info("Subtract", "Seed.totalSupply -= amount");
         this.ensureModuleDataCreated(options.key, "number");
         this.moduleData[options.key] -= amount;
     }
@@ -161,7 +161,7 @@ class ChangeContext {
      * @param {*} options.key - Key in moduleData to add to
      */ 
     addToModuleData(amount, options) {
-        console.info("Add", "Seed.totalSupply += amount");
+        //console.info("Add", "Seed.totalSupply += amount");
         this.ensureModuleDataCreated(options.key, "number");
         this.moduleData[options.key] += amount;
     }
@@ -175,7 +175,7 @@ class ChangeContext {
      * @param {*} options.key - Key in moduleData to set to
      */ 
     setModuleData(value, options) {
-        console.info("Set", "Seed.symbol = \"SEED\"");
+        //console.info("Set", "Seed.symbol = \"SEED\"");
         this.ensureModuleDataCreated(options.key, typeof value);
         this.moduleData[options.key] = value;
     }
@@ -190,7 +190,7 @@ class ChangeContext {
      * @param {*} options.innerKey - Key in moduleData to subtract from
      */ 
     subtractFromModuleDataDeep(amount, options) {
-        console.info("Subtract", "Seed.totalSupply -= amount");
+        //console.info("Subtract", "Seed.totalSupply -= amount");
         this.ensureModuleInnerDataCreated(options.outerKey, options.innerKey, "number");
         this.moduleData[options.outerKey][options.innerKey] -= amount;
     }
@@ -205,7 +205,7 @@ class ChangeContext {
      * @param {*} options.innerKey - Key in moduleData to add to
      */ 
     addToModuleDataDeep(amount, options) {
-        console.info("Add", "Seed.totalSupply += amount");
+        //console.info("Add", "Seed.totalSupply += amount");
         this.ensureModuleInnerDataCreated(options.outerKey, options.innerKey, "number");
         this.moduleData[options.outerKey][options.innerKey] += amount;
     }
@@ -220,7 +220,7 @@ class ChangeContext {
      * @param {*} options.innerKey - Key in moduleData.outerKey to set
      */ 
     setModuleDataDeep(value, options) {
-        console.info("Set", "Game.citySlogans.falador = \"Home Of The Brave\"");
+        //console.info("Set", "Game.citySlogans.falador = \"Home Of The Brave\"");
         this.ensureModuleInnerDataCreated(options.outerKey, options.innerKey, typeof value);
         this.moduleData[options.outerKey][options.innerKey] = value;
     }
@@ -235,7 +235,7 @@ class ChangeContext {
      * @param {*} options.key - Key in userData to subtract from
      */ 
     subtractFromUserData(amount, options) {
-        console.info("Subtract", "Seed.0xABC.balance -= amount", this);
+        //console.info("Subtract", "Seed.0xABC.balance -= amount", this);
         this.ensureUserDataCreated(options.user, options.key, "number");
         this.userData[options.user][options.key] -= amount;
     }
@@ -250,7 +250,7 @@ class ChangeContext {
      * @param {*} options.key - Key in userData to add to
      */ 
     addToUserData(amount, options) {
-        console.info("Add", "Seed.0xABC.balance += amount", this);
+        //console.info("Add", "Seed.0xABC.balance += amount", this);
         this.ensureUserDataCreated(options.user, options.key, "number");
         this.userData[options.user][options.key] += amount;
     }
@@ -265,7 +265,7 @@ class ChangeContext {
      * @param {*} options.key - Key in userData to set
      */ 
     setUserData(value, options) {
-        console.info("Set", "Game.0xABC.username = \"Gandolf\"", this);
+        //console.info("Set", "Game.0xABC.username = \"Gandolf\"", this);
         this.ensureUserDataCreated(options.user, options.key, typeof value);
         this.userData[options.user][options.key] = value;
     }
@@ -281,7 +281,7 @@ class ChangeContext {
      * @param {*} options.innerKey - Key in in userData.outerKey to subtract from
      */ 
     subtractFromUserDataDeep(amount, options) {
-        console.info("Subtract", "Seed.0xABC.allowance.0xDEF -= amount", options.user, options.outerKey, options.innerKey, amount);
+        //console.info("Subtract", "Seed.0xABC.allowance.0xDEF -= amount", options.user, options.outerKey, options.innerKey, amount);
         this.ensureUserInnerDataCreated(options.user, options.outerKey, options.innerKey, "number");
         this.userData[options.user][options.outerKey][options.innerKey] -= amount;
     }
@@ -297,7 +297,7 @@ class ChangeContext {
      * @param {*} options.innerKey - Key in in userData.outerKey to add to
      */ 
     addToUserDataDeep(amount, options) {
-        console.info("Add", "Seed.0xABC.allowance.0xDEF += amount", options.user, options.outerKey, options.innerKey, amount);
+        //console.info("Add", "Seed.0xABC.allowance.0xDEF += amount", options.user, options.outerKey, options.innerKey, amount);
         this.ensureUserInnerDataCreated(options.user, options.outerKey, options.innerKey, "number");
         this.userData[options.user][options.outerKey][options.innerKey] += amount;
     }
@@ -313,7 +313,7 @@ class ChangeContext {
      * @param {*} options.innerKey - Key in userData.outerKey to set
      */ 
     setUserDataDeep(value, options) {
-        console.info("Set", "Game.0xABC.notes.0xDEF = \"Coward\"", options.user, options.outerKey, options.innerKey, value);
+        //console.info("Set", "Game.0xABC.notes.0xDEF = \"Coward\"", options.user, options.outerKey, options.innerKey, value);
         this.ensureUserInnerDataCreated(options.user, options.outerKey, options.innerKey, typeof value);
         this.userData[options.user][options.outerKey][options.innerKey] = value;
     }

@@ -14,7 +14,8 @@ module.exports = {
         this.data = Object.assign({}, info.data);
         this.data["userData"] = {};
         this.initialUserData = Object.assign({}, info.initialUserData);
-        console.info("Module::Constructor[name,defaultData,defaultUserData]", this.module, this.data, this.initialUserData);
+
+        //console.info("Module::Constructor[name,defaultData,defaultUserData]", this.module, this.data, this.initialUserData);
     }
 
     addFunction(func) {
@@ -27,7 +28,11 @@ module.exports = {
 
     addUser(user) {
         this.data["userData"][user] = Object.assign({}, this.initialUserData);
-        console.info("Module::AddUser[name,defaultUserData,assignedUserData]", this.module, this.initialUserData, this.data["userData"][user]);
+        //console.info("Module::AddUser[name,defaultUserData,assignedUserData]", this.module, this.initialUserData, this.data["userData"][user]);
+    }
+
+    doesUserExist(user) {
+        return this.data["userData"][user] != undefined;
     }
 
     getFunctionByName(name) {

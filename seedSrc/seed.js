@@ -2,54 +2,92 @@ const moduleExporter = require("./module.js");
 
 /**
  * Name: 
- *      Seed Module
+ *      Seed
  * 
  * Description:
- *      The cryptocurrency of the Seed ecosystem. This base implementation is inspired by the Ethereum ERC20 standard
+ *      The cryptocurrency of the Seed ecosystem.
  * 
+ *      The cryptocurrency's design & implementation is based on the Ethereum ERC-20 Standard
+ * 
+ * State Changing Functions:
+ *      transfer(to, amount)
+ *      transferFrom(from, to, amount)
+ *      approve(spender, amount)
+ *      
+ * Getters:
+ *      getBalanceOf(owner)
+ *      getAllowance(owner, spender)
+ *      getTotalSupply()
+ *      getSymbol()
+ *      getDecimals()
+ *      
+ *  Module-Data:
+ *      totalSupply : number
+ *      symbol : string
+ *      decimals : number
+ * 
+ *  User-Data:
+ *      balance : number
+ *      allowance : { string : number }
  */
 
  let seedModule = null;
 
- let createSeedModule = function() {
-    let newSeedModule = moduleExporter.createModule({
-        module : "Seed", 
-        data : initialSeedState,
-        initialUserData : initialUserState
-    });
-
-    newSeedModule.addFunction({
-        invoke : transfer, 
-        name : "transfer"
-    });
-
-    newSeedModule.addFunction({
-        invoke : transferFrom, 
-        name : "transferFrom"
-    });
-
-    newSeedModule.addFunction({
-        invoke : approve, 
-        name : "approve"
-    });
-
-    newSeedModule.addFunction({
-        invoke : balanceOf, 
-        name : "balanceOf"
-    });
-
-    newSeedModule.addFunction({
-        invoke : allowance, 
-        name : "allowance"
-    });
-
-    return newSeedModule;
- }
-
 module.exports = {
     getSeed : function() {
         if (seedModule == null) {
-            seedModule = createSeedModule();
+            seedModule = moduleExporter.createModule({
+                module : "Seed", 
+                data : initialSeedState,
+                initialUserData : initialUserState
+            });
+
+            console.info(constructor);
+
+            seedModule.addFunction({
+                invoke : constructor,
+                name : "constructor"
+            });
+        
+            seedModule.addFunction({
+                invoke : transfer, 
+                name : "transfer"
+            });
+        
+            seedModule.addFunction({
+                invoke : transferFrom, 
+                name : "transferFrom"
+            });
+        
+            seedModule.addFunction({
+                invoke : approve, 
+                name : "approve"
+            });
+        
+            seedModule.addFunction({
+                invoke : getBalanceOf, 
+                name : "getBalanceOf"
+            });
+        
+            seedModule.addFunction({
+                invoke : getAllowance, 
+                name : "getAllowance"
+            });
+        
+            seedModule.addFunction({
+                invoke : getTotalSupply, 
+                name : "getTotalSupply"
+            });
+        
+            seedModule.addFunction({
+                invoke : getSymbol, 
+                name : "getSymbol"
+            });
+        
+            seedModule.addFunction({
+                invoke : getDecimals, 
+                name : "getDecimals"
+            });
         }
         return seedModule;
     }
@@ -73,6 +111,31 @@ let initialUserState = {
     ### State Changing Functions ###
     ################################ 
 */
+
+/**
+ * Constructor for the Seed module, called upon creation.
+ * 
+ * args:
+ *      initialSeed - Initial amount of SEED to give to the creator
+ * 
+ * changes:
+ *      Increase "Sender" balance
+ *      Increase totalSupply
+ * 
+ * For testing purposes, initially gives SEED to the creator
+ * 
+ * @param {*} container - Container object that holds read-only data.
+ * @param {*} changeContext  - Write-Only object to hold changes to module and userData state
+ */
+let constructor = function(container, changeContext) {
+    let sender = container.sender;
+    let initialSeed = container.args.initialSeed;
+
+    changeContext.add(initialSeed, { user : sender, key : "balance" });
+    changeContext.add(initialSeed, { key : "totalSupply" });
+
+    return changeContext;
+}
 
 /**
  * Transfer funds from a user to another user

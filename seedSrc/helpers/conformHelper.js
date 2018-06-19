@@ -6,19 +6,28 @@ module.exports = {
     
         // Object and Schema must be the same length
         if (objectKeys.length < schemaKeys.length) {
-            console.info("doesNOTConform", "not enough keys", object, schema);
             return false;
         }
     
         for(let i = 0; i < schemaKeys; i++) {
             // The value of object.key must match the type in schema
             if (typeof object[schemaKeys[i]] != schema[schemaKeys[i]]) {
-                console.info("doesNOTConform", "differing keys", object, schema);
                 return false;
             }
         }
-    
-        console.info("doesFullyConform", object, schema);
         return true;
+    },
+    getFunctionArgs : function(func) {
+        // First match everything inside the function argument parens.
+        var args = func.toString().match(/function\s.*?\(([^)]*)\)/)[1];
+
+        // Split the arguments string into an array comma delimited.
+        return args.split(',').map(function(arg) {
+            // Ensure no inline comments are parsed and trim the whitespace.
+            return arg.replace(/\/\*.*\*\//, '').trim();
+        }).filter(function(arg) {
+            // Ensure no undefined values are added.
+            return arg;
+        });
     }
  }
