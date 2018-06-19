@@ -66,13 +66,13 @@ let transfer = function(container, changeContext) {
     // Gather readonly data
     let to = container.args.to;
     let value = container.args.value;
-    let sender = container.args.sender;
+    let sender = container.sender;
     let fromBalance = container.getUserData("Seed", sender).balance;
 
     // Confirm adequate balance for the transaction
     if (fromBalance >= value && value > 0) {
          changeContext.subtract(value, {user : sender, key : "balance"});
-         changeContext.add(to, "balance", add);
+         changeContext.add(value, { user : to, key : "balance"} );
     }
 
     return changeContext;
@@ -95,20 +95,35 @@ let transferFrom = function(container, changeContext) {
     // Gather readonly data
     let to = container.args.to;
     let from = container.args.from;
-    let sender = container.args.sender;
     let value = container.args.value;
+    let sender = container.sender;
     let fromBalance = container.getUserData("Seed", from).balance;
     let senderAllowance = container.getUserData("Seed", from).allowance[sender];
 
     // Confirm adequate balance and allowance for the transaction
     if (fromBalance >= value && senderAllowance >= value && value > 0) {
-         changeContext.subtract(from, "balance", value);
-         changeContext.subtract(from, "allowance", sender, value);
-         changeContext.add(to, "balance", add);
+         changeContext.subtract(value, { user : from, key : "balance" });
+         changeContext.subtract(value, { user : "from", outerKey : "allowance", innerKey : sender });
+         changeContext.add(value, { user : to, key : "balance" });
     }
     
     return changeContext;
 }
 
+let approve = function(container, changeContext) {
+    //Gather readonly data
+    let spender = container.args.spender;
+    let value = container.args.value;
+    let currentApproval = container.getUserData("Seed", container.sender).allowance[spender];
+
+    
+
+}
+
 // Read-Only Views
+let balanceOf = function(container) {
+    return container.getuserData("Seed", container.sender).balance;
+}
+
+
 
