@@ -26,7 +26,7 @@ class ChangeContext {
 
     /**
      * 
-     * Subtracts data from the changeset using various options
+     * Subtracts data from the changeset using various options. Only works with numeric data.
      * 
      * e.g's:
      *      subtract(10, { user : "0xABC", key : "balance" })
@@ -62,7 +62,7 @@ class ChangeContext {
 
     /**
      * 
-     * Add data from the changeset using various options
+     * Add data from the changeset using various options. Only works with numeric data.
      * 
      * e.g's:
      *      add(10, { user : "0xABC", key : "balance" })
@@ -94,6 +94,42 @@ class ChangeContext {
                 break;
         }
         console.log("add", amount, options);
+    }
+
+    /**
+     * 
+     * Set data to the changeset using various options. Works with any data type, however is treated as a "set the relative increase" for numbers.
+     * 
+     * e.g's:
+     *      set(10, { user : "0xABC", key : "balance" })
+     *          Seed.0xABC.balance += 10
+     *      set(10, { user : "0xABC", outerKey : "allowance", innerKey : "0xDEF" })
+     *          Seed.0xABC.allowance.0xDEF += 10
+     *      set(10, { key : "symbol" })
+     *          Seed.symbol = "SEED"
+     *      set(10, { outerKey : "population", innerKey : "falador" })
+     *          Game.citySlogans.falador = "Home of the brave"
+     * 
+     * 
+     * @param {*} value - Value to set
+     * @param {*} options - The options determining which piece of data to set
+     */
+    set(value, options) {
+        switch(this.routeOption(options)) {
+            case routes.MODULE_BASIC:
+                this.setModuleData(value, options);
+                break;
+            case routes.MODULE_DEEP:
+                this.setModuleDataDeep(value, options);
+                break;
+            case routes.USER_BASIC:
+                this.setUserData(value, options);
+                break;
+            case routes.USER_DEEP:
+                this.setUserDataDeep(value, options);
+                break;
+        }
+        console.log("set", value, options);
     }
 
     /* 
@@ -131,6 +167,20 @@ class ChangeContext {
     }
 
     /**
+     * Set moduleData[key] to value
+     * 
+     * e.g. Seed.symbol = "SEED"
+     * 
+     * @param {number} value - What to set the value to
+     * @param {*} options.key - Key in moduleData to set to
+     */ 
+    setModuleData(value, options) {
+        console.info("Set", "Seed.symbol = \"SEED\"");
+        this.ensureModuleDataCreated(options.key, typeof value);
+        this.moduleData[options.key] = value;
+    }
+
+    /**
      * Subtract moduleData[outerKey][innerKey] by amount
      * 
      * e.g. Game.population.falador -= amount
@@ -158,6 +208,21 @@ class ChangeContext {
         console.info("Add", "Seed.totalSupply += amount");
         this.ensureModuleInnerDataCreated(options.outerKey, options.innerKey, "number");
         this.moduleData[options.outerKey][options.innerKey] += amount;
+    }
+
+    /**
+     * Set moduleData[outerKey][innerKey] to value
+     * 
+     * e.g. Game.citySlogans.falador = "Home Of The Brave"
+     * 
+     * @param {number} value - Value to set to
+     * @param {*} options.outerKey - Key in moduleData to set
+     * @param {*} options.innerKey - Key in moduleData.outerKey to set
+     */ 
+    setModuleDataDeep(value, options) {
+        console.info("Set", "Game.citySlogans.falador = \"Home Of The Brave\"");
+        this.ensureModuleInnerDataCreated(options.outerKey, options.innerKey, typeof value);
+        this.moduleData[options.outerKey][options.innerKey] = value;
     }
 
     /**
@@ -191,6 +256,21 @@ class ChangeContext {
     }
 
     /**
+     * Set userData[key] to value
+     * 
+     * e.g. Seed.0xABC.balance += value or Game.0xABC.username = "Gandolf"
+     * 
+     * @param {number} value - Value to set to
+     * @param {string} options.user - User to set the variable of
+     * @param {*} options.key - Key in userData to set
+     */ 
+    setUserData(value, options) {
+        console.info("Set", "Game.0xABC.username = \"Gandolf\"", this);
+        this.ensureUserDataCreated(options.user, options.key, typeof value);
+        this.userData[options.user][options.key] = value;
+    }
+
+    /**
      * Subtract userData[outerKey][innerKey] by amount
      * 
      * e.g. Seed.0xABC.allowance.0xDEF -= amount
@@ -220,6 +300,22 @@ class ChangeContext {
         console.info("Add", "Seed.0xABC.allowance.0xDEF += amount", options.user, options.outerKey, options.innerKey, amount);
         this.ensureUserInnerDataCreated(options.user, options.outerKey, options.innerKey, "number");
         this.userData[options.user][options.outerKey][options.innerKey] += amount;
+    }
+
+    /**
+     * Set userData[outerKey][innerKey] to value
+     * 
+     * e.g. Seed.0xABC.allowance.0xDEF += value or Game.0xABC.notes.0xDEF = "Coward"
+     * 
+     * @param {number} value - Value to set to
+     * @param {string} options.user - User to set the value of
+     * @param {*} options.outerKey - Key to mapping in userData that has the value to set to
+     * @param {*} options.innerKey - Key in userData.outerKey to set
+     */ 
+    setUserDataDeep(value, options) {
+        console.info("Set", "Game.0xABC.notes.0xDEF = \"Coward\"", options.user, options.outerKey, options.innerKey, value);
+        this.ensureUserInnerDataCreated(options.user, options.outerKey, options.innerKey, typeof value);
+        this.userData[options.user][options.outerKey][options.innerKey] = value;
     }
 
     /* 
@@ -356,7 +452,6 @@ class ChangeContext {
             this.userData[user][outerKey][innerKey] = this.getDefault(type);
         }
     }
-
 
     toString() {
         return "User: " + this.user + " | ModuleData: " + JSON.stringify(this.moduleData) + " | UserData: " + JSON.stringify(this.userData);
