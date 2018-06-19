@@ -39,7 +39,7 @@ class VirtualMachine {
         console.info("Module::invoke[info,moduleToInvoke]", info, moduleToInvoke);
         let moduleFunction = moduleToInvoke.getFunctionByName(info.function);
         let changeContext = changeContextExporter.createChangeContext(info.user);
-        let container = containerExporter.createContainer(moduleToInvoke, info.user, info.arguments);
+        let container = containerExporter.createContainer(moduleToInvoke, info.user, info.args);
         //Container is ledger
         //changeContext keeps track of changes
         //let result = moduleFunction.invoke(container, changeContext, info.user);
