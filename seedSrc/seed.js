@@ -53,7 +53,11 @@ let initialUserState = {
 /**
  * Transfer funds from a user to another user
  * 
- * Changes:
+ * args:
+ *      to - Who to send SEED to
+ *      value - How much SEED to send
+ * 
+ * changes:
  *      Decrease "sender" balance
  *      Increase "to" balance
  * 
@@ -81,7 +85,12 @@ let transfer = function(container, changeContext) {
 /**
  * Transfer funds from user "from" to user "to" on the sender behalf based on "from" users given allowance to "sender" user
  * 
- * Changes:
+ * args:
+ *      to - Who to send SEED to
+ *      from - On who's behalf is the sender spender the SEED of
+ *      value - How much SEED to send
+ * 
+ * changes:
  *      Decrease "from" balance
  *      Decrease "from"-"sender" allowance
  *      Increase "to" balance
@@ -110,20 +119,64 @@ let transferFrom = function(container, changeContext) {
     return changeContext;
 }
 
+/**
+ * The sender approves an allowance for the spender of a set amount, allowing the spender to spend on the senders behalf.
+ * 
+ * args:
+ *      spender - Who is receiving an allowance on the Senders behalf
+ *      value - How much SEED is the allowance for
+ * 
+ * changes:
+ *      Increases/Decreases "sender"-"spender" allowance
+ * 
+ * @param {*} container - Container object that holds read-only data
+ *          Used to grab arguments regarding who is giving an allowance, who is receiving the allowance, and how much the allowance is for
+ * @param {*} changeContext - Write-Only object to hold changes to module and userData state
+ */
 let approve = function(container, changeContext) {
     //Gather readonly data
     let spender = container.args.spender;
     let value = container.args.value;
     let currentApproval = container.getUserData("Seed", container.sender).allowance[spender];
 
-    
+    let dif = value - currentApproval; 
 
+    if (dif > 0) {
+        changeContext.add(dif, { user : container.sender, outerKey : "allowance", innerKey : spender });
+    } else if (dif < 0) {
+        changeContext.subtract(dif, { user : container.sender, outerKey : "allowance", innerKey : spender });
+    }
+
+    return changeContext;
 }
 
-// Read-Only Views
+/*  
+    #########################
+    ### Read-Only Getters ###
+    #########################
+*/
+
+/**
+ * Gets the current SEED balance of a user
+ * 
+ * args:
+ *      owner - Who's SEED balance we are getting
+ * 
+ * @param {*} container - Container object that holds read-only data
+ */
 let balanceOf = function(container) {
-    return container.getuserData("Seed", container.sender).balance;
+    return container.getUserData("Seed", container.args.owner).balance;
 }
 
-
-
+/**
+ * Gets the current SEED allowance of a spender for a given owner
+ * 
+ * args:
+ *      owner - Who's SEED the allowance spends from
+ *      spender - Who has the allowance that can spend the owners SEED
+ * 
+ * @param {*} container - Container object that holds read-only data
+ */
+let allowance = function(container) {
+    return container.getUserData("Seed", container.args.owner).allowance[container.args.spender];
+}
