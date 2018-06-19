@@ -1,158 +1,87 @@
-let cryptoHelper = require("./cryptography.js").newCryptographyHelper();
+const changeContextExporter = require("./virtualMachine/changeContext.js");
+const containerExporter = require("./virtualMachine/container.js");
+let cryptoHelper = require("./cryptoHelper.js").newCryptoHelper();
 
 module.exports = {
     createVirtualMachine: function() {
        return new VirtualMachine();
-    },
-    createModule : function(info) {
-        return new Module(info);
-    } 
+    }
  }
-
- class Module {
-    constructor(info) {
-        this.functions = {};
-        this.module = info.module;
-        this.version = info.version;
-        this.data = info.data;
-        this.data["userData"] = {};
-        this.initialUserData = info.initialUserData;
-    }
-
-    addFunction(func) {
-        if (func.invoke != null && func.name != null && func.version != null) {
-            let version = func.version == null ? info.version : func.version;
-            let hash = cryptoHelper.SHA256(func.name + version);
-            this.functions[hash] = func;
-        }
-    }
-
-    addUser(user) {
-        if (this.data["userData"][user] == undefined) {
-            this.data["userData"][user] = this.initialUserData;
-        }
-    }
-
-    getFunction(info) {
-        let version = info.version == null ? this.version : info.version;
-        let hash = cryptoHelper.SHA256(info.name + version);
-        return this.functions[hash];
-    }
-
-    isFunctionValid(info, invokeHash) {
-        return this.hashFunction(info) == invokeHash;
-    }
-
-    leanHash(info) {
-        return cryptoHelper.SHA256(this.module + this.version);
-    }
-
-    fullHash() {
-        return cryptoHelper.SHA256(this.functions.toString() + this.module + this.version);
-    }
-
-    leanHashFunction(info) {
-        let hash = cryptoHelper.SHA256(info.function + info.version);
-        return hash;
-    }
-
-    fullHashFunction(info) {
-        let func = this.getFunction(info);
-        let hash = cryptoHelper.SHA256(func.invoke.toString() + info.function + info.version);
-        return hash;
-    }
-
-    isFunctionLeanInfoCorrect(info, leanInfoHash) {
-        return this.leanHashFunction(info) == leanInfoHash;
-    }
-
-    isFunctionCorrect(info, fullHash) {
-        return this.fullHashFunction(info) == fullHash;
-    }
-}
-
-class ChangeContext {
-    constructor(moduleData, userData) {
-        this.moduleData = {};
-        this.userData = {};
-    }
-
-    ensureModuleDataCreated(module, key) {
-        this.moduleData[key] = 0;
-    }
-
-    ensureUserDataCreated(module, user, key) {
-        this.userData[key] = 0;
-    }
-
-    subtract(module, key, amount) {
-        ensureModuleDataCreated(module, key);
-        this.moduleData[key] -= amount;
-    }
-
-    subtract(module, user, key, amount) {
-        ensureUserDataCreated(module, user, key);
-        this.userData[key] -= amount;
-    }
-
-    toString() {
-        return JSON.stringify(this.moduleData) + " " + JSON.stringify(this.userData);
-    }
-}
-
-class Container {
-    constructor(module, user) {
-        this.module = module;
-        this.user = user;
-    }
-
-    getModuleData(moduleName) {
-        return this.module.data;
-    }
-
-    getUserData(moduleName) {
-        return this.module.data["userData"];
-    }
-}
-
 
 class VirtualMachine {
     constructor() {
         this.modules = {};
     }
 
-    addModule(module) {
-        let hash = cryptoHelper.SHA256(module.module + module.version);
-        this.modules[hash] = module;
+    addModule(newModule) {
+        let hash = cryptoHelper.sha256(newModule.module + newModule.version);
+        this.modules[hash] = newModule;
     }
 
     addUser(moduleInfo, user) {
-        let moduleHash = cryptoHelper.SHA256(moduleInfo.module + moduleInfo.version);
-        let module = this.modules[moduleHash];
-        module.addUser(user);
+        let moduleHash = cryptoHelper.sha256(moduleInfo.module + moduleInfo.version);
+        let moduleToAddTo = this.modules[moduleHash];
+        moduleToAddTo.addUser(user);
     }
 
     getModule(info) {
-        let hash = cryptoHelper.SHA256(info.module + info.version);
+        let hash = cryptoHelper.sha256(info.module + info.version);
         return this.modules[hash];
     }
 
     getFunction(info) {
-        let module = this.getModule(info);
-        return module.getFunction(info);
+        let moduleToGet = this.getModule(info);
+        return moduleToGet.getFunction(info);
     }
 
     invoke(info) {
-        let module = getModule(info);
-        let moduleFunction = module.getFunction(info);
-        let changeContext = new ChangeContext(module.data, module.data["userData"][info.user]);
-        let container = new Container(module, info.user);
+        let moduleToInvoke = this.getModule(info);
+        console.info("Module::invoke[info,moduleToInvoke]", info, moduleToInvoke);
+        let moduleFunction = moduleToInvoke.getFunctionByName(info.function);
+        let changeContext = changeContextExporter.createChangeContext(info.user);
+        let container = containerExporter.createContainer(moduleToInvoke, info.user, info.arguments);
         //Container is ledger
         //changeContext keeps track of changes
         //let result = moduleFunction.invoke(container, changeContext, info.user);
         let result = moduleFunction.invoke(container, changeContext, info.user);
         //if its not a container, we have a view
         return result;
+    }
+
+    applyChangeContext(info, changeContext) {
+        console.info("VM::applyChangeContext[changeContext]",changeContext);
+        let moduleToUpdate = this.getModule(info);
+
+        let moduleDataKeys = Object.keys(changeContext.moduleData);
+        for(let i = 0; i < moduleDataKeys.length; i++) {
+            let key = moduleDataKeys[i];
+            moduleToUpdate.data[key] += changeContext.moduleData[key]; //Only works cause number. Should check if number
+        }
+
+        let users = Object.keys(changeContext.userData);
+        for(let i = 0; i < users.length; i++) {
+            let user = users[i];
+            let userDataKeys = Object.keys(changeContext.userData[user]);
+
+            for(let j = 0; j < userDataKeys.length; j++) {
+                let key = userDataKeys[i];
+                let value = changeContext.userData[user][key];
+                switch(typeof value) {
+                    case "number":
+                        // Number changes are relative
+                        moduleToUpdate.data["userData"][user][key] += changeContext.userData[user][key];
+                        break;
+                    case "string":
+                        // Strings are absolute
+                        moduleToUpdate.data["userData"][user][key] = changeContext.userData[user][key]; 
+                        break;
+                    case "object":
+                        // Objets are absolute and Object.assigned over
+                        moduleToUpdate.data["userData"][user][key] = Object.assign({}, changeContext.userData[user][key] );
+                        break;
+                }
+            }
+        }
     }
 
     isFunctionLeanInfoCorrect(info, invokeHash) {
@@ -194,7 +123,5 @@ class VirtualMachine {
         let module = this.getModule(info);
         return module.fullHashFunction(info);
     }
-
-    
 }
 

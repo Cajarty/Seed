@@ -1,5 +1,6 @@
 console.log("Wallet.js");
 
-require("../seedSrc/seed.js");
+const scenarioExporter = require("../seedSrc/scenarioTest.js");
 
-
+scenarioExporter.cryptographyTest();
+scenarioExporter.vmModuleTest();
