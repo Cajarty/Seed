@@ -44,54 +44,17 @@ module.exports = {
 
             console.info(constructor);
 
-            seedModule.addFunction({
-                invoke : constructor,
-                name : "constructor"
-            });
-        
-            seedModule.addFunction({
-                invoke : transfer, 
-                name : "transfer"
-            });
-        
-            seedModule.addFunction({
-                invoke : transferFrom, 
-                name : "transferFrom"
-            });
-        
-            seedModule.addFunction({
-                invoke : approve, 
-                name : "approve"
-            });
-
-            seedModule.addFunction({
-                invoke : burn,
-                name : "burn"
-            });
-        
-            seedModule.addFunction({
-                invoke : getBalanceOf, 
-                name : "getBalanceOf"
-            });
-        
-            seedModule.addFunction({
-                invoke : getAllowance, 
-                name : "getAllowance"
-            });
-        
-            seedModule.addFunction({
-                invoke : getTotalSupply, 
-                name : "getTotalSupply"
-            });
-        
-            seedModule.addFunction({
-                invoke : getSymbol, 
-                name : "getSymbol"
-            });
-        
-            seedModule.addFunction({
-                invoke : getDecimals, 
-                name : "getDecimals"
+            seedModule.addFunctions({
+                constructor : constructor,
+                transfer : transfer,
+                transferFrom : transferFrom,
+                approve : approve,
+                burn : burn,
+                getBalanceOf : getBalanceOf,
+                getAllowance : getAllowance,
+                getTotalSupply : getTotalSupply,
+                getSymbol : getSymbol,
+                getDecimals : getDecimals
             });
         }
         return seedModule;

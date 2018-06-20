@@ -19,6 +19,13 @@ module.exports = {
         //console.info("Module::Constructor[name,defaultData,defaultUserData]", this.module, this.data, this.initialUserData);
     }
 
+    addFunctions(funcs) {
+        let funcNames = Object.keys(funcs);
+        for(let i = 0; i < funcNames.length; i++) {
+            this.addFunction( { name : funcNames[i], invoke : funcs[funcNames[i]] } );
+        }
+    }
+
     addFunction(func) {
         if (func.invoke != null && func.name != null) {
             let hash = cryptoHelper.sha256(func.name + JSON.stringify(func.invoke));
