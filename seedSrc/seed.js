@@ -63,6 +63,11 @@ module.exports = {
                 invoke : approve, 
                 name : "approve"
             });
+
+            seedModule.addFunction({
+                invoke : burn,
+                name : "burn"
+            });
         
             seedModule.addFunction({
                 invoke : getBalanceOf, 
@@ -232,6 +237,32 @@ let approve = function(container, changeContext) {
         changeContext.add(dif, { user : container.sender, outerKey : "allowance", innerKey : spender });
     } else if (dif < 0) {
         changeContext.subtract(dif, { user : container.sender, outerKey : "allowance", innerKey : spender });
+    }
+
+    return changeContext;
+}
+
+/**
+ * The sender burns value worth of SEED coin, removing it from circulation
+ * 
+ * args:
+ *      value - How much SEED to burn
+ * 
+ * changes:
+ *      Decreases "sender" balance by value
+ *      Decreases "totalSupply" by value
+ * 
+ * @param {*} container - Container object that holds read-only data
+ * @param {*} changeContext - Write-Only object to hold changes to module and userData state
+ */
+let burn = function(container, changeContext) {
+    //Gather readonly data
+    let value = container.args.value;
+    let balance = container.getUserData("Seed", container.sender).balance;
+
+    if (balance >= value) {
+        changeContext.subtract(value, { user : container.sender, key : "balance" });
+        changeContext.subtract(value, { key : "totalSupply" });
     }
 
     return changeContext;

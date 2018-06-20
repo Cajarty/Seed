@@ -114,6 +114,9 @@ module.exports = {
         console.info("Transfer GHI 50 SEED to ABC");
         console.log(vm.invoke({ module : "Seed", function : "transfer", user : "GHI", args : { to : "ABC", value : 50 } }));
 
+        console.info("DEF burns 25 SEED");
+        console.log(vm.invoke({ module : "Seed", function : "burn", user : "DEF", args : {value : 25 } }));
+
         console.info(seedModule.data);
     }
  }
