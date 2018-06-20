@@ -37,7 +37,7 @@ class VirtualMachine {
 
     invoke(info) {
         let result = this.simulate(info);
-        if (conformHelper.doesFullyConform(result, { moduleData : "object", userData : "object" })) {
+        if (result != undefined && conformHelper.doesFullyConform(result, { moduleData : "object", userData : "object" })) {
             this.applyChangeContext(info, result);
         }
         return result;
@@ -54,37 +54,57 @@ class VirtualMachine {
         let moduleFunction = moduleToInvoke.getFunctionByName(info.function);
         let moduleFunctionArgs = conformHelper.getFunctionArgs(moduleFunction.invoke);
         let container = containerExporter.createContainer(moduleToInvoke, info.user, info.args);
+        let result = undefined;
 
         if (moduleFunctionArgs.length == 2) { //State-modifying function
             let changeContext = changeContextExporter.createChangeContext(info.user);
-            return moduleFunction.invoke(container, changeContext); //Container is ledger, changeContext keeps track of changes
+            try {
+                result = moduleFunction.invoke(container, changeContext); //Container is ledger, changeContext keeps track of changes
+            } catch (err) {
+                console.info("VirtualMachine::ERROR:: Failed to run state-modifying function", err);
+            }
         } else if (moduleFunctionArgs.length == 1) { //Read-Only Getter
-            return moduleFunction.invoke(container); //Container is ledger
+            try {
+                result = moduleFunction.invoke(container); //Container is ledger
+            } catch (err) {
+                console.info("VirtualMachine::ERROR:: Failed to run read-nly getter", err);
+            }
         } else {
             throw "VirtualMachine::ERROR::simulate: Invalid number of parameters for a module function";
         }
+        return result;
     }
 
     applyChangeContext(info, changeContext) {
-        //console.info("VM::applyChangeContext[changeContext]",changeContext);
-        let moduleToUpdate = this.getModule(info);
+        let users = Object.keys(changeContext.userData);
         let moduleDataKeys = Object.keys(changeContext.moduleData);
+
+        if (users.length == 0 && moduleDataKeys.length == 0) {
+            console.info("VirtualMachine::ERROR::applyingChangeContext: Cannot apply no-changes");
+            return;
+        }
+
+        let moduleToUpdate = this.getModule(info);
         for(let i = 0; i < moduleDataKeys.length; i++) {
             let key = moduleDataKeys[i];
             moduleToUpdate.data[key] += changeContext.moduleData[key]; //Only works cause number. Should check if number
         }
 
-        let users = Object.keys(changeContext.userData);
         for(let i = 0; i < users.length; i++) {
             let user = users[i];
             let userDataKeys = Object.keys(changeContext.userData[user]);
 
+            if (moduleToUpdate.data.userData[user] == undefined) {
+                this.addUser(info, user);
+            }
+
             for(let j = 0; j < userDataKeys.length; j++) {
-                let key = userDataKeys[i];
+                let key = userDataKeys[j];
                 let value = changeContext.userData[user][key];
                 switch(typeof value) {
                     case "number":
                         // Number changes are relative
+                        console.info("Change", user, key, changeContext.userData[user][key]);
                         moduleToUpdate.data["userData"][user][key] += changeContext.userData[user][key];
                         break;
                     case "string":
@@ -93,7 +113,15 @@ class VirtualMachine {
                         break;
                     case "object":
                         // Objets are absolute and Object.assigned over
-                        moduleToUpdate.data["userData"][user][key] = Object.assign({}, changeContext.userData[user][key] );
+                        let innerKeys = Object.keys(changeContext.userData[user][key]);
+                        for(let k = 0; k < innerKeys.length; k++) {
+                            if (moduleToUpdate.data["userData"][user][key][innerKeys[k]] == undefined || typeof moduleToUpdate.data["userData"][user][key][innerKeys[k]] != "number") {
+                                moduleToUpdate.data["userData"][user][key][innerKeys[k]] = changeContext.userData[user][key][innerKeys[k]];
+                            } else {
+                                moduleToUpdate.data["userData"][user][key][innerKeys[k]] += changeContext.userData[user][key][innerKeys[k]];
+                            }
+                        }
+                        //moduleToUpdate.data["userData"][user][key] = Object.assign({}, changeContext.userData[user][key] );
                         break;
                 }
             }

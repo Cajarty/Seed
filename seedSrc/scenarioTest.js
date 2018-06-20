@@ -51,13 +51,13 @@ module.exports = {
         console.info("User Data In Module (Default)", vm.getModule({module : "Game"}).data["userData"]);
         
         console.log("Invoke \"MoveLeft\" function on user");
-        let changeContext = vm.invoke({module : "Game", function : "moveLeft", user : "ABC"});
+        let changeContext = vm.simulate({module : "Game", function : "moveLeft", user : "ABC"});
         console.info("Changes caused by \"MoveLeft\"", changeContext);
         vm.applyChangeContext({module : "Game"}, changeContext);
         console.info("User data after moving left the first time", vm.getModule({module : "Game"}));
     
         console.log("Invoke \"MoveLeft\" function on user");
-        changeContext = vm.invoke({module : "Game", function : "moveLeft", user : "ABC"});
+        changeContext = vm.simulate({module : "Game", function : "moveLeft", user : "ABC"});
         console.info("Changes caused by \"MoveLeft\"", changeContext);
         vm.applyChangeContext({module : "Game"}, changeContext);
         console.info("User data after moving left the second time", vm.getModule({module : "Game"}));
@@ -74,7 +74,7 @@ module.exports = {
         vm.addModule(seedModule);
 
         console.log("Construct Seed")
-        let changes = vm.invoke({ 
+        vm.invoke({ 
             module : "Seed", 
             function : "constructor", 
             user : "ABC", 
@@ -84,5 +84,36 @@ module.exports = {
         });
 
         console.info("getBalanceOf creator", vm.invoke({ module : "Seed", function : "getBalanceOf", user : "ABC", args : { owner : "ABC" } }));
+        console.info("getSymbol", vm.invoke({ module : "Seed", function : "getSymbol", user : "ABC" }));
+        console.info("getDecimals", vm.invoke({ module : "Seed", function : "getDecimals", user : "ABC" }));
+        console.info("getTotalSupply", vm.invoke({ module : "Seed", function : "getTotalSupply", user : "ABC" }));
+        console.info("getAllowance before allowance set [Expected Fail]", vm.invoke({ module : "Seed", function : "getAllowance", user : "ABC", args : { owner : "ABC", spender : "DEF" } }));
+
+        console.info("TransferFrom before DEF exists or allowance set [Expected Fail]");
+        console.log(vm.invoke({ module : "Seed", function : "transferFrom", user : "DEF", args : { from : "ABC", to : "GEH", value : 100 } }));
+
+        console.log("Add user DEF");
+        vm.addUser({ module : "Seed" }, "DEF");
+
+        console.info("TransferFrom before allowance set [Expected Fail]");
+        console.log(vm.invoke({ module : "Seed", function : "transferFrom", user : "DEF", args : { from : "ABC", to : "GEH", value : 100 } }));
+
+        console.info("Give DEF allowance for ABC");
+        console.log(vm.invoke({ module : "Seed", function : "approve", user : "ABC", args : { spender : "DEF", value : 250 } }));
+
+        console.info("TransferFrom with allowance to added user");
+        console.log(vm.invoke({ module : "Seed", function : "transferFrom", user : "DEF", args : { from : "ABC", to : "DEF", value : 100 } }));
+
+        console.info("TransferFrom with allowance to a user that has not been added yet [Should add user and send to them]");
+        console.log(vm.invoke({ module : "Seed", function : "transferFrom", user : "DEF", args : { from : "ABC", to : "GHI", value : 100 } }));
+
+        console.info("getBalanceOf ABC (should be 800)", vm.invoke({ module : "Seed", function : "getBalanceOf", user : "ABC", args : { owner : "ABC" } }));
+        console.info("getBalanceOf DEF (should be 100)", vm.invoke({ module : "Seed", function : "getBalanceOf", user : "DEF", args : { owner : "DEF" } }));
+        console.info("getBalanceOf GHI (should be 100)", vm.invoke({ module : "Seed", function : "getBalanceOf", user : "GHI", args : { owner : "GHI" } }));
+
+        console.info("Transfer GHI 50 SEED to ABC");
+        console.log(vm.invoke({ module : "Seed", function : "transfer", user : "GHI", args : { to : "ABC", value : 50 } }));
+
+        console.info(seedModule.data);
     }
  }

@@ -1,4 +1,5 @@
 let cryptoHelper = require("./cryptoHelper.js").newCryptoHelper();
+let conformHelper = require("./helpers/conformHelper.js");
 
 module.exports = {
     createModule : function(info) {
@@ -11,9 +12,9 @@ module.exports = {
         this.functions = {}; // True function lookup
         this.functionHashes = {}; // Will overwrite previous name->hash mapping if functions share a name. Convenience lookup, not true lookup
         this.module = info.module;
-        this.data = Object.assign({}, info.data);
+        this.data = conformHelper.deepCopy(info.data);
         this.data["userData"] = {};
-        this.initialUserData = Object.assign({}, info.initialUserData);
+        this.initialUserData = conformHelper.deepCopy(info.initialUserData);
 
         //console.info("Module::Constructor[name,defaultData,defaultUserData]", this.module, this.data, this.initialUserData);
     }
@@ -27,7 +28,7 @@ module.exports = {
     }
 
     addUser(user) {
-        this.data["userData"][user] = Object.assign({}, this.initialUserData);
+        this.data["userData"][user] = conformHelper.deepCopy(this.initialUserData);
         //console.info("Module::AddUser[name,defaultUserData,assignedUserData]", this.module, this.initialUserData, this.data["userData"][user]);
     }
 

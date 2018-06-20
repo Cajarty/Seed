@@ -199,7 +199,7 @@ let transferFrom = function(container, changeContext) {
     // Confirm adequate balance and allowance for the transaction
     if (fromBalance >= value && senderAllowance >= value && value > 0) {
          changeContext.subtract(value, { user : from, key : "balance" });
-         changeContext.subtract(value, { user : "from", outerKey : "allowance", innerKey : sender });
+         changeContext.subtract(value, { user : from, outerKey : "allowance", innerKey : sender });
          changeContext.add(value, { user : to, key : "balance" });
     }
     
@@ -226,7 +226,7 @@ let approve = function(container, changeContext) {
     let value = container.args.value;
     let currentApproval = container.getUserData("Seed", container.sender).allowance[spender];
 
-    let dif = value - currentApproval; 
+    let dif = value - (currentApproval != undefined ? currentApproval : 0); 
 
     if (dif > 0) {
         changeContext.add(dif, { user : container.sender, outerKey : "allowance", innerKey : spender });

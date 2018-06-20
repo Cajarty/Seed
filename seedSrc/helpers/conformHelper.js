@@ -9,7 +9,7 @@ module.exports = {
             return false;
         }
     
-        for(let i = 0; i < schemaKeys; i++) {
+        for(let i = 0; i < schemaKeys.length; i++) {
             // The value of object.key must match the type in schema
             if (typeof object[schemaKeys[i]] != schema[schemaKeys[i]]) {
                 return false;
@@ -29,5 +29,21 @@ module.exports = {
             // Ensure no undefined values are added.
             return arg;
         });
+    },
+    deepCopy : function(obj) {
+        let finalCopy = {};
+        let copyObject = (o) => {
+            let copy = {};
+            let keys = Object.keys(o);
+            for (let i = 0; i < keys.length; i++) {
+                if (typeof o[keys[i]] === 'object')
+                    copy[keys[i]] = copyObject(o[keys[i]]);
+                else
+                    copy[keys[i]] = o[keys[i]];
+            }
+            return copy;
+        }
+        finalCopy = copyObject(obj);
+        return finalCopy;
     }
  }
