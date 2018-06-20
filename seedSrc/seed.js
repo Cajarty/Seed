@@ -13,6 +13,7 @@ const moduleExporter = require("./module.js");
  *      transfer(to, amount)
  *      transferFrom(from, to, amount)
  *      approve(spender, amount)
+ *      burn(amount)
  *      
  * Getters:
  *      getBalanceOf(owner)
