@@ -2,7 +2,9 @@
  * changeContext.js *
  ********************
  * 
- * Exports ChangeContext objects and methods related to it. This is a wrapping around making changes to the ledger
+ * Exports ChangeContext objects and methods related to it. This is a wrapping around making changes to the ledger.
+ * 
+ * This is the "write only" object used by the functions of modules.
  * 
  * Exported Functions:
  *      createChangeContext(user)
