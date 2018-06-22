@@ -1,3 +1,20 @@
+/********************
+ * conformHelper.js *
+ ********************
+ * 
+ * Exports functions focused around data conforming to certain schemas or analyzing objects/functions.
+ * 
+ * Exported Functions:
+ *      doesFunnyConform(object, schema)
+ *          - Confirms that an object has the appropriate variables found in the schema
+ *          - e.g. object { a : 10, b : "Hello", c : {} } and schema { a : "number", b : "string", c : "object" } are true
+ *      getFunctionArgs(func)
+ *          - Returns the arguments for the passed in function as an array
+ *          - e.g. function(a,b,c){} returns the parameters ["a","b","c"]
+ *      deepCopy(obj)
+ *          - Returns a deep copy/clone of the object passed in, done recursively by copying fully by value rather than by reference.
+ *          - e.g. { a : { b : { c : 5 } } } would return a new object that matches it fully, however modifying the new object wont affect the old one
+ */
 
 module.exports = {
     doesFullyConform : function(object, schema) {
