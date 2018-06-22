@@ -4,18 +4,6 @@ Seed is a cooperative proof-of-work blockchain. The protocol will allow for the 
 
 -----
 
-# Literature
-
-## Research Proposals
-
-Two research proposals written by Carson Roscoe & Jaegar Sarauer are in the /design folder. These proposals each contain literature reviews aimed at exploring the inefficiencies of blockchain technology, with the goals of combining the proposed solutions in each proposal. 
-
-# Project Proposal
-
-The research project proposal written by Carson Roscoe can be found in the /design folder. The proposal is simply the original proposal for the Seed project. The end design of the blockchain and project is subject to change.
-
------
-
 # Source Code
 
 ## Seed
@@ -33,8 +21,8 @@ The Client source code is an Electron wallet being created for both the Seed cry
 ## Literature/Background Research
 
 - [x] [Literature Reviews On Blockchain Inefficiencies](https://steemit.com/blockchain/@carsonroscoe/seed-literature-review-the-flaws-of-proof-of-work)
-- [x] [Write Blockchain Research Proposals](design)
-- [x] [Write Seed Project Proposal](design/ProjectProposal.pdf)
+- [x] [Blockchain Research Proposal](design/ResearchProposal_CarsonRoscoe.pdf)
+- [x] [Seed Project Proposal](design/ProjectProposal.pdf)
 
 ## Cryptography
 
