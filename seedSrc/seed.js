@@ -6,9 +6,8 @@ const moduleExporter = require("./module.js");
  * 
  * Description:
  *      The cryptocurrency of the Seed ecosystem.
- * 
  *      The cryptocurrency's design & implementation is based on the Ethereum ERC-20 Standard
- * 
+ *      
  * State Changing Functions:
  *      transfer(to, amount)
  *      transferFrom(from, to, amount)
@@ -26,7 +25,7 @@ const moduleExporter = require("./module.js");
  *      totalSupply : number
  *      symbol : string
  *      decimals : number
- * 
+ *      
  *  User-Data:
  *      balance : number
  *      allowance : { string : number }

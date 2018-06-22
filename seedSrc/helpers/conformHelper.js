@@ -17,6 +17,16 @@
  */
 
 module.exports = {
+    /**
+     * Confirms that an object has the appropriate variables found in the schema
+     * 
+     * e.g. object { a : 10, b : "Hello", c : {} } and schema { a : "number", b : "string", c : "object" } are true
+     * 
+     * @param {object} - JSON object to check the depth-1 values of to confirm it matches the schema
+     * @param {object} - JSON object representing the schema to patch, where the keys match the object to check and the values are the string name of the values
+     * 
+     * @return {bool} - Returns true or false depending on whether the object matches the schema at a shallow level
+     */
     doesFullyConform : function(object, schema) {
         let objectKeys = Object.keys(object);
         let schemaKeys = Object.keys(schema);
@@ -34,6 +44,15 @@ module.exports = {
         }
         return true;
     },
+    /**
+     * Returns the arguments for the passed in function as an array
+     * 
+     * e.g. function(a,b,c){} returns the parameters ["a","b","c"]
+     * 
+     * @param {object} - Function that has parameters we are searching for
+     * 
+     * @return {array} - Array of parameters from the passed in function
+     */
     getFunctionArgs : function(func) {
         // First match everything inside the function argument parens.
         var args = func.toString().match(/function\s.*?\(([^)]*)\)/)[1];
@@ -47,6 +66,15 @@ module.exports = {
             return arg;
         });
     },
+    /**
+     * Returns a deep copy/clone of the object passed in, done recursively by copying fully by value rather than by reference.
+     * 
+     * e.g. { a : { b : { c : 5 } } } would return a new object that matches it fully, however modifying the new object wont affect the old one
+     * 
+     * @param {object} - Object we are copying
+     * 
+     * @return {object} - Deep-copy of the object passed in
+     */
     deepCopy : function(obj) {
         let finalCopy = {};
         let copyObject = (o) => {

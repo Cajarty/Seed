@@ -1,14 +1,35 @@
+/********************
+ * changeContext.js *
+ ********************
+ * 
+ * Exports ChangeContext objects and methods related to it. This is a wrapping around making changes to the ledger
+ * 
+ * Exported Functions:
+ *      createChangeContext(user)
+ *          - Creates a new ChangeContext object on the passed in users behalf
+ */
+
 module.exports = {
+    /**
+     * Creates a new ChangeContext object on the passed in users behalf
+     * 
+     * @param - The user's public address this changeContext is working on behalf of
+     * 
+     * @return - A new change context object
+     */
     createChangeContext: function(user) {
        return new ChangeContext(user);
     }
  }
 
+ /**
+  * Routes to where the data being read/written is stored in the ledger.
+  */
 const routes  = { 
-    MODULE_BASIC : "moduleBasic",
-    MODULE_DEEP : "moduleDeep",
-    USER_BASIC : "userBasic",
-    USER_DEEP : "userDeep"
+    MODULE_BASIC : "moduleBasic",   // e.g. Module.variable
+    MODULE_DEEP : "moduleDeep",     // e.g. Module.mapping.variable
+    USER_BASIC : "userBasic",       // e.g. Module.0xABC.variable
+    USER_DEEP : "userDeep"          // e.g. Module.0xABC.mapping.variable
 }
 
 class ChangeContext {
@@ -25,7 +46,6 @@ class ChangeContext {
     */
 
     /**
-     * 
      * Subtracts data from the changeset using various options. Only works with numeric data.
      * 
      * e.g's:
@@ -61,7 +81,6 @@ class ChangeContext {
     }
 
     /**
-     * 
      * Add data from the changeset using various options. Only works with numeric data.
      * 
      * e.g's:
@@ -97,7 +116,6 @@ class ChangeContext {
     }
 
     /**
-     * 
      * Set data to the changeset using various options. Works with any data type, however is treated as a "set the relative increase" for numbers.
      * 
      * e.g's:
