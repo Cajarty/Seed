@@ -32,9 +32,9 @@ The Client source code is an Electron wallet being created for both the Seed cry
 
 ## Literature/Background Research
 
-- [x] Literature Reviews On Blockchain Inefficiencies
-- [x] Write Blockchain Research Proposals
-- [x] Write Seed Project Proposal
+- [x] [Literature Reviews On Blockchain Inefficiencies](https://steemit.com/blockchain/@carsonroscoe/seed-literature-review-the-flaws-of-proof-of-work)
+- [x] [Write Blockchain Research Proposals](design)
+- [x] [Write Seed Project Proposal](design/ProjectProposal.pdf)
 
 ## Cryptography
 
