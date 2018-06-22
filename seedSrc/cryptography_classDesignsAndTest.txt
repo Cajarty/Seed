@@ -1,0 +1,93 @@
+
+Account:
+    constructor(entropy):
+        //Creates a new user with a new privateKey/publicKey using the added entropy
+    constructor(privateKey):
+        //Creates with ability to sign & validate signatures
+    constructor(publicKey):
+        //Creates with ability to validate signatures
+    sign(data):
+        //Signs a transaction, applying their signature to it
+        //throws if not a privateKey created Account
+    verifySignature(signature, data):
+        //Verifys that they did sign a transaction
+
+AccountExporter:
+    newAccount(wrapperInfoObject):
+        //Creates a new account, stores it in this file in a dictionary, then returns a shell version
+        //back without a private key stored that can request from the original to sign when needed
+        //This is to avoid leaking private keys to the global namespace
+    logIn(existingAccount):
+        //Takes an account that's already built and hooks it into the system
+
+AccountUnitTests:
+    constructor_privateKeyGeneratesValidData():
+    constructor_nullPrivateKeyThrows():
+    constructor_publicKeyGeneratesValidData():
+    constructor_nullPublicKeyThrows():
+    canSign_returnsTrueForPrivateKeyAccounts():
+    canSign_returnsFalseForPublicKeyAccounts():
+    sign_privateKeyAccountCanSign():
+    sign_publicKeyAccountThrows():
+    sign_twoAccountsOneTransactionGenerateDifferentSignatures():
+    sign_oneAccountTwoTransactionsGenerateDifferentSignatures():
+    verify_privateKeyAccountsCanVerify():
+    verify_publicKeyAccountsCanVerify():
+    verify_returnsFalseOnBadSignatures():
+    verify_cantVerifySignaturesAAccountDidntSign():
+
+Transaction:
+    constructor(module, version, work, merkelData):
+        //assigns parameters data
+    signed(signature):
+        //assigns the passed in signature to a transaction
+    setMerkelHash(merkelHash):
+        //assigns the passed in merkel hash data
+    setHash(hash):
+        //assigns the hash to a transaction
+        //throws if a piece of data is empty (signature, merkelHash, etc)
+
+TransactionUnitTests:
+    constructor_assignsData():
+    constructor_throwsOnAnyEmptyData():
+    signed_setsData:
+    signed_throwsOnEmptySignature:
+    setMerkelHash_setsData:
+    setMerkelHash_throwsOnEmptyData:
+    setHash_setsData:
+    setHash_throwsOnMissingAnyData
+
+CryptoHelper:
+    SHA256(data):
+        //returns a SHA256 hash of the data. Throws if data is empty
+    GeneratePrivateKey(optionalEntropy):
+        //returns a generated privateKey for an sepk256 elliptic curve. Optional extra entropy
+    GenerateKeyPair(optionalEntropy):
+        //returns a generated privateKey and publicKey for an sepk256 elliptic curve. Optional entropy
+    GetPublicKey(privateKey):
+        //returns the public key attributed with a given private key. Throws if null or empty key
+    PublicKeyToPublicAddress(publicKey, network):
+        //returns the base58check encoded public address for a given key network (e.g. "01" test, "00" main)
+    Sign(privateKey, data):
+        //returns a signature for the given data by a given private key. Throws on empty or null privateKey or data
+    VerifySignature(publicKey, signature, data):
+        //returns a bool for whether the signature is valid. Throws for empty publicKey, signature or data
+
+CryptoHelperUnitTests:
+    SHA256_hashesValidData:
+    SHA256_hashesSmallData:
+    SHA256_hashesLargeData:
+    SHA256_throwsOnEmptyData:
+    GeneratePrivateKey_generatesProperPrivateKey:
+    GeneratePrivateKey_entropyCanBeAdded:
+    GenerateKeyPair_generatesProperKeyPair:
+    GenerateKeyPair_entropyCanBeAdded:
+    GetPublicKey_getsProperPublicKey:
+    GetPublicKey_throwsOnNullPrivate:
+    PublicKeyToPublicAddress_getsProperAddress:
+    PublicKeyToPublicAddress_throwsOnEmptyData:
+    Sign_createsProperSignature:
+    Sign_throwsOnEmptyData:
+    VerifySignature_verifiesValidSignatures:
+    VerifySignature_failsOnInvalidSignature:
+    VerifySignature_cantVerifyOtherAccountsSignature:
