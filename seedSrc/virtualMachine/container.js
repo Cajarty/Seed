@@ -120,7 +120,7 @@ class Container {
      */
     getRandomFloat() {
         this.ensureRandomLoaded();
-        this.random.nextFloat();
+        return this.random.nextFloat();
     }
 
     /*  

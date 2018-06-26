@@ -41,7 +41,7 @@ module.exports = {
             } 
         });
 
-        console.info("getBalanceOf creator", vm.invoke({ module : "Seed", function : "getBalanceOf", user : "ABC", args : { owner : "ABC" }, txHashes: ["1"] }));
+        console.info("getBalanceOf creator", vm.invoke({ module : "Seed", function : "getBalanceOf", user : "ABC", args : { owner : "ABC" } }));
         console.info("getSymbol", vm.invoke({ module : "Seed", function : "getSymbol", user : "ABC" }));
         console.info("getDecimals", vm.invoke({ module : "Seed", function : "getDecimals", user : "ABC" }));
         console.info("getTotalSupply", vm.invoke({ module : "Seed", function : "getTotalSupply", user : "ABC" }));
