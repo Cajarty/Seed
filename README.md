@@ -37,7 +37,7 @@ The Client source code is an Electron wallet being created for both the Seed cry
 
 ## Blockchain & Entanglement
 
-- [x] Reseach Relevant Problems
+- [x] Research Relevant Problems
     - [x] Blockchain vs DAG's [(Part 1)](https://steemit.com/bitcoin/@carsonroscoe/seed-dev-discussion-tangle-vs-blockchain-part-1)/[(Part 2)](https://steemit.com/bitcoin/@carsonroscoe/seed-dev-discussion-tangle-vs-blockchain-part-2)
     - [x] Transaction Squashing [(Part 1)](https://steemit.com/blockchain/@carsonroscoe/seed-dev-discussion-transaction-squashing-proposition-part-1)/[(Part 2)](https://steemit.com/blockchain/@carsonroscoe/seed-dev-discussion-transaction-squashing-considerations-for-jitter-part-2)
 - [ ] Design Blockchain & Entanglement Portion
@@ -56,10 +56,11 @@ The Client source code is an Electron wallet being created for both the Seed cry
     - [x] [Provable Execution In JavaScript](https://steemit.com/blockchain/@carsonroscoe/seed-dev-discussion-provable-execution-with-function-hashing-in-javascript)
     - [x] [JavaScript Pseudo-VirtualMachine vs Custom Language or True Virtual Machine](https://steemit.com/cryptocurrency/@carsonroscoe/seed-dev-discussion-custom-languages-and-virtual-machines)
 - [x] [Design Modules & Virtual Machine](https://steemit.com/blockchain/@carsonroscoe/seed-development-design-module-smart-contracts-and-the-svm)
-- [x] Implement Basic Module Design
-- [x] Implement Virtual Machine
-- [x] Implement Unit Tests For Example Modules & Virtual Machine
+- [x] [Implement Basic Module Design](https://steemit.com/utopian-io/@carsonroscoe/seed-development-modules-smart-contracts-and-the-svm)
+- [x] [Implement Virtual Machine](https://steemit.com/utopian-io/@carsonroscoe/seed-development-modules-smart-contracts-and-the-svm)
+- [x] [Implement Unit Tests For Example Modules & Virtual Machine](https://steemit.com/utopian-io/@carsonroscoe/seed-development-modules-smart-contracts-and-the-svm)
 - [ ] Connect Virtual Machine To Blockchain Ledger
+- [ ] Subscription System For External DApp Integration
 
 ## Client
 
@@ -71,4 +72,22 @@ The Client source code is an Electron wallet being created for both the Seed cry
 
 -----
 
-Seed is open source project and is open to public contributions. If you would like to contribute, simply create a pull request with your changes. For questions or more information, please create an issue in the Seed repository or contact [Carson Roscoe](https://github.com/CarsonRoscoe)
+# How To Contribute
+
+Seed is open source project and is open to public contributions. 
+
+## Background Information
+
+If you would like to know the full background information of the project, the [research proposal](/design/ResearchProposal_CarsonRoscoe.pdf) & [project proposal](/design/ProjectProposal.pdf) can be found in the [/design](/design) folder.
+
+As that is a lot of reading, discussion/design/development updates can also be selectively read at [Carson Roscoe's blog](https://steemit.com/@carsonroscoe). Just search for blog title which begin with "Seed".
+
+## Tasks
+
+The roadmap above is the current "To-Do" list. If you feel comfortable tackling any task, feel free to clone/fork the repository and begin contributing. Simply create a pull request with your changes, and it will be reviewed by one of the repository owners before being accepted.
+
+If you have another way you'd like to contribute that is not completing one of the above tasks, update this README.md file and pull-request it in so we know what features you'd like to add.
+
+## Contact Repository Owners
+
+For questions or more information, please create an issue in the Seed repository or contact [Carson Roscoe](https://github.com/CarsonRoscoe) directly.
