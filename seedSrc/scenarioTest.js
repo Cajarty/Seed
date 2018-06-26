@@ -25,7 +25,7 @@ module.exports = {
     seedModuleTest : function() {
         console.log("SeedModuleTest::Start")
 
-        let vm = virtualMachineExporter.createVirtualMachine();
+        let vm = virtualMachineExporter.getVirtualMachine();
         let seedModule = seedExporter.getSeed();
 
         console.log("Add Seed Module To VM")
@@ -75,7 +75,6 @@ module.exports = {
         console.info("DEF burns 25 SEED");
         console.log(vm.invoke({ module : "Seed", function : "burn", user : "DEF", args : {value : 25 } }));
 
-        console.info(seedModule.data);
     },
     /**
      * Runs the Cryptography and account test scenario
@@ -98,7 +97,7 @@ module.exports = {
      */
     vmModuleTest : function() {
         console.log("Module Test::Create Game");
-        let vm = virtualMachineExporter.createVirtualMachine();
+        let vm = virtualMachineExporter.getVirtualMachine();
         let game = moduleExporter.createModule({
             module : "Game", 
             data : { walls : [[1, 1, 1], [0, 0, 0], [0, 0, 0]] },

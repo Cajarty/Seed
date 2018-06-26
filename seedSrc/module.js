@@ -13,6 +13,7 @@
 
 let cryptoHelper = require("./cryptoHelper.js").newCryptoHelper();
 let conformHelper = require("./helpers/conformHelper.js");
+const ledgerExporter = require("./ledger.js");
 
 module.exports = {
     /**
@@ -35,8 +36,7 @@ module.exports = {
         this.functions = {}; // True function lookup
         this.functionHashes = {}; // Will overwrite previous name->hash mapping if functions share a name. Convenience lookup, not true lookup
         this.module = info.module;
-        this.data = conformHelper.deepCopy(info.data);
-        this.data["userData"] = {};
+        this.initialData = conformHelper.deepCopy(info.data);
         this.initialUserData = conformHelper.deepCopy(info.initialUserData);
     }
 
@@ -76,7 +76,7 @@ module.exports = {
      */
     addUser(user) {
         if (!this.doesUserExist(user)) {
-            this.data["userData"][user] = conformHelper.deepCopy(this.initialUserData);
+            ledgerExporter.getLedger().addUserData(this.module, user);
         }
     }
 
@@ -88,7 +88,7 @@ module.exports = {
      * @return - Returns true of false for whether the user already exists in this modules data
      */
     doesUserExist(user) {
-        return this.data["userData"][user] != undefined;
+        return ledgerExporter.getLedger().getModuleData(this.module).userData[user] != undefined;
     }
 
     /**

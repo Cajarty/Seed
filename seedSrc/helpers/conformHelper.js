@@ -90,5 +90,22 @@ module.exports = {
         }
         finalCopy = copyObject(obj);
         return finalCopy;
+    },
+    /**
+     * Gives options (or other shallow object) with default values where otherwise undefined
+     * 
+     * e.g. object { a : 10, b : "z" }, defaultValues { a : 5, b : "b", c : -1 }
+     *      - object becomes { a : 10, b : "z", c : -1 }
+     * 
+     * @param {*} object - Object to modify and give default values to
+     * @param {*} defaultValues - Object to grab the default values from
+     */
+    defaults(options, defaultValues) {
+        let keys = defaultValues.keys;
+        for(let i = 0; i < keys.length; i++) {
+            if (object[keys[i]] == undefined) {
+                object[keys[i]] = defaultValues[keys[i]];
+            }
+        }
     }
  }

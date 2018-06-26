@@ -11,7 +11,7 @@
  * Users can use the virtual machine to simulate functions being run, and selectively apply the changes to simualtions they choose.
  * 
  * Exported Functions:
- *      createVirtualMachine()
+ *      getVirtualMachine()
  *          - Creates a new VirtualMachine object
  */
 
@@ -19,13 +19,19 @@ const changeContextExporter = require("./virtualMachine/changeContext.js");
 const containerExporter = require("./virtualMachine/container.js");
 const conformHelper = require("./helpers/conformHelper.js");
 let cryptoHelper = require("./cryptoHelper.js").newCryptoHelper();
+const ledgerExporter = require("./ledger.js");
+
+let virtualMachine = null;
 
 module.exports = {
     /**
      * Creates a new VirtualMachine object
      */
-    createVirtualMachine: function() {
-       return new VirtualMachine();
+    getVirtualMachine: function() {
+        if (virtualMachine == null) {
+            virtualMachine = new VirtualMachine();
+        }
+        return virtualMachine;
     }
  }
 
@@ -36,31 +42,30 @@ class VirtualMachine {
 
     /**
      * Adds an externally created module to the virtual machine. 
-     * The name of the module is hashed, used as the key lookup of the module.
+     * The name of the module is used as the module lookup.
+     * Creates the module data in the ledger
      * 
      * @param {Module} newModule - An externally created Module object
      * @param {string} creator - The public address of the creator of the module
      */
     addModule(newModule, creator) {
-        let hash = cryptoHelper.sha256(newModule.module);
-        this.modules[hash] = newModule;
+        this.modules[newModule.module] = newModule;
+        ledgerExporter.getLedger().addModuleData(newModule.module, newModule.initialData, newModule.initialUserData);
     }
 
     /**
-     * Adds a Seed user to be a part of the module's userbase
+     * Adds a Seed user to be a part of the module's userbase in the ledger
      * 
      * @param {object} moduleInfo - An options object that contains the module name as a variable
      * @param {string} user - The public address of the user to add to the module
      */
     addUser(moduleInfo, user) {
-        let moduleHash = cryptoHelper.sha256(moduleInfo.module);
-        let moduleToAddTo = this.modules[moduleHash];
-        moduleToAddTo.addUser(user);
+        ledgerExporter.getLedger().addUserData(moduleInfo.module, user);
     }
 
     /**
      * Gets A module stored in the virtual machine by module name.
-     * Turns the name into a hash to find it in the key-value storage
+     * Uses module name as look-up in the key-value storage
      * 
      * @param {object} info - An options object that contains the module name as a variable
      *      {string} info.module - The module name
@@ -68,8 +73,7 @@ class VirtualMachine {
      * @return - The module found in the mapping
      */
     getModule(info) {
-        let hash = cryptoHelper.sha256(info.module);
-        return this.modules[hash];
+        return this.modules[info.module];
     }
 
     /**
@@ -82,8 +86,7 @@ class VirtualMachine {
      * @return - The function found in the given module
      */
     getFunction(info) {
-        let moduleToGet = this.getModule(info);
-        return moduleToGet.getFunction(info);
+        return this.getModule(info).getFunction(info);
     }
 
     /**
@@ -101,15 +104,17 @@ class VirtualMachine {
      */
     simulate(info) {
         let moduleToInvoke = this.getModule(info);
-        if (info.function == "constructor" && Object.keys(moduleToInvoke.data.userData).length != 0) {
+        let moduleDataToInvoke = ledgerExporter.getLedger().getModuleData(info.module);
+        if (info.function == "constructor" && Object.keys(moduleDataToInvoke.userData).length != 0) {
             throw "VirtualMachine::ERROR::simulate: Constructor can only be called if the module has not yet been used";
         }
+        //If the user simulating this does not exist, add them to our ledger
         if (!moduleToInvoke.doesUserExist(info.user)) {
             this.addUser(info, info.user);
         }
         let moduleFunction = moduleToInvoke.getFunctionByName(info.function);
         let moduleFunctionArgs = conformHelper.getFunctionArgs(moduleFunction.invoke);
-        let container = containerExporter.createContainer(moduleToInvoke, info.user, info.args);
+        let container = containerExporter.createContainer(moduleToInvoke.module, info.user, info.args);
         let result = undefined;
 
         if (moduleFunctionArgs.length == 2) { //State-modifying function
@@ -139,56 +144,7 @@ class VirtualMachine {
      * @param {ChangeContext} changeContext - A ChangeContext of changes to apply to the state of the virtual machine
      */
     applyChangeContext(info, changeContext) {
-        let users = Object.keys(changeContext.userData);
-        let moduleDataKeys = Object.keys(changeContext.moduleData);
-
-        if (users.length == 0 && moduleDataKeys.length == 0) {
-            console.info("VirtualMachine::ERROR::applyingChangeContext: Cannot apply no-changes");
-            return;
-        }
-
-        let moduleToUpdate = this.getModule(info);
-        for(let i = 0; i < moduleDataKeys.length; i++) {
-            let key = moduleDataKeys[i];
-            moduleToUpdate.data[key] += changeContext.moduleData[key]; //Only works cause number. Should check if number
-        }
-
-        for(let i = 0; i < users.length; i++) {
-            let user = users[i];
-            let userDataKeys = Object.keys(changeContext.userData[user]);
-
-            if (moduleToUpdate.data.userData[user] == undefined) {
-                this.addUser(info, user);
-            }
-
-            for(let j = 0; j < userDataKeys.length; j++) {
-                let key = userDataKeys[j];
-                let value = changeContext.userData[user][key];
-                switch(typeof value) {
-                    case "number":
-                        // Number changes are relative
-                        console.info("Change", user, key, changeContext.userData[user][key]);
-                        moduleToUpdate.data["userData"][user][key] += changeContext.userData[user][key];
-                        break;
-                    case "string":
-                        // Strings are absolute
-                        moduleToUpdate.data["userData"][user][key] = changeContext.userData[user][key]; 
-                        break;
-                    case "object":
-                        // Objets are absolute and Object.assigned over
-                        let innerKeys = Object.keys(changeContext.userData[user][key]);
-                        for(let k = 0; k < innerKeys.length; k++) {
-                            if (moduleToUpdate.data["userData"][user][key][innerKeys[k]] == undefined || typeof moduleToUpdate.data["userData"][user][key][innerKeys[k]] != "number") {
-                                moduleToUpdate.data["userData"][user][key][innerKeys[k]] = changeContext.userData[user][key][innerKeys[k]];
-                            } else {
-                                moduleToUpdate.data["userData"][user][key][innerKeys[k]] += changeContext.userData[user][key][innerKeys[k]];
-                            }
-                        }
-                        //moduleToUpdate.data["userData"][user][key] = Object.assign({}, changeContext.userData[user][key] );
-                        break;
-                }
-            }
-        }
+        ledgerExporter.getLedger().applyChanges(info.module, changeContext);
     }
 
     /**
