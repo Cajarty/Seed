@@ -17,6 +17,8 @@ const cryptographyHelper = cryptoHelperExporter.newCryptoHelper();
 const virtualMachineExporter = require("./virtualMachine.js");
 const moduleExporter = require("./module.js");
 const seedExporter = require("./seed.js");
+const tester = require("./tester.js");
+
 
 module.exports = {
     /**
