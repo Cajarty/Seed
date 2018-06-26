@@ -14,6 +14,7 @@
  */
 
  const ledgerExporter = require("../ledger.js");
+ const randomExporter = require("../helpers/random.js");
 
 module.exports = {
     /**
@@ -31,24 +32,19 @@ module.exports = {
  }
 
 class Container {
-    constructor(moduleName, sender, args) {
+    constructor(moduleName, sender, args, txHashes) {
         this.moduleName = moduleName;
         this.args = args;
         this.sender = sender;
         this.cachedDatas = {};
+        this.txHashes = txHashes;
     }
 
-    /**
-     * Loads and caches data from the ledger, making sure to get copies of the data so real ledger data
-     * cannot be modified.
-     * 
-     * @param {*} moduleName - Name of module's data to copy & cache
-     */
-    loadData(moduleName) {
-        if (this.cachedDatas[moduleName] == undefined) {
-            this.cachedDatas[moduleName] = ledgerExporter.getLedger().getCopyOfModuleData(moduleName);
-        }
-    }
+    /*  
+        #############################
+        ### Public User Functions ###
+        ############################# 
+    */
 
     /**
      * Gets the data for a given module. 
@@ -65,7 +61,7 @@ class Container {
         if (moduleName == undefined) {
             moduleName = this.moduleName;
         }
-        this.loadData(moduleName);
+        this.ensureDataLoaded(moduleName);
         return this.cachedDatas[moduleName];
     }
 
@@ -88,7 +84,7 @@ class Container {
         if (user == undefined) {
             user = this.sender;
         }
-        this.loadData(moduleName);
+        this.ensureDataLoaded(moduleName);
         return this.cachedDatas[moduleName].userData[user];
     }
 
@@ -101,5 +97,58 @@ class Container {
      */
     getSenderData() {
         return this.getUserData(this.sender, this.moduleName);
+    }
+
+    /**
+     * Returns a pseudo-random value between 1 and 2^32 - 2.
+     * 
+     * WARNING: Can be controlled by the user to an extent
+     * 
+     * @return - A pseudo-random integer value
+     */
+    getRandomInt(min, max) {
+        this.ensureRandomLoaded();
+        return this.random.nextInt();
+    }
+
+    /**
+     * Returns a pseudo-random floating point number in range [0, 1).
+     * 
+     * WARNING: Can be controlled by the user to an extent
+     * 
+     * @return - A pseudo-random integer value
+     */
+    getRandomFloat() {
+        this.ensureRandomLoaded();
+        this.random.nextFloat();
+    }
+
+    /*  
+        ###############################
+        ### Private Local Functions ###
+        ###############################
+    */
+
+    /**
+     * Loads and caches a Random object, which passes a seed given by the virtual machine.
+     * 
+     * WARNING: Random is deterministic and may be controllable by the user to an extent. 
+     */
+    ensureRandomLoaded() {
+        if (this.random == undefined) {
+            this.random = randomExporter.createRandom(randomExporter.generateSeedFromHashes(this.txHashes));
+        }
+    }
+
+    /**
+     * Loads and caches data from the ledger, making sure to get copies of the data so real ledger data
+     * cannot be modified.
+     * 
+     * @param {*} moduleName - Name of module's data to copy & cache
+     */
+    ensureDataLoaded(moduleName) {
+        if (this.cachedDatas[moduleName] == undefined) {
+            this.cachedDatas[moduleName] = ledgerExporter.getLedger().getCopyOfModuleData(moduleName);
+        }
     }
 }

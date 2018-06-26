@@ -99,6 +99,7 @@ class VirtualMachine {
      *      {string} info.function - The functions name
      *      {object} info.args - The arguments to pass into the function
      *      {string} info.user - The address of the user who is the sender of the function
+     *      {array} info.txHashes - The hashes of the transaction hashes validated
      * 
      * @return - ChangeContext if state-modifying function. Fetched data if getter function.
      */
@@ -114,7 +115,7 @@ class VirtualMachine {
         }
         let moduleFunction = moduleToInvoke.getFunctionByName(info.function);
         let moduleFunctionArgs = conformHelper.getFunctionArgs(moduleFunction.invoke);
-        let container = containerExporter.createContainer(moduleToInvoke.module, info.user, info.args);
+        let container = containerExporter.createContainer(moduleToInvoke.module, info.user, info.args, info.txHashes);
         let result = undefined;
 
         if (moduleFunctionArgs.length == 2) { //State-modifying function
@@ -155,6 +156,7 @@ class VirtualMachine {
      *      {string} info.function - The functions name
      *      {object} info.args - The arguments to pass into the function
      *      {string} info.user - The address of the user who is the sender of the function
+     *      {array} info.txHashes - The hashes of the transaction hashes validated
      * 
      * @return - ChangeContext if state-modifying function. Fetched data if getter function.
      */
