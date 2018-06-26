@@ -19,7 +19,7 @@ CryptoHelper:
 ##############################################################*/
 
 const crypto = require("crypto")
-const transactionHelper = require("./transaction.js");
+const transactionHelper = require("../transaction.js");
 const base58Encoder = require('bs58');
 const stringToUInt8ArrayEncoder = new TextEncoder("utf-8");
 
@@ -53,6 +53,25 @@ module.exports = {
 
 //Eliptic PublicKey Encryption, SHA256 Hashing and Base58 Encoding wrapper
 class CryptoHelper {
+    /**
+     * Fast string-to-hashcode JavaScript implementation based off of the Java implementation
+     * 
+     * Repurposed from: https://stackoverflow.com/a/7616484/4907948
+     */
+    fastStringHashCode(stringToHash) {
+        let hash = 0;
+        let chr = 0;
+        if (stringToHash.length === 0) {
+            return hash
+        };
+        for(let i = 0; i < stringToHash.length; i++) {
+            chr = stringToHash.charCodeAt(i);
+            hash = ((hash << 5) - hash) + chr;
+            hash |= 0; // Convert to 32bit integer
+        }
+        return hash;
+    }
+
     //SHA256 hash 
     sha256(toHash) {
         if (toHash == null) {

@@ -23,7 +23,7 @@ Account:
         //Verifys that they did sign a transaction
 ##############################################################*/
 
-const cryptographyExporter = require("./cryptoHelper.js");
+const cryptographyExporter = require("./helpers/cryptoHelper.js");
 
 //Dictionary of { publicKey : Account }'s for logged in accounts
 let loggedInAccounts = {};
