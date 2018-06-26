@@ -38,6 +38,9 @@ module.exports = {
         this.module = info.module;
         this.initialData = conformHelper.deepCopy(info.data);
         this.initialUserData = conformHelper.deepCopy(info.initialUserData);
+        if (info.functions != undefined && typeof info.functions == "object") {
+            this.addFunctions(info.functions);
+        }
     }
 
     /**

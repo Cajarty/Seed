@@ -39,20 +39,19 @@ module.exports = {
             seedModule = moduleExporter.createModule({
                 module : "Seed", 
                 data : initialSeedState,
-                initialUserData : initialUserState
-            });
-
-            seedModule.addFunctions({
-                constructor : constructor,
-                transfer : transfer,
-                transferFrom : transferFrom,
-                approve : approve,
-                burn : burn,
-                getBalanceOf : getBalanceOf,
-                getAllowance : getAllowance,
-                getTotalSupply : getTotalSupply,
-                getSymbol : getSymbol,
-                getDecimals : getDecimals
+                initialUserData : initialUserState,
+                functions : {
+                    constructor : constructor,
+                    transfer : transfer,
+                    transferFrom : transferFrom,
+                    approve : approve,
+                    burn : burn,
+                    getBalanceOf : getBalanceOf,
+                    getAllowance : getAllowance,
+                    getTotalSupply : getTotalSupply,
+                    getSymbol : getSymbol,
+                    getDecimals : getDecimals
+                }
             });
         }
         return seedModule;
