@@ -39,6 +39,7 @@ class ChangeContext {
         this.moduleData = {};
         this.userData = {};
         this.user = user;
+        this.dependencies = [];
     }
 
     /* 
@@ -125,7 +126,7 @@ class ChangeContext {
      *          Seed.0xABC.balance += 10
      *      set(10, { user : "0xABC", outerKey : "allowance", innerKey : "0xDEF" })
      *          Seed.0xABC.allowance.0xDEF += 10
-     *      set(10, { key : "symbol" })
+     *      set("SEED", { key : "symbol" })
      *          Seed.symbol = "SEED"
      *      set(10, { outerKey : "population", innerKey : "falador" })
      *          Game.citySlogans.falador = "Home of the brave"
@@ -343,6 +344,16 @@ class ChangeContext {
         ### To Ensure Proper Data Structure & Routing ###
         #################################################
     */
+
+    /**
+     * A hash of a function that these changes are dependant on. Used so when hashing these changesets,
+     * even equal changes will give a different hash if they depend on different code execution externally.
+     * 
+     * @param {*} externalFunctionHash - The hash of a function to depend on
+     */
+    addDependency(externalFunctionHash) {
+        this.dependencies.push(externalFunctionHash);
+    }
 
     /**
      * Used internally for routing between "module vs user" data and "basic vs deep" data

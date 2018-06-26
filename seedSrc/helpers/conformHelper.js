@@ -67,6 +67,17 @@ module.exports = {
         });
     },
     /**
+     * Wrapper around getFunctionArgs which returns true if 1 parameter (what getters need),
+     * false is 2 parameters.
+     * 
+     * @param {object} - Function that has parameters we are searching for
+     * 
+     * @return {bool} - True for 1 argument, false for more/none
+     */
+    isGetter : function(func) {
+        return (this.getFunctionArgs(func).length == 1);
+    },
+    /**
      * Returns a deep copy/clone of the object passed in, done recursively by copying fully by value rather than by reference.
      * 
      * e.g. { a : { b : { c : 5 } } } would return a new object that matches it fully, however modifying the new object wont affect the old one

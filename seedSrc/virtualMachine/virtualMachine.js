@@ -15,11 +15,7 @@
  *          - Creates a new VirtualMachine object
  */
 
-const changeContextExporter = require("./virtualMachine/changeContext.js");
-const containerExporter = require("./virtualMachine/container.js");
-const conformHelper = require("./helpers/conformHelper.js");
-let cryptoHelper = require("./helpers/cryptoHelper.js").newCryptoHelper();
-const ledgerExporter = require("./ledger.js");
+
 
 let virtualMachine = null;
 
@@ -33,7 +29,13 @@ module.exports = {
         }
         return virtualMachine;
     }
- }
+}
+
+const changeContextExporter = require("./changeContext.js");
+const containerExporter = require("./container.js");
+const conformHelper = require("../helpers/conformHelper.js");
+let cryptoHelper = require("../helpers/cryptoHelper.js").newCryptoHelper();
+const ledgerExporter = require("../ledger.js");
 
 class VirtualMachine {
     
@@ -90,7 +92,7 @@ class VirtualMachine {
      * @return - The function found in the given module
      */
     getFunction(info) {
-        return this.getModule(info).getFunction(info);
+        return this.getModule(info).getFunctionByName(info.function);
     }
 
     /**

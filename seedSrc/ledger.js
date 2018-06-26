@@ -1,6 +1,6 @@
 
 const conformHelper = require("./helpers/conformHelper.js");
-const virtualMachineExporter = require("./virtualMachine.js");
+const virtualMachineExporter = require("./virtualMachine/virtualMachine.js");
 let ledger = null;
 
 module.exports = {

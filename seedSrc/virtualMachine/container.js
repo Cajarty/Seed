@@ -13,8 +13,6 @@
  *          - Creates a new Container on the senders behalf, taking in the module we are talking to and the arguments passed into the function
  */
 
- const ledgerExporter = require("../ledger.js");
- const randomExporter = require("../helpers/random.js");
 
 module.exports = {
     /**
@@ -30,6 +28,11 @@ module.exports = {
        return new Container(moduleName, sender, args);
     }
  }
+
+ const ledgerExporter = require("../ledger.js");
+ const randomExporter = require("../helpers/random.js");
+ const vmExporter = require("./virtualMachine.js");
+ const conformHelper = require("../helpers/conformHelper.js");
 
 class Container {
     constructor(moduleName, sender, args, txHashes) {
@@ -106,7 +109,7 @@ class Container {
      * 
      * @return - A pseudo-random integer value
      */
-    getRandomInt(min, max) {
+    getRandomInt() {
         this.ensureRandomLoaded();
         return this.random.nextInt();
     }
@@ -121,6 +124,71 @@ class Container {
     getRandomFloat() {
         this.ensureRandomLoaded();
         return this.random.nextFloat();
+    }
+
+    /**
+     * Calls a function outside the scope of the current function being executed, but within the scope
+     * of this module.
+     * 
+     * We need to validate the function hash of what we call, so external function hashes become part
+     * of our changesets dependencies
+     * 
+     * @param {object} info - An info object describing what to execute
+     *                 function - The name of the function to execute
+     *                 args - The arguments to be called in the function
+     * @param {ChangeContext} changeContext - The change set that can be modified by the invoking function
+     * 
+     * @return - The updated change context
+     */
+    invoke(info, changeContext) {
+        if (info.args == undefined) {
+            info.args = {};
+        }
+
+        let invokingModule = vmExporter.getVirtualMachine().getModule({ module : this.moduleName });
+        let functionToInvoke = invokingModule.getFunctionByName(info.function);
+        changeContext.addDependency( invokingModule.functionHashes[info.function] );
+        let invokeArgCount = conformHelper.getFunctionArgs(functionToInvoke.invoke).length;
+        if (invokeArgCount == 2) {
+            return functionToInvoke.invoke(new Container(this.moduleName, this.sender, info.args), changeContext);
+        } else if (invokeArgCount == 1) {
+            return functionToInvoke.invoke(new Container(this.moduleName, this.sender, info.args));
+        } else {
+            return changeContext;
+        }
+    }
+
+    /**
+     * Calls a getter function outside the scope of the current function being executed, could even
+     * be in a different module.
+     * 
+     * We need to validate the function hash of what we call, so external function hashes become part
+     * of our changesets dependencies
+     * 
+     * @param {object} info - An info object describing what to execute
+     *                 function - The name of the function to execute
+     *                 args - The arguments to be called in the function
+     *                 module - The name of the module getter is a part of
+     * @param {ChangeContext} changeContext - The change set that can be modified by the invoking function
+     * 
+     * @return - The updated change context
+     */
+    getter(info, changeContext) {
+        if (info.args == undefined) {
+            info.args = {};
+        }
+        if (info.module == undefined) {
+            info.module = this.moduleName;
+        }
+
+        let invokingModule = vmExporter.getVirtualMachine().getModule({ module : info.module });
+        let functionToInvoke = invokingModule.getFunctionByName(info.function);
+        changeContext.addDependency( invokingModule.functionHashes[info.function] );
+        if (conformHelper.isGetter(functionToInvoke.invoke)) {
+            return functionToInvoke.invoke(new Container(info.module, this.sender, info.args));
+        } else {
+            return undefined;
+        }
     }
 
     /*  

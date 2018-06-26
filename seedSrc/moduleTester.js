@@ -1,4 +1,4 @@
-const vmExporter = require("./virtualMachine.js");
+const vmExporter = require("./virtualMachine/virtualMachine.js");
 
 let vm = null;
 

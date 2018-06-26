@@ -14,7 +14,7 @@
 const cryptoHelperExporter = require("./helpers/cryptoHelper.js");
 const accountExporter = require("./account.js");
 const cryptographyHelper = cryptoHelperExporter.newCryptoHelper();
-const virtualMachineExporter = require("./virtualMachine.js");
+const virtualMachineExporter = require("./virtualMachine/virtualMachine.js");
 const moduleExporter = require("./module.js");
 const seedExporter = require("./modules/seed.js");
 const moduleTester = require("./moduleTester.js");
@@ -89,7 +89,7 @@ module.exports = {
      */
     vmModuleTest : function() {
         let vm = virtualMachineExporter.getVirtualMachine();
-        let game = moduleExporter.createModule({
+        vm.addModule(moduleExporter.createModule({
             module : "Game", 
             initialData : { walls : [[1, 1, 1], [0, 0, 0], [0, 0, 0]] },
             initialUserData : { x : 2, y : 1 },
@@ -105,11 +105,46 @@ module.exports = {
                 },
                 getX : function(container) {
                     return container.getSenderData().x;
+                },
+                getY : function(container) {
+                    return container.getSenderData().y;
+                },
+                moveRightDependantLocal : function(container, changeContext) {
+                    let userX = container.getter({function : "getX"}, changeContext);
+                    if (container.getModuleData()["walls"][userX + 1][container.getSenderData().y] == 0) {
+                        changeContext.add(1, { user : container.sender, key : "x" });
+                    }
+                    return changeContext;
+                },
+                moveRightDependantGlobal : function(container, changeContext) {
+                    let userX = container.getter({function : "getX"}, changeContext);
+                    let isGlobalStateTrue = container.getter({ module : "Reliant", function : "doesMatchState", args : { state : "ThisIsTheState" } }, changeContext);
+                    if (isGlobalStateTrue && container.getModuleData()["walls"][userX + 1][container.getSenderData().y] == 0) {
+                        changeContext.add(1, { user : container.sender, key : "x" });
+                    }
+                    return changeContext;
+                },
+                moveUpThenLeft : function(container, changeContext) {
+                    let userData = container.getSenderData();
+                    if (container.getModuleData()["walls"][userData.x][userData.y + 1] == 0) {
+                        changeContext.add(1, { user : container.sender, key : "y" });
+                    }
+                    container.invoke({ function : "moveLeft" }, changeContext);
+                    return changeContext;
                 }
             }
-        });
+        }));
 
-        vm.addModule(game);
+        vm.addModule(moduleExporter.createModule({
+            module : "Reliant",
+            initialData : { state : "ThisIsTheState" },
+            initialUserData : {},
+            functions : {
+                doesMatchState : function(container) {
+                    return container.getModuleData().state == container.args.state;
+                }
+            }
+        }));
 
         let tester = moduleTester.beginTest("Game", "ABC");
         
@@ -118,6 +153,15 @@ module.exports = {
         tester.assertEqual("getX", {}, 1, "ABC should have x of 1 after moving left");
         tester.invoke("moveLeft");
         tester.assertEqual("getX", {}, 1, "ABC should have x of 1 after moving left again cause they hit wall at 1");
+        tester.invoke("moveRightDependantLocal");
+        tester.assertEqual("getX", {}, 2, "ABC should have x of 2 after moving right");
+        tester.invoke("moveLeft");
+        tester.assertEqual("getX", {}, 1, "Move back to 1 so we can move right");
+        tester.invoke("moveRightDependantGlobal");
+        tester.assertEqual("getX", {}, 2, "ABC should have x of 2 after moving right");
+        tester.invoke("moveUpThenLeft");
+        tester.assertEqual("getY", {}, 2, "ABC should have y of 2 after moving up");
+        tester.assertEqual("getX", {}, 1, "ABC should have x of 1 after moving left");
 
         tester.endTest();
     }
