@@ -100,7 +100,7 @@ module.exports = {
         let vm = virtualMachineExporter.getVirtualMachine();
         let game = moduleExporter.createModule({
             module : "Game", 
-            data : { walls : [[1, 1, 1], [0, 0, 0], [0, 0, 0]] },
+            initialData : { walls : [[1, 1, 1], [0, 0, 0], [0, 0, 0]] },
             initialUserData : { x : 2, y : 1 }
         });
         

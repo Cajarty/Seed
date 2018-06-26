@@ -38,7 +38,7 @@ module.exports = {
         if (seedModule == null) {
             seedModule = moduleExporter.createModule({
                 module : "Seed", 
-                data : initialSeedState,
+                initialData : initialSeedState,
                 initialUserData : initialUserState,
                 functions : {
                     constructor : constructor,

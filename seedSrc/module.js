@@ -36,7 +36,7 @@ module.exports = {
         this.functions = {}; // True function lookup
         this.functionHashes = {}; // Will overwrite previous name->hash mapping if functions share a name. Convenience lookup, not true lookup
         this.module = info.module;
-        this.initialData = conformHelper.deepCopy(info.data);
+        this.initialData = conformHelper.deepCopy(info.initialData);
         this.initialUserData = conformHelper.deepCopy(info.initialUserData);
         if (info.functions != undefined && typeof info.functions == "object") {
             this.addFunctions(info.functions);
