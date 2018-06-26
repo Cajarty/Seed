@@ -56,9 +56,9 @@ The Client source code is an Electron wallet being created for both the Seed cry
     - [x] [Provable Execution In JavaScript](https://steemit.com/blockchain/@carsonroscoe/seed-dev-discussion-provable-execution-with-function-hashing-in-javascript)
     - [x] [JavaScript Pseudo-VirtualMachine vs Custom Language or True Virtual Machine](https://steemit.com/cryptocurrency/@carsonroscoe/seed-dev-discussion-custom-languages-and-virtual-machines)
 - [x] [Design Modules & Virtual Machine](https://steemit.com/blockchain/@carsonroscoe/seed-development-design-module-smart-contracts-and-the-svm)
-- [ ] Implement Basic Module Design
-- [ ] Implement Virtual Machine
-- [ ] Implement Unit Tests For Example Modules & Virtual Machine
+- [x] Implement Basic Module Design
+- [x] Implement Virtual Machine
+- [x] Implement Unit Tests For Example Modules & Virtual Machine
 - [ ] Connect Virtual Machine To Blockchain Ledger
 
 ## Client
