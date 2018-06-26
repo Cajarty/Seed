@@ -101,41 +101,40 @@ module.exports = {
         let game = moduleExporter.createModule({
             module : "Game", 
             initialData : { walls : [[1, 1, 1], [0, 0, 0], [0, 0, 0]] },
-            initialUserData : { x : 2, y : 1 }
-        });
-        
-        let moveLeft = function(container, changeContext) {
-            let gameData = container.getModuleData("Game");
-            let userData = container.getUserData("Game", container.sender);
-            let walls = gameData["walls"];
-            if (walls[userData["x"] - 1][userData["y"]] == 0) {
-                changeContext.subtract(1, { user : container.sender, key : "x" });
+            initialUserData : { x : 2, y : 1 },
+            functions : {
+                moveLeft : function(container, changeContext) {
+                    let gameData = container.getModuleData();
+                    let userData = container.getSenderData();
+                    let walls = gameData["walls"];
+                    if (walls[userData.x - 1][userData.y] == 0) {
+                        changeContext.subtract(1, { user : container.sender, key : "x" });
+                    }
+                    return changeContext;
+                },
+                getX : function(container) {
+                    return container.getSenderData().x;
+                }
             }
-            return changeContext;
-        }
-        
-        game.addFunction({
-            invoke : moveLeft, 
-            name : "moveLeft"
         });
         
         console.log("Add Game to VM");
         vm.addModule(game);
         console.log("Add user to Game in VM");
         vm.addUser({module : "Game"}, "ABC");
-        console.info("User Data In Module (Default)", vm.getModule({module : "Game"}).data["userData"]);
+        console.info("ABC X Position: ", vm.invoke({ module : "Game", function : "getX", user : "ABC" }));
         
         console.log("Invoke \"MoveLeft\" function on user");
         let changeContext = vm.simulate({module : "Game", function : "moveLeft", user : "ABC"});
         console.info("Changes caused by \"MoveLeft\"", changeContext);
         vm.applyChangeContext({module : "Game"}, changeContext);
-        console.info("User data after moving left the first time", vm.getModule({module : "Game"}));
+        console.info("ABC X Position: ", vm.invoke({ module : "Game", function : "getX", user : "ABC" }));
     
         console.log("Invoke \"MoveLeft\" function on user");
         changeContext = vm.simulate({module : "Game", function : "moveLeft", user : "ABC"});
-        console.info("Changes caused by \"MoveLeft\"", changeContext);
+        console.info("Changes caused by \"MoveLeft\" (Should error as can't move left)", changeContext);
         vm.applyChangeContext({module : "Game"}, changeContext);
-        console.info("User data after moving left the second time", vm.getModule({module : "Game"}));
+        console.info("ABC X Position: ", vm.invoke({ module : "Game", function : "getX", user : "ABC" }));
 
         console.log("VM Test Complere");
     }
