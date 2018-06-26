@@ -42,8 +42,6 @@ module.exports = {
                 initialUserData : initialUserState
             });
 
-            console.info(constructor);
-
             seedModule.addFunctions({
                 constructor : constructor,
                 transfer : transfer,
@@ -126,7 +124,7 @@ let transfer = function(container, changeContext) {
     let to = container.args.to;
     let value = container.args.value;
     let sender = container.sender;
-    let fromBalance = container.getUserData("Seed", sender).balance;
+    let fromBalance = container.getSenderData().balance;
 
     // Confirm adequate balance for the transaction
     if (fromBalance >= value && value > 0) {
@@ -161,9 +159,9 @@ let transferFrom = function(container, changeContext) {
     let from = container.args.from;
     let value = container.args.value;
     let sender = container.sender;
-    let fromBalance = container.getUserData("Seed", from).balance;
-    let senderAllowance = container.getUserData("Seed", from).allowance[sender];
-    console.info("transferFrom", to, from, value, sender, fromBalance,senderAllowance, container.getModuleData("Seed"));
+    let fromBalance = container.getUserData(from).balance;
+    let senderAllowance = container.getUserData(from).allowance[sender];
+
     // Confirm adequate balance and allowance for the transaction
     if (fromBalance >= value && senderAllowance >= value && value > 0) {
          changeContext.subtract(value, { user : from, key : "balance" });
@@ -192,7 +190,7 @@ let approve = function(container, changeContext) {
     //Gather readonly data
     let spender = container.args.spender;
     let value = container.args.value;
-    let currentApproval = container.getUserData("Seed", container.sender).allowance[spender];
+    let currentApproval = container.getSenderData().allowance[spender];
 
     let dif = value - (currentApproval != undefined ? currentApproval : 0); 
 
@@ -221,7 +219,7 @@ let approve = function(container, changeContext) {
 let burn = function(container, changeContext) {
     //Gather readonly data
     let value = container.args.value;
-    let balance = container.getUserData("Seed", container.sender).balance;
+    let balance = container.getSenderData().balance;
 
     if (balance >= value) {
         changeContext.subtract(value, { user : container.sender, key : "balance" });
@@ -246,7 +244,7 @@ let burn = function(container, changeContext) {
  * @param {*} container - Container object that holds read-only data
  */
 let getBalanceOf = function(container) {
-    return container.getUserData("Seed", container.args.owner).balance;
+    return container.getUserData(container.args.owner).balance;
 }
 
 /**
@@ -259,7 +257,7 @@ let getBalanceOf = function(container) {
  * @param {*} container - Container object that holds read-only data
  */
 let getAllowance = function(container) {
-    return container.getUserData("Seed", container.args.owner).allowance[container.args.spender];
+    return container.getUserData(container.args.owner).allowance[container.args.spender];
 }
 
 /**
@@ -271,7 +269,7 @@ let getAllowance = function(container) {
  * @param {*} container - Container object that holds read-only data
  */
 let getTotalSupply = function(container) {
-    return container.getModuleData("Seed").totalSupply;
+    return container.getModuleData().totalSupply;
 }
 
 /**
@@ -282,7 +280,7 @@ let getTotalSupply = function(container) {
  * @param {*} container - Container object that holds read-only data
  */
 let getSymbol = function(container) {
-    return container.getModuleData("Seed").symbol;
+    return container.getModuleData().symbol;
 }
 
 /**
@@ -293,5 +291,5 @@ let getSymbol = function(container) {
  * @param {*} container - Container object that holds read-only data
  */
 let getDecimals = function(container) {
-    return container.getModuleData("Seed").decimals;
+    return container.getModuleData().decimals;
 }

@@ -32,7 +32,7 @@ module.exports = {
 
 class Container {
     constructor(moduleName, sender, args) {
-        this.module = moduleName;
+        this.moduleName = moduleName;
         this.args = args;
         this.sender = sender;
         this.cachedDatas = {};
@@ -69,14 +69,6 @@ class Container {
         return this.cachedDatas[moduleName];
     }
 
-    get(moduleName, keys) {
-        let moduleData = this.getModuleData(moduleName);
-        let value = 0;
-        for(let i = 0; i < keys.length; i++) {
-
-        }
-    }
-
     /**
      * Gets the user data for a given user within a given module.
      * 
@@ -84,16 +76,30 @@ class Container {
      * 
      * WARNING: Can give undefined values for undefined data in ledger. Unsafe.
      * 
-     * @param {*} moduleName - The name of the module to get the data of.
      * @param {*} user - The users who's data we are grabbing
+     * @param {*} moduleName - The name of the module to get the data of.
      * 
      * @return - The user data for a given module
      */
-    getUserData(moduleName, user) {
+    getUserData(user, moduleName) {
         if (moduleName == undefined) {
             moduleName = this.moduleName;
         }
+        if (user == undefined) {
+            user = this.sender;
+        }
         this.loadData(moduleName);
         return this.cachedDatas[moduleName].userData[user];
+    }
+
+    /**
+     * Wrapper for getUserData which forces it to be called for the senders data
+     * 
+     * WARNING: Can give undefined values for undefined data in ledger. Unsafe.
+     * 
+     * @return - The sender's user data for the current active module
+     */
+    getSenderData() {
+        return this.getUserData(this.sender, this.moduleName);
     }
 }

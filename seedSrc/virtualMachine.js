@@ -128,7 +128,7 @@ class VirtualMachine {
             try {
                 result = moduleFunction.invoke(container); //Container is ledger
             } catch (err) {
-                console.info("VirtualMachine::ERROR:: Failed to run read-nly getter", err);
+                console.info("VirtualMachine::ERROR:: Failed to run read-only getter", err);
             }
         } else {
             throw "VirtualMachine::ERROR::simulate: Invalid number of parameters for a module function";

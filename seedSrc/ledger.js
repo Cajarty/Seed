@@ -68,25 +68,20 @@ module.exports = {
             for(let j = 0; j < userDataKeys.length; j++) {
                 let key = userDataKeys[j];
                 let value = changeContext.userData[user][key];
-                console.info("applyChanges", user, key, value);
                 switch(typeof value) {
                     case "number":
                         // Number changes are relative
-                        console.info("Change", user, key, changeContext.userData[user][key]);
                         moduleDataToUpdate["userData"][user][key] += changeContext.userData[user][key];
                         break;
                     case "string":
                         // Strings are absolute
-                        console.info("Set", user, key, changeContext.userData[user][key]);
                         moduleDataToUpdate["userData"][user][key] = changeContext.userData[user][key]; 
                         break;
                     case "object":
                         // Objets are absolute and Object.assigned over
-                        console.info("Set", user, key, changeContext.userData[user][key]);
                         let innerKeys = Object.keys(changeContext.userData[user][key]);
                         for(let k = 0; k < innerKeys.length; k++) {
                             let userDataAtKey = moduleDataToUpdate["userData"][user][key];
-                            console.info("Setting",moduleDataToUpdate["userData"][user], userDataAtKey[innerKeys[k]]);
                             if (userDataAtKey[innerKeys[k]] == undefined || typeof userDataAtKey[innerKeys[k]] != "number") {
                                 userDataAtKey[innerKeys[k]] = changeContext.userData[user][key][innerKeys[k]];
                             } else {
