@@ -19,7 +19,7 @@ CryptoHelper:
 ##############################################################*/
 
 const crypto = require("crypto")
-const transactionHelper = require("./transaction.js");
+const transactionHelper = require("../transaction.js");
 const base58Encoder = require('bs58');
 const stringToUInt8ArrayEncoder = new TextEncoder("utf-8");
 

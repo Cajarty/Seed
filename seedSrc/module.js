@@ -11,7 +11,7 @@
  *          - Creates a new Module object
  */
 
-let cryptoHelper = require("./cryptoHelper.js").newCryptoHelper();
+let cryptoHelper = require("./helpers/cryptoHelper.js").newCryptoHelper();
 let conformHelper = require("./helpers/conformHelper.js");
 const ledgerExporter = require("./ledger.js");
 

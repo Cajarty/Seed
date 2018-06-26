@@ -11,12 +11,12 @@
  *      
  */
 
-const cryptoHelperExporter = require("./cryptoHelper.js");
+const cryptoHelperExporter = require("./helpers/cryptoHelper.js");
 const accountExporter = require("./account.js");
 const cryptographyHelper = cryptoHelperExporter.newCryptoHelper();
 const virtualMachineExporter = require("./virtualMachine.js");
 const moduleExporter = require("./module.js");
-const seedExporter = require("./seed.js");
+const seedExporter = require("./modules/seed.js");
 const moduleTester = require("./moduleTester.js");
 
 module.exports = {

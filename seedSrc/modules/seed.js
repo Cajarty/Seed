@@ -1,4 +1,4 @@
-const moduleExporter = require("./module.js");
+const moduleExporter = require("../module.js");
 
 /**
  * Name: 

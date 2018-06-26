@@ -10,7 +10,7 @@
  * 
  */
 
- const cryptoExporter = require("../cryptoHelper.js");
+ const cryptoExporter = require("./cryptoHelper.js");
 
 module.exports = {
     /**

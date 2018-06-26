@@ -18,7 +18,7 @@
 const changeContextExporter = require("./virtualMachine/changeContext.js");
 const containerExporter = require("./virtualMachine/container.js");
 const conformHelper = require("./helpers/conformHelper.js");
-let cryptoHelper = require("./cryptoHelper.js").newCryptoHelper();
+let cryptoHelper = require("./helpers/cryptoHelper.js").newCryptoHelper();
 const ledgerExporter = require("./ledger.js");
 
 let virtualMachine = null;
