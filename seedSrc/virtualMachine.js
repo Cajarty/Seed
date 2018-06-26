@@ -36,8 +36,12 @@ module.exports = {
  }
 
 class VirtualMachine {
+    
     constructor() {
         this.modules = {};
+        this.ERROR = {
+            FailedToChangeState : "ERROR::FAILED TO CHANGE STATE"
+        }
     }
 
     /**
@@ -163,7 +167,13 @@ class VirtualMachine {
     invoke(info) {
         let result = this.simulate(info);
         if (result != undefined && conformHelper.doesFullyConform(result, { moduleData : "object", userData : "object" })) {
-            this.applyChangeContext(info, result);
+            let users = Object.keys(result.userData);
+            let moduleDataKeys = Object.keys(result.moduleData);
+            if (users.length != 0 || moduleDataKeys.length != 0) {
+                this.applyChangeContext(info, result);
+            } else {
+                return this.ERROR.FailedToChangeState;
+            }
         }
         return result;
     }

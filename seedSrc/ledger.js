@@ -47,7 +47,7 @@ module.exports = {
         let moduleDataKeys = Object.keys(changeContext.moduleData);
 
         if (users.length == 0 && moduleDataKeys.length == 0) {
-            console.info("VirtualMachine::ERROR::applyingChangeContext: Cannot apply no-changes");
+            console.info("Ledger::ERROR::applyChanges: Cannot apply no-changes");
             return;
         }
 

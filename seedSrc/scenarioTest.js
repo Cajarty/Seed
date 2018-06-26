@@ -17,66 +17,56 @@ const cryptographyHelper = cryptoHelperExporter.newCryptoHelper();
 const virtualMachineExporter = require("./virtualMachine.js");
 const moduleExporter = require("./module.js");
 const seedExporter = require("./seed.js");
-const tester = require("./tester.js");
-
+const moduleTester = require("./moduleTester.js");
 
 module.exports = {
     /**
      * Runs the Seed Module test scenario, confirming the Seed cryptocurrency module behaves as expected
      */
     seedModuleTest : function() {
-        console.log("SeedModuleTest::Start")
-
         let vm = virtualMachineExporter.getVirtualMachine();
         let seedModule = seedExporter.getSeed();
-
-        console.log("Add Seed Module To VM")
         vm.addModule(seedModule);
 
-        console.log("Construct Seed")
-        vm.invoke({ 
-            module : "Seed", 
-            function : "constructor", 
-            user : "ABC", 
-            args : {
-                initialSeed : 1000
-            } 
-        });
+        
+        let tester = moduleTester.beginTest("Seed", "ABC");
+        tester.invoke("constructor", { initialSeed : 1000 });
+        tester.assertEqual("getBalanceOf", { owner : "ABC" }, 1000, "Creator should start with 1000 SEED");
+        tester.assertEqual("getSymbol", {}, "SEED", "The symbol of Seed should be \"SEED\"");
+        tester.assertEqual("getDecimals", {}, 4, "Seed should have 4 decimal points");
+        tester.assertEqual("getTotalSupply", {}, 1000, "1000 SEED should be in circulation upon creation");
 
-        console.info("getBalanceOf creator", vm.invoke({ module : "Seed", function : "getBalanceOf", user : "ABC", args : { owner : "ABC" } }));
-        console.info("getSymbol", vm.invoke({ module : "Seed", function : "getSymbol", user : "ABC" }));
-        console.info("getDecimals", vm.invoke({ module : "Seed", function : "getDecimals", user : "ABC" }));
-        console.info("getTotalSupply", vm.invoke({ module : "Seed", function : "getTotalSupply", user : "ABC" }));
-        console.info("getAllowance before allowance set [Expected Fail]", vm.invoke({ module : "Seed", function : "getAllowance", user : "ABC", args : { owner : "ABC", spender : "DEF" } }));
+        tester.assertEqual("getAllowance", { owner : "ABC", spender : "DEF" }, undefined, "Get allowance is unset for user who has never used Seed before" );
+        tester.switchUser("DEF");
 
-        console.info("TransferFrom before DEF exists or allowance set [Expected Fail]");
-        console.log(vm.invoke({ module : "Seed", function : "transferFrom", user : "DEF", args : { from : "ABC", to : "GEH", value : 100 } }));
+        //Before DEF has an account, should fail
+        tester.assertInvokeFailToChangeState("transferFrom", { from : "ABC", to : "GEH", value : 100 });
 
-        console.log("Add user DEF");
-        vm.addUser({ module : "Seed" }, "DEF");
+        vm.addUser({ module : "Seed" }, "DEF"); // I don't think we need, or want to need, this
 
-        console.info("TransferFrom before allowance set [Expected Fail]");
-        console.log(vm.invoke({ module : "Seed", function : "transferFrom", user : "DEF", args : { from : "ABC", to : "GEH", value : 100 } }));
+        // Before DEF has allowance, should fail
+        tester.assertInvokeFailToChangeState("transferFrom", { from : "ABC", to : "GEH", value : 100 });
 
-        console.info("Give DEF allowance for ABC");
-        console.log(vm.invoke({ module : "Seed", function : "approve", user : "ABC", args : { spender : "DEF", value : 250 } }));
+        tester.switchUser("ABC");
+        tester.invoke("approve", { spender : "DEF", value : 250 });
+        tester.switchUser("DEF");
+        tester.invoke("transferFrom", { from : "ABC", to : "DEF", value : 100 });
+        tester.invoke("transferFrom", { from : "ABC", to : "GHI", value : 100 });
 
-        console.info("TransferFrom with allowance to added user");
-        console.log(vm.invoke({ module : "Seed", function : "transferFrom", user : "DEF", args : { from : "ABC", to : "DEF", value : 100 } }));
+        tester.assertEqual("getBalanceOf", { owner : "ABC" }, 800, "Owner should still have 800 SEED");
+        tester.assertEqual("getBalanceOf", { owner : "DEF" }, 100, "DEF sent 100 SEED to himself");
+        tester.assertEqual("getBalanceOf", { owner : "GHI" }, 100, "GHI received 100 SEED from DEF on ABC's behalf");
 
-        console.info("TransferFrom with allowance to a user that has not been added yet [Should add user and send to them]");
-        console.log(vm.invoke({ module : "Seed", function : "transferFrom", user : "DEF", args : { from : "ABC", to : "GHI", value : 100 } }));
+        tester.switchUser("GHI");
+        tester.invoke("transfer", { to : "ABC", value : 50 });
+        tester.assertEqual("getBalanceOf", { owner : "ABC" }, 850, "ABC should have received 50 from GHI");
 
-        console.info("getBalanceOf ABC (should be 800)", vm.invoke({ module : "Seed", function : "getBalanceOf", user : "ABC", args : { owner : "ABC" } }));
-        console.info("getBalanceOf DEF (should be 100)", vm.invoke({ module : "Seed", function : "getBalanceOf", user : "DEF", args : { owner : "DEF" } }));
-        console.info("getBalanceOf GHI (should be 100)", vm.invoke({ module : "Seed", function : "getBalanceOf", user : "GHI", args : { owner : "GHI" } }));
+        tester.switchUser("DEF");
+        tester.invoke("burn", { value : 25 });
+        tester.assertEqual("getBalanceOf", { owner : "DEF" }, 75, "DEF should have 75 after burning 25, removing it from circulation");
+        tester.assertEqual("getTotalSupply", {}, 975, "25 coins were burned, removed from circulation, since initial 1000 creation");
 
-        console.info("Transfer GHI 50 SEED to ABC");
-        console.log(vm.invoke({ module : "Seed", function : "transfer", user : "GHI", args : { to : "ABC", value : 50 } }));
-
-        console.info("DEF burns 25 SEED");
-        console.log(vm.invoke({ module : "Seed", function : "burn", user : "DEF", args : {value : 25 } }));
-
+        tester.endTest();
     },
     /**
      * Runs the Cryptography and account test scenario
@@ -98,7 +88,6 @@ module.exports = {
      * Runs a basic virtual machine test scenario
      */
     vmModuleTest : function() {
-        console.log("Module Test::Create Game");
         let vm = virtualMachineExporter.getVirtualMachine();
         let game = moduleExporter.createModule({
             module : "Game", 
@@ -119,25 +108,17 @@ module.exports = {
                 }
             }
         });
-        
-        console.log("Add Game to VM");
-        vm.addModule(game);
-        console.log("Add user to Game in VM");
-        vm.addUser({module : "Game"}, "ABC");
-        console.info("ABC X Position: ", vm.invoke({ module : "Game", function : "getX", user : "ABC" }));
-        
-        console.log("Invoke \"MoveLeft\" function on user");
-        let changeContext = vm.simulate({module : "Game", function : "moveLeft", user : "ABC"});
-        console.info("Changes caused by \"MoveLeft\"", changeContext);
-        vm.applyChangeContext({module : "Game"}, changeContext);
-        console.info("ABC X Position: ", vm.invoke({ module : "Game", function : "getX", user : "ABC" }));
-    
-        console.log("Invoke \"MoveLeft\" function on user");
-        changeContext = vm.simulate({module : "Game", function : "moveLeft", user : "ABC"});
-        console.info("Changes caused by \"MoveLeft\" (Should error as can't move left)", changeContext);
-        vm.applyChangeContext({module : "Game"}, changeContext);
-        console.info("ABC X Position: ", vm.invoke({ module : "Game", function : "getX", user : "ABC" }));
 
-        console.log("VM Test Complere");
+        vm.addModule(game);
+
+        let tester = moduleTester.beginTest("Game", "ABC");
+        
+        tester.assertEqual("getX", {}, 2, "ABC should start as x position 2");
+        tester.invoke("moveLeft");
+        tester.assertEqual("getX", {}, 1, "ABC should have x of 1 after moving left");
+        tester.invoke("moveLeft");
+        tester.assertEqual("getX", {}, 1, "ABC should have x of 1 after moving left again cause they hit wall at 1");
+
+        tester.endTest();
     }
  }
