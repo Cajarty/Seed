@@ -1,6 +1,12 @@
-# Seed - The Decentralized Cooperative Networking Approach
+# Seed
 
-Seed is a cooperative proof-of-work blockchain. The protocol will allow for the creation of mudules to run decentralized applications on the network. The end goal of Seed is to attempt to create a network which can achieve near real-time networking requirements when needed that runs on a truly distributed minner-less network of users.
+## The Decentralized Cooperative Networking Approach
+
+Seed is a cooperative proof-of-work DAG/blockchain. The protocol will allow for the creation of Modules (Smart Contracts) to run decentralized applications on the network. The end goal of Seed is to attempt to create a network which can achieve near real-time networking requirements when needed that runs on a truly distributed minner-less network of users.
+
+[Detailed Introduction](https://steemit.com/cryptocurrency/@carsonroscoe/seed-introduction-the-decentralized-cooperative-networking-approach)
+
+[Problems & Hypothesized Solutions](https://steemit.com/cryptocurrency/@carsonroscoe/seed-problems-and-hypothesized-solutions-the-cooperative-blockchain-scaling-solution)
 
 -----
 
@@ -8,11 +14,11 @@ Seed is a cooperative proof-of-work blockchain. The protocol will allow for the 
 
 ## Seed
 
-The Seed source code for the Seed npm module can be found in the /seedSrc folder. This folder is the initially created JavaScript implementation of the Seed protocol.
+The Seed source code for the Seed npm module can be found in the [/seedSrc](/seedSrc) folder. This folder is the initially created JavaScript implementation of the Seed protocol. This will have as few dependencies as possible, primarily relying on NodeJS and Vanilla JavaScript features.
 
 ## Client Source Code
 
-The Client source code is an Electron wallet being created for both the Seed cryptocurrency module, as well as for general interactions with the general Seed blockchain. This code can be found in the /clientSrc folder.
+The Client source code is an Electron wallet being created for both the Seed cryptocurrency module, as well as for general interactions with the general Seed blockchain. This code can be found in the [/clientSrc](/clientSrc) folder. The client will have less constraints for depencies, and will primarily be developed with NodeJS and Electron.
 
 -----
 
