@@ -1,4 +1,23 @@
-let cryptoExporter = require("./cryptoHelper.js");
+/******************
+ * transaction.js *
+ ******************
+ * 
+ * Exports the creation of transactions.
+ * 
+ * Transaction:
+ *      Transaction Hash
+ *      Sender Address
+ *      Execution
+ *          - ModuleName, FunctionName, Arguments
+ *          - ModuleChecksum, FunctionChecksum, ChangeSet
+ *      Trusted Transactions
+ *      Nonce
+ *      Signature
+ * 
+ * Exported Functions:
+ *      createTransaction(children, updateData)
+ *          - Creates a new transaction object
+ */
 
 module.exports = {
     createTransaction: function() {
@@ -21,6 +40,8 @@ module.exports = {
         return transaction;
     }
  }
+
+ let cryptoExporter = require("./helpers/cryptoHelper.js");
 
 class Transaction {
     constructor() {
