@@ -1,0 +1,179 @@
+# Overview 
+
+// There are two crypto-based sections to the Seed system. The DAG and the Blockchain.
+// The DAG is what Seed relies on for validation and short-term malliable storage.
+// The blockchain is used for immutable long-term storage. 
+// Once transactions in the DAG become fully validated and certain conditions are met, they will become condenced into blocks in a fully deterministic fashion.
+
+// This design document will be focused on transactions and the entanglement of transactions into the Seed DAG.
+
+-----
+
+# Seed Entanglement vs IOTA Tangle
+
+//The concept of entanglement is not a new one. 
+//IOTA was the first popular crypto to utilize tangle and DAGs
+
+//The Tangle allows for IOTA to be very lean, require only knowing a portion of the complete DAG to send transactions, allows for offline transactions.
+
+## Differences
+
+### Proof-of-Work vs Proof-of-Execution
+
+//The Tangle uses Proof-of-works and a complicated validation system to prove transactions are valid. The simplified explenation is that every transaction does "work" to prove itself,
+//and this work can be as much or little as a user wants. Transactions then nominate two other transactions that they consider valid. Children transactions inherit their family tree's work,
+//so by having your transaction be validate by other users, your transaction inherits the "work" of the others. Once a transaction has enough parents, or the parents are trusted enough,
+//a transaction becomes "validated".
+
+//Similar to the idea of "work" in proof-of-work, an idea of "work" is required for Seed transactions. 
+//Instead of "work" being finding a nonce, our "work" is simulating the execution of a transaction and verifying that the adequate changes occured to get the same changes in the ledger.
+//Essentially, instead of solving a puzzle as proof, we execute the same code and validate the same output as proof.
+
+//The goal of Proof-of-Work in DAGs is to prove users have the right to make changes. This is a type of built-in spam repellant. Proof-of-execution works similarily, where "spamming" the network
+//requires validating other transactions. If a user attempted to maliciously spam the network, they would be pushing the network forward in doing so and using plenty of processing power in the process.
+
+//For "work" to function in concept, the work being done must be hard (but feasible) to do, while being easy to check. The type of execution Seed requires fits this definiton imperfectly, hence why it is not simply being called
+//"Proof-of-Work". A functions execution may be complicated, or it may be simple, making the amount of proccessing required unknown until execution. There is no easy way to check without trusting other 3rd party users. For 
+//a user to check, they must also invoke the execution themselves. So users re-execute the code the transactions they are validating did in order to confirm they executed it properly to get the right result.
+
+//So instead of the spam repellant being a hard problem which is easy to validate, it's a easy-to-hard problem that the validator puts equal effort into solving as well.
+
+### Offline vs Online Transactions
+
+//The Tangle has a large positive of allowing offline transactions. 
+
+//In blockchains, transactions are appended into new blocks, so you must be online to add to the newest block. Users must be online to submit transactions, despite not needing to be online to view known history.
+
+//Pure DAG implementations like IOTA are different in this regard. Transactions can be appended anywhere in the DAG, not some arbiratry "end" point. 
+//The entire DAG is present at all times, never pruned. We always have all transactions. As long as other users have the transactions your transaction references in their DAG, 
+//we can guarantee that all children are the same, and thus we are looking at the same "history" relative to the given transactions.
+
+// Seed is different.
+// Seed inherits this flaw in blockchains, since transactions are eventually squashed into the blockchain. Once a transaction is discarded, it cannot be used as a validation point for incoming transactions.
+// Therefore, users must be online and know the current DAG in order to submit transactions to the Seed entanglement.
+
+### Coordinator vs Relay Nodes
+
+//Tangle is arguably not truly decentralized due to being dependant on the coordinator, a master node of sorts.
+
+//Coordinator is required due to DAGs requiring new transactions to be published to validate transactions that are becoming stagnant.
+
+//Explain open-source relay nodes used to keep latency lower, anyone can host, and they can be used for efficient routing by DAPP developers to lower their users ping & validate users
+
+
+-----
+
+# Transactions
+
+// Transactions are a statement given by a user declaring what changes they made to the Seed ledger. Cryptographic signatures are used to confirm consent and prove that the real sender is the one signing a given transaction.
+
+// A transaction structure looks like the following:
+
+Transaction:
+    Transaction Hash (SHA256(SPA + Execution + Validated Transactions))
+    Sender Public Address
+    Execution:
+        Module Name
+        Function Name
+        Arguments
+        Module Code Checksum
+        Function Code Checksum
+        ChangeSet
+    Validated Transactions Array:
+        Transaction Hash
+        Module Checksum, Function Checksum, ChangeSet
+    Signature:
+        Signature consents that Sender agrees to Transaction Hash's integrity so Transaction Hash can only be created by the genuine Transaction structure
+
+## Execution
+
+// The execution of module code that this transaction represents. As all transactions are a statement regarding how a module's function invocation effected the ledger.
+
+# Validation Rules
+
+// A transaction is only valid if it follows the following rules. All Seed implementations must follow these agreed upon rules.
+
+//A transaction which meets all rules except for Rule #10 is deemed "Proper" and given a small degree of trust. As the children it validated become valid, it is given a confidence coefficient on a scale of 0 to 1
+//regarding how validated the children are. Once a Proper transaction has all its children validated, it becomes "Valid" as well with a full confidence coefficient
+
+Prove the Transaction.Sender, Transaction.Execution and Transaction.ValidatedTransactions are the content that creates the Transaction.TransactionHash
+1) The SHA256(Transaction.Sender + Transaction.Execution + Transaction.ValidatedTransactions) == Transaction.TransactionHash
+
+Prove that the Transaction.Sender is a valid public key, and therefore was derived from a valid private key
+2) The Transaction.Sender is a valid public key in elliptic cryptography following the secp256k1 curve
+
+Prove that the Transaction.Sender is the public key consenting to the transaction
+3) The cryptographic Transaction.Signature can be verified by the Transaction.Sender
+
+Prove that the Transaction.ValidatedTransactions is using verifiable data that other users have verified, while still being new-enough that its in the DAG still. If we don't have these Hash's, this is an indicator that
+we may have differing versions of history, OR that we simply do not know of these transactions yet
+4) The Transaction.ValidatedTransactions only possess Transaction.Hash's that are in our DAG, and are already validated by other transactions
+
+Prove that this new Transaction and its validate transactions do not create a cycle in the DAG
+5) The Transaction + Transaction.ValidatedTransactions do not create a cycle in the DAG
+
+Prove that we agree on the module code being executed, so we're using the same versions
+6) The Transaction.Execution.ModuleName and Transaction.Execution.ModuleChecksum matches the version of the module we're using
+7) The Transaction.Execution.FunctionName and Transaction.Execution.FunctionChecksum matches the version of the function we're using
+
+Prove that, when we simulate the execution, we get the same ChangeSet (Prove their statement of change was right)
+8) SVM.Simulate(Transaction.Execution) == Transaction.Execution.ChangeSet
+
+Prove that their Transaction.ValidatedTransactions.ChangeSets aggree with the transactions they're validatings results.
+NOTE: If they didn't agree, they shouldn't have mentioned them. We only submit validated transactions we agree with. Ones we disagree with are simply ignored, never referenced, and therefore never validated
+9) foreach Transaction.ValidatedTransactions { SVM.DoesChangeSetMatch(ValidatedTransaction.Hash, ValidatedTransaction.ChangeSet) }
+
+Prove that, when we simulate the execution of their validated transactions, their execution was also right (Prove their "work" was right).
+NOTE: We can't simply execute these on our SVM, as they happened in the past, our ledger may have changed, and there is no "clock" we can effectively used to rollback and rebuild the ledger into a matching state.
+Instead, we need other transactions to validate this transaction. That makes rule #10 one that cannot be fully trusted until these transactions are fully validated by other DAG users.
+IF the rest of this transaction was valid, we act as if this transaction is valid when determining if those transactions were valid. Essentially, we assume this is honest, and wait for others to become honest.
+10) SVM.WaitForValidation(Transaction.ValidatedTransactions, simulateTrustedParent : Transaction.Hash)
+
+-----
+
+# The Entanglement
+
+## Adding Transactions
+
+The first transaction added into the entanglement is the Genesis Transaction, which has no validated transaction array data.
+
+When a transaction is to be added to the DAG, it is first checked against the validation rules. If it is deemed a Proper transaction, it is added to the DAG.
+
+When a transaction is deemed valid, its parents are re-checked to update whether they are still "Proper" or now "Valid" as well.
+
+Transactions do not modify the ledger until they are considered valid. Proper transactions can therefore conflict, where they are only Proper assuming the other transaction does not get validated.
+
+### Managing Conflicts
+
+When validating conflicting transactions, the transaction with the lower hash is selected. This is not enforcable and therefore simply a courtesy rule, however if a transaction selects the wrong one to validate, 
+then their transaction will never get validated.
+
+## Double-Spend Attack
+
+A double spend attack in the cryptocurrency world is when a users manages to spend the same money twice. If Bob has $10 and sends $10 to Bill and $10 to Jane, he has attempted to spend the money twice. If both of Bob's transactions get validated, he has successfully invoked a double-spend attack.
+
+In Bitcoin and traditional blockchains, a double spend can only be executed when controlling 51% of the network hashrate. It is extremely expensive to modify the history of a Proof-of-Work blockchain implementation.
+
+In IOTA, a double spend has two requirements. First, they must have a majority hashpower, which is must easier to obtain. The second requirement is that your transaction must have enough neighbours to get the transaction confirmed. This second requirement is a concept known as omnipresence, where nodes must be neighbours with the majority of the network in order to have a transaction become confirmed. It is very difficult to do a double spending attack on IOTA as the network topology is nearly impossible to know. 
+
+A double spend attack can, effectively, only be done in IOTA by creating a "parasite" chain, building enough work on this parasite chain that it rivals the main chain, and then merging the parasite chain into the main chain while being in control of the coordinator.
+
+In Seed, pure Proof-of-Work has been abandonned. Instead, users explain the execution they did and the causal results it had on the network. This removes the first tangle requirement regarding acquiring a majority hashpower, making it slightly easier to execute a double spend. Seed also does not have the coordinator, and Seed nodes also do not require mutual tethering (though a similar concept is in place). This means double spends are possible unless a seperate mechanism is added.
+
+## Avoiding Parasite Chains
+
+The core problem which results in double-spends is parasite chains. A parasite chain occurs when transactions validate eachother while never re-synching up to the main chain. A new entanglement forms with its own variation of history, which may not be compliant with transactions on the main chain.
+
+Once a parasite chain is large enough, the older transactions are intrinsiquely confirmed, despite potentially conflicting with transactions on the main chain. Once the parasite chain decides to merge back with the main chain, they simply need their tips and recent transactions to be honest. These honest transactions are validated against the main chain, found proper, and merged in. The ledger now contains the history of both chains, despite the conflicts.
+
+### Protocol-Defence
+
+Seed naturally has an extra defence against parasite chains becoming too large due to the block formation mechanism. In Seed, the main chain will deterministically squash groupings of validated transactions into blocks. Once a transaction invokes the block creation process, it and all its validated children get squashed.
+
+If a parasite chain has a transaction occur which triggers the block creation mechanism, the block of changes from the parasite chain are now immergeable with the main chain. Only DAG transactions can be merged, not blocks. The parasite chain now has transactions being created which can never be merged with the main chain, poisoning the parasite chain and killing it. This forces the parasite chains to synchronize with the main chain in a short amount of time, preventing it from ever getting too large.
+
+### Implementation-Defence
+
+Through the use of relay nodes handling transaction routing, no transactions can cause a parasite chain. Although relay nodes do not directly participate in the validation process, they act as a filter for spam and malicious transactions. If a parasite chain transaction is sent to a honest relay node, the relay node will refuse to relay it. This enforces on an implementation basis that only honest transactions are propagated to the main chain. 
+
+Because the majority of users will either be communicating through relay nodes or directly to users who are communicating with relay nodes, the only transactions that will arrive on the main chain, and therefore the only transactions which will be on the chain when the block creation mechanism is triggered, are ones that go through a relay node at some point.

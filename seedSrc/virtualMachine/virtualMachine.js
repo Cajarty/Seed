@@ -34,7 +34,6 @@ module.exports = {
 const changeContextExporter = require("./changeContext.js");
 const containerExporter = require("./container.js");
 const conformHelper = require("../helpers/conformHelper.js");
-let cryptoHelper = require("../helpers/cryptoHelper.js").newCryptoHelper();
 const ledgerExporter = require("../ledger.js");
 
 class VirtualMachine {
@@ -112,9 +111,6 @@ class VirtualMachine {
     simulate(info) {
         let moduleToInvoke = this.getModule(info);
         let moduleDataToInvoke = ledgerExporter.getLedger().getModuleData(info.module);
-        if (info.function == "constructor" && Object.keys(moduleDataToInvoke.userData).length != 0) {
-            throw "VirtualMachine::ERROR::simulate: Constructor can only be called if the module has not yet been used";
-        }
         //If the user simulating this does not exist, add them to our ledger
         if (!moduleToInvoke.doesUserExist(info.user)) {
             this.addUser(info, info.user);

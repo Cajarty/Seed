@@ -18,8 +18,29 @@ const virtualMachineExporter = require("./virtualMachine/virtualMachine.js");
 const moduleExporter = require("./module.js");
 const seedExporter = require("./modules/seed.js");
 const moduleTester = require("./moduleTester.js");
+const transactionExporter = require("./transaction.js");
 
 module.exports = {
+    transactionTest : function() {
+        console.log("### Transaction Test ###");
+
+        //Prep seed module
+        let vm = virtualMachineExporter.getVirtualMachine();
+        let seedModule = seedExporter.getSeed();
+        vm.addModule(seedModule);
+
+        //Prep account
+        let newAccount = accountExporter.newAccount({ entropy : "1349082123412353tgfdvrewfdvdfr43f34390413290413", network : "00" });
+        console.log("Account: ", newAccount);
+        let localSimulation = vm.simulate({ module : "Seed", function : "constructor", args : { initialSeed : 1000 }, user : newAccount.publicKey });
+
+        let transaction = transactionExporter.createNewTransaction(newAccount.publicKey, { moduleName : "Seed", functionName : "constructor", args : { initialSeed : 1000 }, changeSet : JSON.stringify(localSimulation) }, []);
+        transaction.signature = newAccount.sign(transaction.transactionHash);
+
+        console.info("Transaction: ", transaction);
+
+        console.info("Is Transaction Valid: ", transactionExporter.isTransactionValid(transaction));
+    },
     /**
      * Runs the Seed Module test scenario, confirming the Seed cryptocurrency module behaves as expected
      */

@@ -18,11 +18,6 @@ CryptoHelper:
         //returns a bool for whether the signature is valid. Throws for empty publicKey, signature or data
 ##############################################################*/
 
-const crypto = require("crypto")
-const transactionHelper = require("../transaction.js");
-const base58Encoder = require('bs58');
-const stringToUInt8ArrayEncoder = new TextEncoder("utf-8");
-
 module.exports = {
     newCryptoHelper: function() {
        return new CryptoHelper();
@@ -50,6 +45,10 @@ module.exports = {
         console.log("UnitTests :: cryptoHelper.js :: Complete");
     }
  }
+
+ const crypto = require("crypto")
+ const base58Encoder = require('bs58');
+ const stringToUInt8ArrayEncoder = new TextEncoder("utf-8");
 
 //Eliptic PublicKey Encryption, SHA256 Hashing and Base58 Encoding wrapper
 class CryptoHelper {
@@ -100,6 +99,18 @@ class CryptoHelper {
         return keyPair.getPublic("hex");
     }
 
+    isPublicKeyValid(publicKey) {
+        let EC = require('elliptic').ec;
+        let ec = new EC('secp256k1');
+        try {
+            ec.keyFromPublic(publicKey, 'hex');
+        } catch(e) {
+            console.log(e);
+            return false;
+        }
+        return true;
+    }
+
     publicKeyToPublicAddress(publicKey) {
         const bytes = Buffer.from(publicKey, 'hex')
         return base58Encoder.encode(bytes);
@@ -128,6 +139,13 @@ class CryptoHelper {
 
         }
         return result;
+    }
+
+    hashToChecksum(hashToChecksum) {
+        if (hashToChecksum == undefined || hashToChecksum == null || hashToChecksum.length < 4) {
+            throw new Error("Not valid data to checksum");
+        }
+        return hashToChecksum.substring(0, 4);
     }
 }
 
