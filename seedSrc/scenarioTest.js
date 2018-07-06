@@ -19,6 +19,7 @@ const moduleExporter = require("./module.js");
 const seedExporter = require("./modules/seed.js");
 const moduleTester = require("./moduleTester.js");
 const transactionExporter = require("./transaction.js");
+const entanglementExporter = require("./entanglement.js");
 
 module.exports = {
     transactionTest : function() {
@@ -36,6 +37,10 @@ module.exports = {
 
         let transaction = transactionExporter.createNewTransaction(newAccount.publicKey, { moduleName : "Seed", functionName : "constructor", args : { initialSeed : 1000 }, changeSet : JSON.stringify(localSimulation) }, []);
         transaction.signature = newAccount.sign(transaction.transactionHash);
+
+        entanglementExporter.getEntanglement();
+        entanglementExporter.tryAddTransaction(transaction);
+        console.info("Entanglement", entanglementExporter.getEntanglement());
 
         console.info("Transaction: ", transaction);
 
