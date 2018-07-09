@@ -25,44 +25,77 @@ module.exports = {
         }
         entanglement.addTransaction(transaction);
         for(let i = 0; i < children.length; i++) {
-            entanglement.addEdge(transaction.transactionHash, chidren[i]);
+            entanglement.addEdge(transaction.transactionHash, children[i]);
         }
     },
     doesTransactionCauseCycle : function(transaction) {
         let children = [];
+        if (entanglement.contains(transaction.transactionHash)) {
+            throw new Error("Cannot check transaction that's already been added");
+        }
         for(let i = 0; i < transaction.validatedTransactions.length; i++) {
             let child = transaction.validatedTransactions[i].transactionHash;
-            children.push();
+            children.push(child);
             if (!entanglement.contains(child)) {
                 throw new Error("Trying to check transaction who's childs do not exist");
             }
         }
-
-        let from = this.addNode(fromName)
+        let result = false;
+        let from = entanglement.addNode(transaction.transactionHash)
         try {
             for(let i = 0; i < children.length; i++) {
-                let to = this.addNode(toName);
-                if (to.incoming.hasOwnProperty(fromName)) {
-                    return true;
+                let to = entanglement.addNode(children[i]);
+                if (to.incoming.hasOwnProperty(transaction.transactionHash)) {
+                    result = true;
+                    break;
                 }
-                this.checkForCycle(fromName, toName);
+                entanglement.checkForCycle(transaction.transactionHash, children[i]);
             }
         } catch (e) {
             console.log(e);
+            result = true;
+        }
+        entanglement.remove(from);
+        return result;
+    },
+    getTipsToValidate : function(sender, numberOfTips) {
+        let tips = Object.keys(entanglement.tips);
+        let result = [];
+        console.info("getTips", sender, numberOfTips, entanglement.tips, tips);
+        for(let i = 0; i < tips.length && result.length < numberOfTips; i++) {
+            let transaction = entanglement.getTransaction(tips[i]);
+            if (transaction == undefined) {
+                console.info("Failed to find ", JSON.stringify(tips[i]), " in ", entanglement);
+            }
+            if (sender != transaction.sender) {
+                result.push(transaction);
+            }
+        }
+        return result;
+    },
+    hasTransaction : function(transactionHash) {
+        if (entanglement.transactions[transactionHash]) {
             return true;
+        } else {
+            console.info("hasTransaction", entanglement.transactions, transactionHash);
+            return false;
+        }
+    },
+    isValid : function(transactionHash) {
+        if (entanglement.contains(transactionHash)) {
+            if (!entanglement.tips[transactionHash]) {
+                return true;
+            }
         }
         return false;
-    },
-    getTipsToValidate : function(numberOfTips) {
-
     }
  }
 
 let visit = function (vertex, func, visited, path) {
     let name = vertex.name;
     let vertices = vertex.incoming;
-    let names = vertex.incomingNames;
-
+    let names = vertex.incomingNodes;
+    console.info("visit", vertex, names);
     if (!visited) {
         visited = {};
     }
@@ -88,10 +121,27 @@ let visit = function (vertex, func, visited, path) {
         this.vertices = {};
         this.nodes = [];
         this.transactions = {};
+        this.tips = {};
+        this.tipThreshold = 2;
     }
 
     contains(node) {
         return (this.vertices[node] && this.transactions[node]);
+    }
+
+    remove(node) {
+        delete this.vertices[node]
+        delete this.tips[node];
+        for(let i = 0; i < this.nodes.length; i++) {
+            if (this.nodes[i] == node) {
+                this.nodes.splice(i, 1);
+                break;
+            }
+        }
+    }
+
+    getTransaction(transactionHash) {
+        return this.transactions[transactionHash];
     }
 
     addTransaction(transaction) {
@@ -118,6 +168,7 @@ let visit = function (vertex, func, visited, path) {
         };
         this.vertices[node] = vertex;
         this.nodes.push(node);
+        this.tips[node] = this.tipThreshold;
         return vertex;
     }
 
@@ -133,7 +184,14 @@ let visit = function (vertex, func, visited, path) {
         this.checkForCycle(fromName, toName);
         from.hasOutgoing = true;
         to.incoming[fromName] = from;
-        to.incomingNames.push(fromName);
+        to.incomingNodes.push(fromName);
+        if (this.tips[toName] != undefined && this.tips[toName] > 0) {
+            this.tips[toName]--;
+            if (this.tips[toName] == 0) {
+                console.info("ENTANGLEMENT now TRUSTS " + toName);
+                this.tips[toName] = undefined;
+            }
+        }
     }
 
     checkForCycle(fromName, toName) {

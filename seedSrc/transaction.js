@@ -104,7 +104,9 @@ module.exports = {
 
         let rule10 = validator.doesFollowRule10(transaction);
 
-        return rule1 && rule2 && rule3 && rule4 && rule5 && rules6And7 && rule8 && rule9;
+        console.info("isTransactionValid", rule1, rule2, rule3, rule4, rule5, rules6And7, rule8, rule9, rule10);
+
+        return rule1 && rule2 && rule3 && rule4 && rule5 && rules6And7 && rule8 && rule9 && rule10;
     
         /*
             NOTES:
@@ -120,6 +122,7 @@ module.exports = {
  const svmExporter = require("./virtualMachine/virtualMachine.js");
  const accountExporter = require("./account.js");
  const conformHelper = require("./helpers/conformHelper.js");
+ const entanglementExporter = require("./entanglement.js");
 
 
 class TransactionValidator {
@@ -146,14 +149,17 @@ class TransactionValidator {
     //Prove that the Transaction.ValidatedTransactions is using verifiable data that other users have verified, while still being new-enough that its in the DAG still. If we don't have these Hash's, this is an indicator that
     //we may have differing versions of history, OR that we simply do not know of these transactions yet
     doesFollowRule4(transaction) {
-        //TODO: Create DAG and ask it if all transaction.validatedTransactions' hashes are in the DAG currently
+        for(let i = 0;  i < transaction.validatedTransactions.length; i++) {
+            if (!entanglementExporter.hasTransaction(transaction.validatedTransactions[i].transactionHash)) {
+                return false;
+            }
+        }
         return true;
     }
 
     //Prove that this new Transaction and its validate transactions do not create a cycle in the DAG
     doesFollowRule5(transaction) {
-        //TODO: Create DAG and ask it if all this transaction does not make a cycle
-        return true;
+        return !entanglementExporter.doesTransactionCauseCycle(transaction);
     }
 
     //Prove that we agree on the module code being executed, so we're using the same versions
@@ -182,7 +188,7 @@ class TransactionValidator {
         let svm = svmExporter.getVirtualMachine();
         let functionToInvoke = svm.getModule({ module : transaction.execution.moduleName }).getFunctionByName(transaction.execution.functionName);
         let txHashes = [];
-        for(let i = 0; i < transaction.validatedTransactions; i++) {
+        for(let i = 0; i < transaction.validatedTransactions.length; i++) {
             txHashes.push(transaction.validatedTransactions[i].transactionHash);
         }
         let simulationInfo = { 
@@ -201,7 +207,18 @@ class TransactionValidator {
     //NOTE: If they didn't agree, they shouldn't have mentioned them. We only submit validated transactions we agree with. Ones we disagree with are simply ignored, never referenced, and therefore never validated
     //9) foreach Transaction.ValidatedTransactions { SVM.DoesChangeSetMatch(ValidatedTransaction.Hash, ValidatedTransaction.ChangeSet) }
     doesFollowRule9(transaction) {
-        //TODO: Be able to look at the DAG, ask for Transaction.ValidatedTransactions, and confirm their changesets match  what transaction claims they are
+        let entanglement = entanglementExporter.getEntanglement();
+        for(let i = 0; i < transaction.validatedTransactions.length; i++) {
+            let transactionInDAG = entanglement.getTransaction(transaction.validatedTransactions[i].transactionHash);
+            if (transactionInDAG != undefined) {
+                if (transaction.validatedTransactions[i].changeSet != transactionInDAG.execution.changeSet) {
+                    return false;
+                }
+            } else {
+                throw new Error("All transactions being validated must exist");
+                return false;
+            }
+        }
         return true;
     }
 
@@ -209,6 +226,11 @@ class TransactionValidator {
     //10) SVM.WaitForValidation(Transaction.ValidatedTransactions, simulateTrustedParent : Transaction.Hash)
     doesFollowRule10(transaction) {
         //TODO: Be able to look at the DAG and check if the validatedTransactions themselves are valid yet
+        return true;
+    }
+
+    //TODO: You cannot validate other transactions owned by yourself
+    doesFollowRule11(transaction) {
         return true;
     }
 }
@@ -249,7 +271,6 @@ class Transaction {
             hashable += this.validatedTransactions[i].transactionChecksum;
             hashable += this.validatedTransactions[i].changeSet;
         }
-        console.info("getHashableData", hashable);
         return hashable;
     }
 

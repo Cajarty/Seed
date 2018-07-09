@@ -21,6 +21,53 @@ const moduleTester = require("./moduleTester.js");
 const transactionExporter = require("./transaction.js");
 const entanglementExporter = require("./entanglement.js");
 
+let tipsToWork = function(tips, svm) {
+    let result = [];
+    for(let i = 0; i < tips.length; i++) {
+        let transaction = tips[i];
+        let localSimulation = svm.simulate({ module : transaction.execution.moduleName, function : transaction.execution.functionName, args : transaction.execution.args, user : transaction.sender });
+        let localSimAsString = JSON.stringify(localSimulation);
+        if (localSimAsString == transaction.execution.changeSet) {
+            let moduleUsed = svm.getModule({ module : transaction.execution.moduleName });
+            
+            if (moduleUsed != undefined) {
+                let functionHash = moduleUsed.functionHashes[transaction.execution.functionName];
+                if (functionHash != undefined) {
+                    let moduleChecksum = cryptographyHelper.hashToChecksum(moduleUsed.fullHash());
+                    let functionChecksum = cryptographyHelper.hashToChecksum(functionHash);
+                    result.push( { transactionHash : transaction.transactionHash, moduleChecksum : moduleChecksum, functionChecksum : functionChecksum, changeSet : localSimAsString });
+                } else {
+                    throw new Error("Failed to get function hash");
+                }
+            } else {
+                throw new Error("Failed to get module");
+            }
+        } else {
+            throw new Error("Failed to simulate tip");
+        }
+    }
+    return result;
+}
+
+let createTransaction = function(account, mod, func, args) {
+    console.info("Creating Tx:", mod, func, args, account);
+    let vm = virtualMachineExporter.getVirtualMachine();
+    let localSimulation = vm.simulate({ module : mod, function : func, args : args, user : account.publicKey });
+    let tips = entanglementExporter.getTipsToValidate(account.publicKey, 2);
+
+    let work = tipsToWork(tips, vm);
+
+    let transaction = transactionExporter.createNewTransaction(account.publicKey, { moduleName : mod, functionName : func, args : args, changeSet : JSON.stringify(localSimulation) }, work);
+    transaction.signature = account.sign(transaction.transactionHash);
+    if (transactionExporter.isTransactionValid(transaction)) {
+        console.info("Adding Valid Tx To Tangle");
+        entanglementExporter.tryAddTransaction(transaction);
+    } else {
+        console.log("FAILED TO CREATE TRANSACTION. FAILED VALIDATION");
+    }
+    return transaction;
+}
+
 module.exports = {
     transactionTest : function() {
         console.log("### Transaction Test ###");
@@ -31,20 +78,18 @@ module.exports = {
         vm.addModule(seedModule);
 
         //Prep account
-        let newAccount = accountExporter.newAccount({ entropy : "1349082123412353tgfdvrewfdvdfr43f34390413290413", network : "00" });
-        console.log("Account: ", newAccount);
-        let localSimulation = vm.simulate({ module : "Seed", function : "constructor", args : { initialSeed : 1000 }, user : newAccount.publicKey });
-
-        let transaction = transactionExporter.createNewTransaction(newAccount.publicKey, { moduleName : "Seed", functionName : "constructor", args : { initialSeed : 1000 }, changeSet : JSON.stringify(localSimulation) }, []);
-        transaction.signature = newAccount.sign(transaction.transactionHash);
-
+        let accountABC = accountExporter.newAccount({ entropy : "ABC_123456789012345678901234567890", network : "00" });
+        let accountDEF = accountExporter.newAccount({ entropy : "DEF_123456789012345678901234567890", network : "00" });
+        let accountHGI = accountExporter.newAccount({ entropy : "GHI_123456789012345678901234567890", network : "00" });
         entanglementExporter.getEntanglement();
-        entanglementExporter.tryAddTransaction(transaction);
+        
+        console.log(createTransaction(accountABC, "Seed", "constructor", { initialSeed : 1000 }));
+        console.log(createTransaction(accountABC, "Seed", "approve", { spender : accountDEF.publicKey, value : 250 }));
+        console.log(createTransaction(accountDEF, "Seed", "transferFrom", { from : accountABC.publicKey, to : accountDEF.publicKey, value : 100 }));
+
         console.info("Entanglement", entanglementExporter.getEntanglement());
 
-        console.info("Transaction: ", transaction);
 
-        console.info("Is Transaction Valid: ", transactionExporter.isTransactionValid(transaction));
     },
     /**
      * Runs the Seed Module test scenario, confirming the Seed cryptocurrency module behaves as expected
