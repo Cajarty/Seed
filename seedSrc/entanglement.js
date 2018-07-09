@@ -61,7 +61,6 @@ module.exports = {
     getTipsToValidate : function(sender, numberOfTips) {
         let tips = Object.keys(entanglement.tips);
         let result = [];
-        console.info("getTips", sender, numberOfTips, entanglement.tips, tips);
         for(let i = 0; i < tips.length && result.length < numberOfTips; i++) {
             let transaction = entanglement.getTransaction(tips[i]);
             if (transaction == undefined) {
@@ -71,6 +70,8 @@ module.exports = {
                 result.push(transaction);
             }
         }
+        console.info("getTips", result, sender, numberOfTips, entanglement.tips, tips);
+
         return result;
     },
     hasTransaction : function(transactionHash) {

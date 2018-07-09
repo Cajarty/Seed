@@ -24,8 +24,8 @@ module.exports = {
      * 
      * @return {object} - A new Container object
      */
-    createContainer: function(moduleName, sender, args) {
-       return new Container(moduleName, sender, args);
+    createContainer: function(moduleName, sender, args, txHashes) {
+       return new Container(moduleName, sender, args, txHashes);
     }
  }
 

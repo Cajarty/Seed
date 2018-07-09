@@ -21,53 +21,6 @@ const moduleTester = require("./moduleTester.js");
 const transactionExporter = require("./transaction.js");
 const entanglementExporter = require("./entanglement.js");
 
-let tipsToWork = function(tips, svm) {
-    let result = [];
-    for(let i = 0; i < tips.length; i++) {
-        let transaction = tips[i];
-        let localSimulation = svm.simulate({ module : transaction.execution.moduleName, function : transaction.execution.functionName, args : transaction.execution.args, user : transaction.sender });
-        let localSimAsString = JSON.stringify(localSimulation);
-        if (localSimAsString == transaction.execution.changeSet) {
-            let moduleUsed = svm.getModule({ module : transaction.execution.moduleName });
-            
-            if (moduleUsed != undefined) {
-                let functionHash = moduleUsed.functionHashes[transaction.execution.functionName];
-                if (functionHash != undefined) {
-                    let moduleChecksum = cryptographyHelper.hashToChecksum(moduleUsed.fullHash());
-                    let functionChecksum = cryptographyHelper.hashToChecksum(functionHash);
-                    result.push( { transactionHash : transaction.transactionHash, moduleChecksum : moduleChecksum, functionChecksum : functionChecksum, changeSet : localSimAsString });
-                } else {
-                    throw new Error("Failed to get function hash");
-                }
-            } else {
-                throw new Error("Failed to get module");
-            }
-        } else {
-            throw new Error("Failed to simulate tip");
-        }
-    }
-    return result;
-}
-
-let createTransaction = function(account, mod, func, args) {
-    console.info("Creating Tx:", mod, func, args, account);
-    let vm = virtualMachineExporter.getVirtualMachine();
-    let localSimulation = vm.simulate({ module : mod, function : func, args : args, user : account.publicKey });
-    let tips = entanglementExporter.getTipsToValidate(account.publicKey, 2);
-
-    let work = tipsToWork(tips, vm);
-
-    let transaction = transactionExporter.createNewTransaction(account.publicKey, { moduleName : mod, functionName : func, args : args, changeSet : JSON.stringify(localSimulation) }, work);
-    transaction.signature = account.sign(transaction.transactionHash);
-    if (transactionExporter.isTransactionValid(transaction)) {
-        console.info("Adding Valid Tx To Tangle");
-        entanglementExporter.tryAddTransaction(transaction);
-    } else {
-        console.log("FAILED TO CREATE TRANSACTION. FAILED VALIDATION");
-    }
-    return transaction;
-}
-
 module.exports = {
     transactionTest : function() {
         console.log("### Transaction Test ###");
@@ -83,13 +36,11 @@ module.exports = {
         let accountHGI = accountExporter.newAccount({ entropy : "GHI_123456789012345678901234567890", network : "00" });
         entanglementExporter.getEntanglement();
         
-        console.log(createTransaction(accountABC, "Seed", "constructor", { initialSeed : 1000 }));
-        console.log(createTransaction(accountABC, "Seed", "approve", { spender : accountDEF.publicKey, value : 250 }));
-        console.log(createTransaction(accountDEF, "Seed", "transferFrom", { from : accountABC.publicKey, to : accountDEF.publicKey, value : 100 }));
+        console.log(vm.createTransaction(accountABC, "Seed", "constructor", { initialSeed : 1000 }, 2));
+        console.log(vm.createTransaction(accountABC, "Seed", "approve", { spender : accountDEF.publicKey, value : 250 }, 2));
+        console.log(vm.createTransaction(accountDEF, "Seed", "transferFrom", { from : accountABC.publicKey, to : accountDEF.publicKey, value : 100 }, 2));
 
         console.info("Entanglement", entanglementExporter.getEntanglement());
-
-
     },
     /**
      * Runs the Seed Module test scenario, confirming the Seed cryptocurrency module behaves as expected
@@ -102,39 +53,39 @@ module.exports = {
         
         let tester = moduleTester.beginTest("Seed", "ABC");
         tester.invoke("constructor", { initialSeed : 1000 });
-        tester.assertEqual("getBalanceOf", { owner : "ABC" }, 1000, "Creator should start with 1000 SEED");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 1000, "Creator should start with 1000 SEED");
         tester.assertEqual("getSymbol", {}, "SEED", "The symbol of Seed should be \"SEED\"");
         tester.assertEqual("getDecimals", {}, 4, "Seed should have 4 decimal points");
         tester.assertEqual("getTotalSupply", {}, 1000, "1000 SEED should be in circulation upon creation");
 
-        tester.assertEqual("getAllowance", { owner : "ABC", spender : "DEF" }, undefined, "Get allowance is unset for user who has never used Seed before" );
+        tester.assertEqual("getAllowance", { owner : tester.getAccount("ABC"), spender : tester.getAccount("DEF") }, undefined, "Get allowance is unset for user who has never used Seed before" );
         tester.switchUser("DEF");
 
         //Before DEF has an account, should fail
-        tester.assertInvokeFailToChangeState("transferFrom", { from : "ABC", to : "GEH", value : 100 });
+        tester.assertInvokeFailToChangeState("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GEH"), value : 100 });
 
-        vm.addUser({ module : "Seed" }, "DEF"); // I don't think we need, or want to need, this
+        vm.addUser({ module : "Seed" }, tester.getAccount("DEF")); // I don't think we need, or want to need, this
 
         // Before DEF has allowance, should fail
-        tester.assertInvokeFailToChangeState("transferFrom", { from : "ABC", to : "GEH", value : 100 });
+        tester.assertInvokeFailToChangeState("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GEH"), value : 100 });
 
         tester.switchUser("ABC");
-        tester.invoke("approve", { spender : "DEF", value : 250 });
+        tester.invoke("approve", { spender : tester.getAccount("DEF"), value : 250 });
         tester.switchUser("DEF");
-        tester.invoke("transferFrom", { from : "ABC", to : "DEF", value : 100 });
-        tester.invoke("transferFrom", { from : "ABC", to : "GHI", value : 100 });
+        tester.invoke("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("DEF"), value : 100 });
+        tester.invoke("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GHI"), value : 100 });
 
-        tester.assertEqual("getBalanceOf", { owner : "ABC" }, 800, "Owner should still have 800 SEED");
-        tester.assertEqual("getBalanceOf", { owner : "DEF" }, 100, "DEF sent 100 SEED to himself");
-        tester.assertEqual("getBalanceOf", { owner : "GHI" }, 100, "GHI received 100 SEED from DEF on ABC's behalf");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 800, "Owner should still have 800 SEED");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("DEF") }, 100, "DEF sent 100 SEED to himself");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("GHI") }, 100, "GHI received 100 SEED from DEF on ABC's behalf");
 
         tester.switchUser("GHI");
-        tester.invoke("transfer", { to : "ABC", value : 50 });
-        tester.assertEqual("getBalanceOf", { owner : "ABC" }, 850, "ABC should have received 50 from GHI");
+        tester.invoke("transfer", { to : tester.getAccount("ABC"), value : 50 });
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 850, "ABC should have received 50 from GHI");
 
         tester.switchUser("DEF");
         tester.invoke("burn", { value : 25 });
-        tester.assertEqual("getBalanceOf", { owner : "DEF" }, 75, "DEF should have 75 after burning 25, removing it from circulation");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("DEF") }, 75, "DEF should have 75 after burning 25, removing it from circulation");
         tester.assertEqual("getTotalSupply", {}, 975, "25 coins were burned, removed from circulation, since initial 1000 creation");
 
         tester.endTest();

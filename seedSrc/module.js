@@ -39,6 +39,9 @@ module.exports = {
         this.module = info.module;
         this.initialData = conformHelper.deepCopy(info.initialData);
         this.initialUserData = conformHelper.deepCopy(info.initialUserData);
+        this.functionChecksums = {};
+        this.moduleHash = "";
+        this.moduleChecksum = "";
 
         if (info.functions != undefined && typeof info.functions == "object") {
             this.addFunctions(info.functions);
@@ -58,6 +61,9 @@ module.exports = {
             if (this.functions[hash] == undefined) {
                 this.functions[hash] = info;
                 this.functionHashes[info.name] = hash;
+                this.functionChecksums[info.name] = cryptoHelper.hashToChecksum(hash);
+                this.moduleHash = this.fullHash();
+                this.moduleChecksum = cryptoHelper.hashToChecksum(this.moduleHash);
             }
         }
     }

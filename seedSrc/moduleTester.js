@@ -1,4 +1,7 @@
 const vmExporter = require("./virtualMachine/virtualMachine.js");
+const transactionExporter = require("./transaction.js");
+const entanglementExporter = require("./entanglement.js");
+const accountExporter = require("./account.js");
 
 let vm = null;
 
@@ -13,10 +16,12 @@ class ModuleTester{
     constructor(moduleName, startingUser) {
         console.info("Begin Test For Module " + moduleName);
         this.moduleName = moduleName;
-        this.currentUser = startingUser;
         this.passCounter = 1;
         this.totalCounter = 1;
         this.fails = [];
+        this.accounts = {};
+        this.switchUser(startingUser);
+        entanglementExporter.getEntanglement();
     }
 
     passTest() {
@@ -34,16 +39,31 @@ class ModuleTester{
     }
 
     switchUser(newUser) {
-        this.currentUser = newUser;
+        if (this.accounts[newUser] == undefined) {
+            this.accounts[newUser] = accountExporter.newAccount( { entropy : newUser + "_123456789012345678901234567890", network : "00" });
+        }
+        this.currentUser = this.accounts[newUser];
+    }
+
+    getAccount(user) {
+        if (this.accounts[user] == undefined) {
+            this.accounts[user] = accountExporter.newAccount( { entropy : user + "_123456789012345678901234567890", network : "00" });
+        }
+        return this.accounts[user].publicKey;
     }
 
     invoke(functionName, args) {
         return vm.invoke({ 
             module : this.moduleName, 
             function : functionName, 
-            user : this.currentUser, 
-            args : args
+            user : this.currentUser.publicKey, 
+            args : args,
+            txHashes : []
         });
+    }
+
+    runTransaction(functionName, args) {
+        return vm.createTransaction(this.currentUser, this.moduleName, functionName, args, 2);
     }
 
     assertEqual(functionName, args, valueToCheck, failMessage) {

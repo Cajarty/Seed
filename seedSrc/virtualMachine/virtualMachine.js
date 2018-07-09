@@ -35,6 +35,8 @@ const changeContextExporter = require("./changeContext.js");
 const containerExporter = require("./container.js");
 const conformHelper = require("../helpers/conformHelper.js");
 const ledgerExporter = require("../ledger.js");
+const entanglement = require("../entanglement.js");
+const transactionExporter = require("../transaction.js");
 
 class VirtualMachine {
     
@@ -171,6 +173,51 @@ class VirtualMachine {
                 this.applyChangeContext(info, result);
             } else {
                 return this.ERROR.FailedToChangeState;
+            }
+        }
+        return result;
+    }
+
+    createTransaction(account, mod, func, args, transactionsToValidate) {
+        console.info("Creating Tx:", mod, func, args, account);
+        let localSimulation = this.simulate({ module : mod, function : func, args : args, user : account.publicKey });
+        let tips = entanglement.getTipsToValidate(account.publicKey, transactionsToValidate);
+    
+        let work = this.doWork(account, tips);
+    
+        let transaction = transactionExporter.createNewTransaction(account.publicKey, { moduleName : mod, functionName : func, args : args, changeSet : JSON.stringify(localSimulation) }, work);
+        transaction.signature = account.sign(transaction.transactionHash);
+        this.incomingTransaction(transaction);
+        return transaction;
+    }
+
+    incomingTransaction(transaction) {
+        if (transactionExporter.isTransactionValid(transaction)) {
+            console.info("Adding Valid Tx To Tangle");
+            entanglement.tryAddTransaction(transaction);
+        } else {
+            console.log("FAILED TO CREATE TRANSACTION. FAILED VALIDATION");
+        }
+    }
+
+    doWork(account, tips) {
+        let result = [];
+        for(let i = 0; i < tips.length; i++) {
+            let transaction = tips[i];
+            let localSimulation = this.simulate({ module : transaction.execution.moduleName, function : transaction.execution.functionName, args : transaction.execution.args, user : transaction.sender });
+            let localSimAsString = JSON.stringify(localSimulation);
+            if (localSimAsString == transaction.execution.changeSet) {
+                let moduleUsed = this.getModule({ module : transaction.execution.moduleName });
+                
+                if (moduleUsed != undefined) {
+                    let functionChecksum = moduleUsed.functionChecksums[transaction.execution.functionName];
+                    let moduleChecksum = moduleUsed.moduleChecksum;
+                    result.push( { transactionHash : transaction.transactionHash, moduleChecksum : moduleChecksum, functionChecksum : functionChecksum, changeSet : localSimAsString });
+                } else {
+                    throw new Error("Failed to get module");
+                }
+            } else {
+                throw new Error("Failed to simulate tip");
             }
         }
         return result;

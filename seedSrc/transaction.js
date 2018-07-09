@@ -36,17 +36,12 @@ module.exports = {
         let moduleUsed = svm.getModule({ module : execution.moduleName });
 
         if (moduleUsed != undefined) {
-            let functionHash = moduleUsed.functionHashes[execution.functionName];
-            if (functionHash != undefined) {
-                execution.moduleChecksum = cryptoHelper.hashToChecksum(moduleUsed.fullHash());
-                execution.functionChecksum = cryptoHelper.hashToChecksum(functionHash);
+            execution.functionChecksum = moduleUsed.functionChecksums[execution.functionName];
+            execution.moduleChecksum = moduleUsed.moduleChecksum;
 
-                var transaction = new Transaction(sender, execution, trustedTransactions);
-                transaction.updateHash();
-                return transaction;
-            } else {
-                throw new Error("Error creating new transaction. Function used not found");
-            }
+            var transaction = new Transaction(sender, execution, trustedTransactions);
+            transaction.updateHash();
+            return transaction;
         } else {
             throw new Error("Error creating new transaction. Module used not found");
         }
