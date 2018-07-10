@@ -13,7 +13,7 @@ module.exports = {
 }
 
 class ModuleTester{
-    constructor(moduleName, startingUser) {
+    constructor(moduleName, startingUser, simulateDAG) {
         console.info("Begin Test For Module " + moduleName);
         this.moduleName = moduleName;
         this.passCounter = 1;
@@ -22,6 +22,7 @@ class ModuleTester{
         this.accounts = {};
         this.switchUser(startingUser);
         entanglementExporter.getEntanglement();
+        this.simulateDAG = simulateDAG;
     }
 
     passTest() {
@@ -62,8 +63,23 @@ class ModuleTester{
         });
     }
 
-    runTransaction(functionName, args) {
-        return vm.createTransaction(this.currentUser, this.moduleName, functionName, args, 2);
+    createTransaction(functionName, args) {
+        return vm.createTransaction(this.currentUser, this.moduleName, functionName, args, this.simulateDAG ? 2 : 0);
+    }
+
+    createAndInvokeTransaction(functionName, args) {
+        let transaction = this.createTransaction(functionName, args);
+        let txHashes = [];
+        for(let i = 0; i < transaction.validatedTransactions.length; i++) {
+            txHashes.push(transaction.validatedTransactions[i].transactionHash);
+        }
+        return vm.invoke({ 
+            module : transaction.execution.moduleName, 
+            function : transaction.execution.functionName, 
+            user : this.currentUser.publicKey, 
+            args : transaction.execution.args,
+            txHashes : txHashes
+        }, transaction.execution.changeSet);
     }
 
     assertEqual(functionName, args, valueToCheck, failMessage) {

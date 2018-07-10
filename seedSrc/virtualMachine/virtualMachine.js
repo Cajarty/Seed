@@ -164,8 +164,8 @@ class VirtualMachine {
      * 
      * @return - ChangeContext if state-modifying function. Fetched data if getter function.
      */
-    invoke(info) {
-        let result = this.simulate(info);
+    invoke(info, resultIfSimulate) {
+        let result = resultIfSimulate == undefined ? this.simulate(info) : JSON.parse(resultIfSimulate);
         if (result != undefined && conformHelper.doesFullyConform(result, { moduleData : "object", userData : "object" })) {
             let users = Object.keys(result.userData);
             let moduleDataKeys = Object.keys(result.moduleData);
@@ -193,7 +193,6 @@ class VirtualMachine {
 
     incomingTransaction(transaction) {
         if (transactionExporter.isTransactionValid(transaction)) {
-            console.info("Adding Valid Tx To Tangle");
             entanglement.tryAddTransaction(transaction);
         } else {
             console.log("FAILED TO CREATE TRANSACTION. FAILED VALIDATION");

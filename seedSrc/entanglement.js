@@ -70,7 +70,6 @@ module.exports = {
                 result.push(transaction);
             }
         }
-        console.info("getTips", result, sender, numberOfTips, entanglement.tips, tips);
 
         return result;
     },

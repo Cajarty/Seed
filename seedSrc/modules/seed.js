@@ -160,7 +160,6 @@ let transferFrom = function(container, changeContext) {
     let sender = container.sender;
     let fromBalance = container.getUserData(from).balance;
     let senderAllowance = container.getUserData(from).allowance[sender];
-
     // Confirm adequate balance and allowance for the transaction
     if (fromBalance >= value && senderAllowance >= value && value > 0) {
          changeContext.subtract(value, { user : from, key : "balance" });

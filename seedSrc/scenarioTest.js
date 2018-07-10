@@ -20,27 +20,57 @@ const seedExporter = require("./modules/seed.js");
 const moduleTester = require("./moduleTester.js");
 const transactionExporter = require("./transaction.js");
 const entanglementExporter = require("./entanglement.js");
+const ledgerExporter = require("./ledger.js");
 
 module.exports = {
-    transactionTest : function() {
-        console.log("### Transaction Test ###");
+    seedAndSVMTransactionTest_NoDAG : function() {
+        console.log("### Seed & SVM Transaction Test ###");
 
         //Prep seed module
         let vm = virtualMachineExporter.getVirtualMachine();
         let seedModule = seedExporter.getSeed();
         vm.addModule(seedModule);
 
-        //Prep account
-        let accountABC = accountExporter.newAccount({ entropy : "ABC_123456789012345678901234567890", network : "00" });
-        let accountDEF = accountExporter.newAccount({ entropy : "DEF_123456789012345678901234567890", network : "00" });
-        let accountHGI = accountExporter.newAccount({ entropy : "GHI_123456789012345678901234567890", network : "00" });
-        entanglementExporter.getEntanglement();
-        
-        console.log(vm.createTransaction(accountABC, "Seed", "constructor", { initialSeed : 1000 }, 2));
-        console.log(vm.createTransaction(accountABC, "Seed", "approve", { spender : accountDEF.publicKey, value : 250 }, 2));
-        console.log(vm.createTransaction(accountDEF, "Seed", "transferFrom", { from : accountABC.publicKey, to : accountDEF.publicKey, value : 100 }, 2));
+        let tester = moduleTester.beginTest("Seed", "ABC");
+        tester.createAndInvokeTransaction("constructor", { initialSeed : 1000 });
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 1000, "Creator should start with 1000 SEED");
+        tester.assertEqual("getSymbol", {}, "SEED", "The symbol of Seed should be \"SEED\"");
+        tester.assertEqual("getDecimals", {}, 4, "Seed should have 4 decimal points");
+        tester.assertEqual("getTotalSupply", {}, 1000, "1000 SEED should be in circulation upon creation");
 
-        console.info("Entanglement", entanglementExporter.getEntanglement());
+        tester.assertEqual("getAllowance", { owner : tester.getAccount("ABC"), spender : tester.getAccount("DEF") }, undefined, "Get allowance is unset for user who has never used Seed before" );
+        tester.switchUser("DEF");
+
+        //Before DEF has an account, should fail
+        tester.assertInvokeFailToChangeState("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GEH"), value : 100 });
+        vm.addUser({ module : "Seed" }, tester.getAccount("DEF")); // I don't think we need, or want to need, this
+    
+        // Before DEF has allowance, should fail
+        tester.assertInvokeFailToChangeState("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GEH"), value : 100 });
+
+        tester.switchUser("ABC");
+        tester.createAndInvokeTransaction("approve", { spender : tester.getAccount("DEF"), value : 250 });
+        tester.switchUser("DEF");
+        tester.createAndInvokeTransaction("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("DEF"), value : 100 });
+        tester.createAndInvokeTransaction("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GHI"), value : 100 });
+
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 800, "Owner should still have 800 SEED");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("DEF") }, 100, "DEF sent 100 SEED to himself");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("GHI") }, 100, "GHI received 100 SEED from DEF on ABC's behalf");
+
+        tester.switchUser("GHI");
+        tester.createAndInvokeTransaction("transfer", { to : tester.getAccount("ABC"), value : 50 });
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 850, "ABC should have received 50 from GHI");
+
+        tester.switchUser("DEF");
+        tester.createAndInvokeTransaction("burn", { value : 25 });
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("DEF") }, 75, "DEF should have 75 after burning 25, removing it from circulation");
+        tester.assertEqual("getTotalSupply", {}, 975, "25 coins were burned, removed from circulation, since initial 1000 creation");
+
+        tester.endTest();
+
+        console.info("Entanglement", entanglementExporter.getEntanglement(), "Ledger", ledgerExporter.getLedger().getModuleData("Seed"));
+        
     },
     /**
      * Runs the Seed Module test scenario, confirming the Seed cryptocurrency module behaves as expected
@@ -49,7 +79,6 @@ module.exports = {
         let vm = virtualMachineExporter.getVirtualMachine();
         let seedModule = seedExporter.getSeed();
         vm.addModule(seedModule);
-
         
         let tester = moduleTester.beginTest("Seed", "ABC");
         tester.invoke("constructor", { initialSeed : 1000 });

@@ -29,7 +29,6 @@
 
 module.exports = {
     createNewTransaction : function(sender, execution, trustedTransactions ) {
-        console.log(cryptoExporter);
         let cryptoHelper = cryptoExporter.newCryptoHelper();
         let svm = svmExporter.getVirtualMachine();
 
@@ -99,9 +98,14 @@ module.exports = {
 
         let rule10 = validator.doesFollowRule10(transaction);
 
-        console.info("isTransactionValid", rule1, rule2, rule3, rule4, rule5, rules6And7, rule8, rule9, rule10);
+        let result = rule1 && rule2 && rule3 && rule4 && rule5 && rules6And7 && rule8 && rule9 && rule10;
 
-        return rule1 && rule2 && rule3 && rule4 && rule5 && rules6And7 && rule8 && rule9 && rule10;
+        if (!result) {
+            console.info("isTransactionValid Failed", rule1, rule2, rule3, rule4, rule5, rules6And7, rule8, rule9, rule10);
+        }
+
+        return result;
+
     
         /*
             NOTES:
