@@ -98,10 +98,12 @@ module.exports = {
 
         let rule10 = validator.doesFollowRule10(transaction);
 
-        let result = rule1 && rule2 && rule3 && rule4 && rule5 && rules6And7 && rule8 && rule9 && rule10;
+        let rule11 = validator.doesFollowRule11(transaction);
+
+        let result = rule1 && rule2 && rule3 && rule4 && rule5 && rules6And7 && rule8 && rule9 && rule10 && rule11;
 
         if (!result) {
-            console.info("isTransactionValid Failed", rule1, rule2, rule3, rule4, rule5, rules6And7, rule8, rule9, rule10);
+            console.info("isTransactionValid Failed", rule1, rule2, rule3, rule4, rule5, rules6And7, rule8, rule9, rule10, rule11);
         }
 
         return result;
@@ -228,8 +230,14 @@ class TransactionValidator {
         return true;
     }
 
-    //TODO: You cannot validate other transactions owned by yourself
+    //You cannot validate other transactions owned by yourself
     doesFollowRule11(transaction) {
+        for(let i = 0; i < transaction.validatedTransactions.length; i++) {
+            let transactionValidated = entanglementExporter.getEntanglement().transactions[transaction.validatedTransactions[i].transactionHash];
+            if (transactionValidated.sender == transaction.sender) {
+                return false;
+            }
+        }
         return true;
     }
 }
