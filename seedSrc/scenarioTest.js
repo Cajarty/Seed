@@ -23,17 +23,6 @@ const transactionExporter = require("./transaction.js");
 const entanglementExporter = require("./entanglement.js");
 const ledgerExporter = require("./ledger.js");
 
-let relay = function (tester, relays) {
-    let oldAccount = tester.currentUser;
-    let rand = Math.floor((Math.random() * 10));
-    for(let i = 0; i < relays; i++) {
-        let name = "Z" + (rand + i);
-        tester.switchUser(name);
-        tester.relay();
-    }
-    tester.currentUser = oldAccount;
-}
-
 module.exports = {
     seedAndSVMTransactionTest : function() {
         console.log("### Seed & SVM Transaction Test ###");
@@ -45,8 +34,9 @@ module.exports = {
         vm.addModule(relayExporter.getRelay());
 
         let tester = moduleTester.beginTest("Seed", "ABC", true);
-        tester.createTransaction("constructor", { initialSeed : 1000 });
-        relay(tester, 4);
+        tester.createTransactionWithRelay("constructor", { initialSeed : 1000 });
+        tester.relay();
+        tester.relay();
         tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 1000, "Creator should start with 1000 SEED");
         tester.assertEqual("getSymbol", {}, "SEED", "The symbol of Seed should be \"SEED\"");
         tester.assertEqual("getDecimals", {}, 4, "Seed should have 4 decimal points");
@@ -54,33 +44,34 @@ module.exports = {
         tester.assertEqual("getAllowance", { owner : tester.getAccount("ABC"), spender : tester.getAccount("DEF") }, undefined, "Get allowance is unset for user who has never used Seed before" );
 
         tester.switchUser("ABC");
-        tester.createTransaction("approve", { spender : tester.getAccount("DEF"), value : 250 });
+        tester.createTransactionWithRelay("approve", { spender : tester.getAccount("DEF"), value : 250 });
+        tester.relay();
 
-        relay(tester, 2);
         tester.switchUser("DEF");
-        tester.createTransaction("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("DEF"), value : 100 });
-        relay(tester, 2);
-        tester.createTransaction("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GHI"), value : 100 });
-        relay(tester, 2);
-        console.info(ledgerExporter.getLedger());
+        tester.createTransactionWithRelay("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("DEF"), value : 100 });
+        tester.createTransactionWithRelay("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GHI"), value : 100 });
+        tester.relay();
+        tester.relay();
         tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 800, "Owner should still have 800 SEED");
         tester.assertEqual("getBalanceOf", { owner : tester.getAccount("DEF") }, 100, "DEF sent 100 SEED to himself");
         tester.assertEqual("getBalanceOf", { owner : tester.getAccount("GHI") }, 100, "GHI received 100 SEED from DEF on ABC's behalf");
 
         tester.switchUser("GHI");
-        tester.createTransaction("transfer", { to : tester.getAccount("ABC"), value : 50 });
-        relay(tester, 2);
+        tester.createTransactionWithRelay("transfer", { to : tester.getAccount("ABC"), value : 50 });
+        tester.relay();
+        tester.relay();
         tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 850, "ABC should have received 50 from GHI");
 
         tester.switchUser("DEF");
-        tester.createTransaction("burn", { value : 25 });
-        relay(tester, 2);
+        tester.createTransactionWithRelay("burn", { value : 25 });
+        tester.relay();
+        tester.relay();
         tester.assertEqual("getBalanceOf", { owner : tester.getAccount("DEF") }, 75, "DEF should have 75 after burning 25, removing it from circulation");
         tester.assertEqual("getTotalSupply", {}, 975, "25 coins were burned, removed from circulation, since initial 1000 creation");
 
         tester.endTest();
 
-        console.info("Entanglement", entanglementExporter.getEntanglement(), "Ledger", ledgerExporter.getLedger().getModuleData("Seed"));
+        console.info("Entanglement", entanglementExporter.getEntanglement(), "Ledger", ledgerExporter.getLedger());
         
     },
     seedAndSVMTransactionTest_NoDAG : function() {

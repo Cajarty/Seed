@@ -182,12 +182,16 @@ class VirtualMachine {
         let tips = entanglement.getTipsToValidate(account.publicKey, transactionsToValidate);
         console.info("createTransaction", account, mod, func, args, transactionsToValidate, tips);
         let localSimulation = this.simulate({ module : mod, function : func, args : args, user : account.publicKey, txHashes : tips });
-        let work = this.doWork(account, tips);
-    
-        let transaction = transactionExporter.createNewTransaction(account.publicKey, { moduleName : mod, functionName : func, args : args, changeSet : JSON.stringify(localSimulation) }, work);
-        transaction.signature = account.sign(transaction.transactionHash);
-        this.incomingTransaction(transaction);
-        return transaction;
+        if (localSimulation.didChange()) {
+            let work = this.doWork(account, tips);
+            let transaction = transactionExporter.createNewTransaction(account.publicKey, { moduleName : mod, functionName : func, args : args, changeSet : JSON.stringify(localSimulation) }, work);
+            transaction.signature = account.sign(transaction.transactionHash);
+            this.incomingTransaction(transaction);
+            return transaction;
+        } else {
+            console.info("FAILED", localSimulation);
+            return null;
+        }
     }
 
     incomingTransaction(transaction) {

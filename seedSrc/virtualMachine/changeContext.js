@@ -339,6 +339,14 @@ class ChangeContext {
         this.userData[options.user][options.outerKey][options.innerKey] = value;
     }
 
+    /**
+     * Returns whether any changes occured to the data
+     */
+    didChange() {
+        
+        return Object.keys(this.userData).length > 0 || Object.keys(this.moduleData).length > 0;
+    }
+
     /* 
         #################################################
         ### To Ensure Proper Data Structure & Routing ###

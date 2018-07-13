@@ -64,11 +64,28 @@ class ModuleTester{
     }
 
     relay() {
-        return vm.createTransaction(this.currentUser, "Relay", "relay", {}, this.simulateDAG ? 4 : 0);
+        let oldAccount = this.currentUser;
+        let name = "Z" + Math.floor((Math.random() * 10));
+        this.switchUser(name);
+        let transaction = vm.createTransaction(this.currentUser, "Relay", "relay", {}, this.simulateDAG ? 4 : 0);
+        this.currentUser = oldAccount;
+        return transaction;
     }
 
     createTransaction(functionName, args) {
         return vm.createTransaction(this.currentUser, this.moduleName, functionName, args, this.simulateDAG ? 2 : 0);
+    }
+
+    createTransactionWithRelay(functionName, args) {
+        console.info("CreatingTransaction", functionName, args);
+        let transaction = this.createTransaction(functionName, args);
+        if (transaction == null) {
+            console.info("Rerolling");
+            this.relay();
+            console.info("Back to failed");
+            return this.createTransactionWithRelay(functionName, args);
+        }
+        return transaction;
     }
 
     createAndInvokeTransaction(functionName, args) {
