@@ -1,11 +1,10 @@
 # Overview 
 
-// There are two crypto-based sections to the Seed system. The DAG and the Blockchain.
-// The DAG is what Seed relies on for validation and short-term malliable storage.
-// The blockchain is used for immutable long-term storage. 
-// Once transactions in the DAG become fully validated and certain conditions are met, they will become condenced into blocks in a fully deterministic fashion.
+There are two crypto-based sections to the Seed system. The DAG and the Blockchain. The DAG is what Seed relies on for validation and short-term malliable storage, while the blockchain portion is used for long term storage.
 
-// This design document will be focused on transactions and the entanglement of transactions into the Seed DAG.
+Once transactions in the DAG become fully validated and certain conditions are met, they will become condenced into blocks in a fully deterministic fashion.
+
+This design document will be focused on transactions and the entanglement of transactions into the Seed DAG.
 
 -----
 
