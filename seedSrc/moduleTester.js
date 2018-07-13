@@ -6,9 +6,9 @@ const accountExporter = require("./account.js");
 let vm = null;
 
 module.exports = {
-    beginTest : function(moduleName, startingUser) {
+    beginTest : function(moduleName, startingUser, simulateDAG) {
         vm = vmExporter.getVirtualMachine();
-        return new ModuleTester(moduleName, startingUser);
+        return new ModuleTester(moduleName, startingUser, simulateDAG);
     } 
 }
 
@@ -61,6 +61,10 @@ class ModuleTester{
             args : args,
             txHashes : []
         });
+    }
+
+    relay() {
+        return vm.createTransaction(this.currentUser, "Relay", "relay", {}, this.simulateDAG ? 4 : 0);
     }
 
     createTransaction(functionName, args) {

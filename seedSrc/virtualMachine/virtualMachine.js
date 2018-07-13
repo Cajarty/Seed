@@ -179,10 +179,9 @@ class VirtualMachine {
     }
 
     createTransaction(account, mod, func, args, transactionsToValidate) {
-        console.info("Creating Tx:", mod, func, args, account);
-        let localSimulation = this.simulate({ module : mod, function : func, args : args, user : account.publicKey });
         let tips = entanglement.getTipsToValidate(account.publicKey, transactionsToValidate);
-    
+        console.info("createTransaction", account, mod, func, args, transactionsToValidate, tips);
+        let localSimulation = this.simulate({ module : mod, function : func, args : args, user : account.publicKey, txHashes : tips });
         let work = this.doWork(account, tips);
     
         let transaction = transactionExporter.createNewTransaction(account.publicKey, { moduleName : mod, functionName : func, args : args, changeSet : JSON.stringify(localSimulation) }, work);
@@ -203,7 +202,7 @@ class VirtualMachine {
         let result = [];
         for(let i = 0; i < tips.length; i++) {
             let transaction = tips[i];
-            let localSimulation = this.simulate({ module : transaction.execution.moduleName, function : transaction.execution.functionName, args : transaction.execution.args, user : transaction.sender });
+            let localSimulation = this.simulate({ module : transaction.execution.moduleName, function : transaction.execution.functionName, args : transaction.execution.args, user : transaction.sender, txHashes : transaction.getValidatedTXHashes() });
             let localSimAsString = JSON.stringify(localSimulation);
             if (localSimAsString == transaction.execution.changeSet) {
                 let moduleUsed = this.getModule({ module : transaction.execution.moduleName });
@@ -216,6 +215,7 @@ class VirtualMachine {
                     throw new Error("Failed to get module");
                 }
             } else {
+                console.info("Simulated", localSimAsString, "Actual", transaction.execution.changeSet);
                 throw new Error("Failed to simulate tip");
             }
         }

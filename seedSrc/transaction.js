@@ -273,6 +273,14 @@ class Transaction {
         return hashable;
     }
 
+    getValidatedTXHashes() {
+        let result = [];
+        for(let i = 0; i < this.validatedTransactions.length; i++) {
+            result.push(this.validatedTransactions[i].transactionHash);
+        }
+        return result;
+    }
+
     /*toHashableString() {
         let result = "";
         result += this.merkelDAGHash;

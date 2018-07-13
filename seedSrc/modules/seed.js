@@ -50,7 +50,8 @@ module.exports = {
                     getAllowance : getAllowance,
                     getTotalSupply : getTotalSupply,
                     getSymbol : getSymbol,
-                    getDecimals : getDecimals
+                    getDecimals : getDecimals,
+                    mine : mine
                 }
             });
         }
@@ -160,6 +161,7 @@ let transferFrom = function(container, changeContext) {
     let sender = container.sender;
     let fromBalance = container.getUserData(from).balance;
     let senderAllowance = container.getUserData(from).allowance[sender];
+    console.info(to, from, value, sender, fromBalance, senderAllowance);
     // Confirm adequate balance and allowance for the transaction
     if (fromBalance >= value && senderAllowance >= value && value > 0) {
          changeContext.subtract(value, { user : from, key : "balance" });
@@ -222,6 +224,19 @@ let burn = function(container, changeContext) {
     if (balance >= value) {
         changeContext.subtract(value, { user : container.sender, key : "balance" });
         changeContext.subtract(value, { key : "totalSupply" });
+    }
+
+    return changeContext;
+}
+
+let mine = function(container, changeContext) {
+    //Gather readonly data
+    let value = container.args.value;
+    let balance = container.getSenderData().balance;
+
+    if (container.txHashes.length > 0) {
+        changeContext.add(container.txHashes.length, { user : container.sender, key : "balance" });
+        changeContext.add(container.txHashes.length, { key : "totalSupply" });
     }
 
     return changeContext;
@@ -291,3 +306,4 @@ let getSymbol = function(container) {
 let getDecimals = function(container) {
     return container.getModuleData().decimals;
 }
+

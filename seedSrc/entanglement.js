@@ -31,6 +31,7 @@ module.exports = {
     doesTransactionCauseCycle : function(transaction) {
         let children = [];
         if (entanglement.contains(transaction.transactionHash)) {
+            console.info(transaction, entanglement);
             throw new Error("Cannot check transaction that's already been added");
         }
         for(let i = 0; i < transaction.validatedTransactions.length; i++) {
@@ -55,7 +56,7 @@ module.exports = {
             console.log(e);
             result = true;
         }
-        entanglement.remove(from);
+        entanglement.remove(transaction.transactionHash);
         return result;
     },
     getTipsToValidate : function(sender, numberOfTips) {
@@ -66,7 +67,7 @@ module.exports = {
             if (transaction == undefined) {
                 console.info("Failed to find ", JSON.stringify(tips[i]), " in ", entanglement);
             }
-            if (sender != transaction.sender) {
+            if (sender != transaction.sender && entanglement.tips[transaction.transactionHash] > 0) {
                 result.push(transaction);
             }
         }
@@ -91,11 +92,12 @@ module.exports = {
     }
  }
 
+ const svmExporter = require("./virtualMachine/virtualMachine.js");
+
 let visit = function (vertex, func, visited, path) {
     let name = vertex.name;
     let vertices = vertex.incoming;
     let names = vertex.incomingNodes;
-    console.info("visit", vertex, names);
     if (!visited) {
         visited = {};
     }
@@ -132,6 +134,7 @@ let visit = function (vertex, func, visited, path) {
     remove(node) {
         delete this.vertices[node]
         delete this.tips[node];
+        delete this.transactions[node];
         for(let i = 0; i < this.nodes.length; i++) {
             if (this.nodes[i] == node) {
                 this.nodes.splice(i, 1);
@@ -189,6 +192,15 @@ let visit = function (vertex, func, visited, path) {
             this.tips[toName]--;
             if (this.tips[toName] == 0) {
                 console.info("ENTANGLEMENT now TRUSTS " + toName);
+                let toTransaction = this.transactions[toName];
+                svmExporter.getVirtualMachine().invoke(
+                    { 
+                        module : toTransaction.execution.moduleName, 
+                        function : toTransaction.execution.functionName, 
+                        user : toTransaction.sender, 
+                        args : toTransaction.execution.args,
+                        txHashes : toTransaction.txHashes
+                    }, toTransaction.execution.changeSet);
                 this.tips[toName] = undefined;
             }
         }
