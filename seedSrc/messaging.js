@@ -101,24 +101,35 @@ module.exports = {
             }
     
             // We have module data callbacks to invoke on this module+function change
-            if (changeSet.moduleData != undefined) {
-                let mdKeys = Object.keys(changeSet.moduleData);
-                for(let i = 0; i < mdKeys.length; i++) {
-                    let mdcKey = moduleName + mdKeys[i]; // SeedtotalSupply = "Seed" + "totalSupply"
-                    //If we have subscriptions for mdcKey, go through them and invoke
-                    if (moduleDataCallbacks[mdcKey] != undefined) {
-                        let moduleDataKeys = Object.keys(moduleDataCallbacks[mdcKey]);
-                        for(let j = 0; j < moduleDataKeys.length; j++) {
-                            console.info(moduleDataCallbacks, moduleDataKeys[i], moduleDataCallbacks[mdcKey][moduleDataKeys[j]]);
-                            moduleDataCallbacks[mdcKey][moduleDataKeys[j]](message);
-                        }
+            let mdKeys = Object.keys(changeSet.moduleData);
+            for(let i = 0; i < mdKeys.length; i++) {
+                let mdcKey = moduleName + mdKeys[i]; // SeedtotalSupply = "Seed" + "totalSupply"
+                //If we have subscriptions for mdcKey, go through them and invoke
+                if (moduleDataCallbacks[mdcKey] != undefined) {
+                    let moduleDataKeys = Object.keys(moduleDataCallbacks[mdcKey]);
+                    for(let j = 0; j < moduleDataKeys.length; j++) {
+                        moduleDataCallbacks[mdcKey][moduleDataKeys[j]](message);
                     }
                 }
             }
                     
             // We have user data callbacks to invoke on each user data change in changeSet
+            let users = Object.keys(changeSet.userData);
+            for(let i = 0; i < users.length; i++) {
+                let user = users[i];
+                let udKeys = Object.keys(changeSet.userData[user]);
+                for(let j = 0; j < udKeys.length; j++) {
+                    let udcKey = moduleName + udKeys[j] + user;
+                    // If there are callbacks for this user data callback key
+                    if (userDataCallbacks[udcKey] != undefined) {
+                        let userDataKeys = Object.keys(userDataCallbacks[udcKey]);
+                        for(let k = 0; k < userDataKeys.length; k++) {
+                            userDataCallbacks[udcKey][userDataKeys[k]](message);
+                        }
+                    }
+                }
+            }
             
         }
-        
     }
 }

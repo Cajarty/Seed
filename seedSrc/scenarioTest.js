@@ -25,11 +25,15 @@ const ledgerExporter = require("./ledger.js");
 const messagingExporter = require("./messaging.js");
 
 let messageReply = function(payload) {
-    console.info("Message: " , payload);
+    console.info("FunctionInvoke: " , payload);
 }
 
 let dataChangeReply = function(payload) {
     console.info("DataChange: " , payload);
+}
+
+let userChangeReply = function(payload) {
+    console.info("UserChange: " , payload);
 }
 
 module.exports = {
@@ -46,6 +50,7 @@ module.exports = {
         vm.addModule(relayExporter.getRelay());
 
         let tester = moduleTester.beginTest("Seed", "ABC", true);
+        messagingExporter.subscribeToDataChange("Seed", "balance", userChangeReply, tester.currentUser.publicKey);
         tester.createTransactionWithRelay("constructor", { initialSeed : 1000 });
         tester.relay();
         tester.relay();
