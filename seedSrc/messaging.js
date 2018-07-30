@@ -49,7 +49,7 @@ module.exports = {
      * 
      * @return - 
      */
-    subscribeToDataChange : function(moduleName, dataKey, user) {
+    subscribeToDataChange : function(moduleName, dataKey, callback, user) {
         let key = moduleName + dataKey;
         let receipt = Math.random();
         if (user == undefined) {
@@ -87,26 +87,38 @@ module.exports = {
      * @return - 
      */
     invoke : function(moduleName, functionName, transactionHash, changeSet) {
-        let message = new Message(moduleName, functionName, transactionHash, changeSet);
-
-        // We have function callbacks to invoke on this module+function change
-        let fcKey = moduleName + functionName;
-        if (functionCallbacks[fcKey] != undefined) {
-            let funcKeys = Object.keys(functionCallbacks[fcKey]);
-            for(let i = 0; i < funcKeys.length; i++) {
-                functionCallbacks[fcKey][funcKeys[i]](message);
-            }
-        }
-
-        // We have module data callbacks to invoke on this module+function change
-        /*for(let i = 0; i < keys.length; i++) {
-            if (moduleDataCallbacks[key] != undefined) {
-                let moduleDataKeys = Object.keys(moduleDataCallbacks[key]);
+        // If we have a changeset and that changeset is an object
+        if (changeSet && typeof changeSet == "object") {
+            let message = new Message(moduleName, functionName, transactionHash, changeSet);
+            
+            // We have function callbacks to invoke on this module+function change
+            let fcKey = moduleName + functionName;
+            if (functionCallbacks[fcKey] != undefined) {
+                let funcKeys = Object.keys(functionCallbacks[fcKey]);
+                for(let i = 0; i < funcKeys.length; i++) {
+                    functionCallbacks[fcKey][funcKeys[i]](message);
+                }
             }
     
-        }*/
+            // We have module data callbacks to invoke on this module+function change
+            if (changeSet.moduleData != undefined) {
+                let mdKeys = Object.keys(changeSet.moduleData);
+                for(let i = 0; i < mdKeys.length; i++) {
+                    let mdcKey = moduleName + mdKeys[i]; // SeedtotalSupply = "Seed" + "totalSupply"
+                    //If we have subscriptions for mdcKey, go through them and invoke
+                    if (moduleDataCallbacks[mdcKey] != undefined) {
+                        let moduleDataKeys = Object.keys(moduleDataCallbacks[mdcKey]);
+                        for(let j = 0; j < moduleDataKeys.length; j++) {
+                            console.info(moduleDataCallbacks, moduleDataKeys[i], moduleDataCallbacks[mdcKey][moduleDataKeys[j]]);
+                            moduleDataCallbacks[mdcKey][moduleDataKeys[j]](message);
+                        }
+                    }
+                }
+            }
+                    
+            // We have user data callbacks to invoke on each user data change in changeSet
+            
+        }
         
-        // We have user data callbacks to invoke on each user data change in changeSet
-
     }
 }

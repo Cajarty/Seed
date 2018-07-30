@@ -28,11 +28,16 @@ let messageReply = function(payload) {
     console.info("Message: " , payload);
 }
 
+let dataChangeReply = function(payload) {
+    console.info("DataChange: " , payload);
+}
+
 module.exports = {
     seedAndSVMTransactionTest : function() {
         console.log("### Seed & SVM Transaction Test ###");
 
         messagingExporter.subscribeToFunctionCallback("Seed", "transfer", messageReply);
+        messagingExporter.subscribeToDataChange("Seed", "totalSupply", dataChangeReply);
 
         //Prep seed module
         let vm = virtualMachineExporter.getVirtualMachine();
