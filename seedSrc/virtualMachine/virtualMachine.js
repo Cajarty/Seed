@@ -37,6 +37,7 @@ const conformHelper = require("../helpers/conformHelper.js");
 const ledgerExporter = require("../ledger.js");
 const entanglement = require("../entanglement.js");
 const transactionExporter = require("../transaction.js");
+const messagingExporter = require("../messaging.js");
 
 class VirtualMachine {
     
@@ -175,6 +176,7 @@ class VirtualMachine {
                 return this.ERROR.FailedToChangeState;
             }
         }
+        messagingExporter.invoke(info.module, info.function, "txHash", result);
         return result;
     }
 

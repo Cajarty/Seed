@@ -22,10 +22,17 @@ const moduleTester = require("./moduleTester.js");
 const transactionExporter = require("./transaction.js");
 const entanglementExporter = require("./entanglement.js");
 const ledgerExporter = require("./ledger.js");
+const messagingExporter = require("./messaging.js");
+
+let messageReply = function(payload) {
+    console.info("Message: " , payload);
+}
 
 module.exports = {
     seedAndSVMTransactionTest : function() {
         console.log("### Seed & SVM Transaction Test ###");
+
+        messagingExporter.subscribeToFunctionCallback("Seed", "transfer", messageReply);
 
         //Prep seed module
         let vm = virtualMachineExporter.getVirtualMachine();
