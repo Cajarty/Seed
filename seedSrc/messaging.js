@@ -76,8 +76,20 @@ module.exports = {
      * 
      * @return - 
      */
-    unsubscribe : function(receipt) {
-
+    unsubscribe : function(moduleName, funcNameOrDataKey, receipt, optionalUser) {
+        let firstChar = receipt[0];
+        receipt = receipt.substr(1);
+        switch(firstChar) {
+            case "F":
+                functionCallbacks[moduleName + funcNameOrDataKey][receipt] = undefined;
+            break;
+            case "U":
+                userDataCallbacks[moduleName + funcNameOrDataKey + optionalUser][receipt] = undefined;
+            break;
+                moduleDataCallbacks[moduleName + funcNameOrDataKey][receipt] = undefined;
+            case "M":
+            break;
+        }
     },
     /**
      * 
