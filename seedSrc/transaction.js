@@ -228,6 +228,11 @@ class TransactionValidator {
     doesFollowRule10(transaction) {
         //TODO: Be able to look at the DAG and check if the validatedTransactions themselves are valid yet
         return true;
+
+        // Check if validatedTransactions are valid
+            // If they are, return true
+        // else
+            // Grab unvalidated transactions, and invoke a callback to retry this test once those transactions become valid
     }
 
     //You cannot validate other transactions owned by yourself
