@@ -69,53 +69,35 @@ module.exports = {
     },
     isTransactionValid: function(transaction) {
         let validator = new TransactionValidator();
-
-        //Prove the Transaction.Sender, Transaction.Execution and Transaction.ValidatedTransactions are the content that creates the Transaction.TransactionHash
-        let rule1 = validator.doesFollowRule1(transaction);
-
-        //Prove that the Transaction.Sender is a valid public key, and therefore was derived from a valid private key
-        let rule2 = validator.doesFollowRule2(transaction);
-
-        //Prove that the Transaction.Sender is the public key consenting to the transaction
-        let rule3 = validator.doesFollowRule3(transaction);
-
-        //Prove that the Transaction.ValidatedTransactions is using verifiable data that other users have verified, while still being new-enough that its in the DAG still. If we don't have these Hash's, this is an indicator that
-        //we may have differing versions of history, OR that we simply do not know of these transactions yet
-        let rule4 = validator.doesFollowRule4(transaction);
-
-        //Prove that this new Transaction and its validate transactions do not create a cycle in the DAG
-        let rule5 = validator.doesFollowRule5(transaction);
-
-        //Prove that we agree on the module code being executed, so we're using the same versions
-        let rules6And7 = validator.doesFollowRules6And7(transaction)
-
-        //Prove that, when we simulate the execution, we get the same ChangeSet (Prove their statement of change was right)
-        let rule8 = validator.doesFollowRule8(transaction);
-
-        //Prove that their Transaction.ValidatedTransactions.ChangeSets aggree with the transactions they're validatings results.
-        //NOTE: If they didn't agree, they shouldn't have mentioned them. We only submit validated transactions we agree with. Ones we disagree with are simply ignored, never referenced, and therefore never validated
-        let rule9 = validator.doesFollowRule9(transaction);
-
-        let rule10 = validator.doesFollowRule10(transaction);
-
-        let rule11 = validator.doesFollowRule11(transaction);
-
-        let result = rule1 && rule2 && rule3 && rule4 && rule5 && rules6And7 && rule8 && rule9 && rule10 && rule11;
-
-        if (!result) {
-            console.info("isTransactionValid Failed", rule1, rule2, rule3, rule4, rule5, rules6And7, rule8, rule9, rule10, rule11);
+        return isValid(transaction, validator);
+    },
+    isTransactionProper : function(transaction) {
+        let validator = new TransactionValidator();
+        return isProper(transaction, validator);
+    },
+    notifyTransactionValidation : function(transactionHash) {
+        if (validCheckWaiting[transactionHash]) {
+            for(let i = 0; i < validCheckWaiting[transactionHash].length; i++) {
+                let toCheck = validCheckWaiting[transactionHash][i];
+                toCheck.checksLeft--;
+                if (toCheck.checksLeft == 0) {
+                    entanglementExporter.incomingTransaction(toCheck.transaction);
+                }
+            }
         }
-
-        return result;
-
-    
-        /*
-            NOTES:
-            Breaking rule4 may mean its too new or too old. It can still be "Proper", we just can't validate it. Wait a bit then retry in case its just too new
-            Breaking rule10 may mean they are too recent and just need more time. This is fully "Proper"
-        */
-        
-        
+    },
+    waitToBeNotified : function(transaction) {
+        let validateCheck = { transaction : transaction.transaction, checksLeft : 0 }
+        for(let i = 0; i < transaction.validatedTransactions.length; i++) {
+            let toBeValidatedHash = transaction.validatedTransactions[i].transactionHash;
+            if (!entanglementExporter.isValid(toBeValidatedHash)) {
+                if (!validCheckWaiting[toBeValidatedHash]) {
+                    validCheckWaiting[toBeValidatedHash] = [];
+                }
+                validCheckWaiting[toBeValidatedHash].push(validateCheck);
+                validateCheck.checksLeft++;
+            }
+        }
     }
  }
 
@@ -125,6 +107,57 @@ module.exports = {
  const conformHelper = require("./helpers/conformHelper.js");
  const entanglementExporter = require("./entanglement.js");
 
+ 
+// Lacks rule10 for validation
+/*
+    NOTES:
+    Breaking rule4 may mean its too new or too old. It can still be "Proper", we just can't validate it. Wait a bit then retry in case its just too new
+    Breaking rule10 may mean they are too recent and just need more time. This is fully "Proper"
+*/
+ let isProper = function(transaction, validator) {
+    //Prove the Transaction.Sender, Transaction.Execution and Transaction.ValidatedTransactions are the content that creates the Transaction.TransactionHash
+    let rule1 = validator.doesFollowRule1(transaction);
+
+    //Prove that the Transaction.Sender is a valid public key, and therefore was derived from a valid private key
+    let rule2 = validator.doesFollowRule2(transaction);
+
+    //Prove that the Transaction.Sender is the public key consenting to the transaction
+    let rule3 = validator.doesFollowRule3(transaction);
+
+    //Prove that the Transaction.ValidatedTransactions is using verifiable data that other users have verified, while still being new-enough that its in the DAG still. If we don't have these Hash's, this is an indicator that
+    //we may have differing versions of history, OR that we simply do not know of these transactions yet
+    let rule4 = validator.doesFollowRule4(transaction);
+
+    //Prove that this new Transaction and its validate transactions do not create a cycle in the DAG
+    let rule5 = validator.doesFollowRule5(transaction);
+
+    //Prove that we agree on the module code being executed, so we're using the same versions
+    let rules6And7 = validator.doesFollowRules6And7(transaction)
+
+    //Prove that, when we simulate the execution, we get the same ChangeSet (Prove their statement of change was right)
+    let rule8 = validator.doesFollowRule8(transaction);
+
+    //Prove that their Transaction.ValidatedTransactions.ChangeSets aggree with the transactions they're validatings results.
+    //NOTE: If they didn't agree, they shouldn't have mentioned them. We only submit validated transactions we agree with. Ones we disagree with are simply ignored, never referenced, and therefore never validated
+    let rule9 = validator.doesFollowRule9(transaction);
+
+    let rule11 = validator.doesFollowRule11(transaction);
+
+    let result = rule1 && rule2 && rule3 && rule4 && rule5 && rules6And7 && rule8 && rule9 && rule11;
+
+    if (!result) {
+        console.info("isTransactionValid Failed", rule1, rule2, rule3, rule4, rule5, rules6And7, rule8, rule9, rule10, rule11);
+    }
+
+    return result;
+ }
+
+ let isValid = function(transaction, validator) {
+    let rule10 = validator.doesFollowRule10(transaction);
+    return isProper(transaction, validator) && rule10;
+}
+
+ let validCheckWaiting = {};
 
 class TransactionValidator {
     //Prove the Transaction.Sender, Transaction.Execution and Transaction.ValidatedTransactions are the content that creates the Transaction.TransactionHash
@@ -226,13 +259,18 @@ class TransactionValidator {
     //Prove that, when we simulate the execution of their validated transactions, their execution was also right (Prove their "work" was right).
     //10) SVM.WaitForValidation(Transaction.ValidatedTransactions, simulateTrustedParent : Transaction.Hash)
     doesFollowRule10(transaction) {
-        //TODO: Be able to look at the DAG and check if the validatedTransactions themselves are valid yet
-        return true;
-
-        // Check if validatedTransactions are valid
-            // If they are, return true
-        // else
-            // Grab unvalidated transactions, and invoke a callback to retry this test once those transactions become valid
+        let trusted = true
+        let validateCheck = { transaction : transaction.transactionHash, checksLeft : 0 }
+        console.info("Does follow Rule 10", transaction);
+        for(let i = 0; i < transaction.validatedTransactions.length; i++) {
+            let toBeValidatedHash = transaction.validatedTransactions[i].transactionHash;
+            console.info("Checking for validation", transaction.validatedTransactions[i]);
+            if (!entanglementExporter.isValid(toBeValidatedHash)) {
+                trusted = false;
+                console.info("Fail Rule #10", transaction);
+            }
+        }
+        return trusted;
     }
 
     //You cannot validate other transactions owned by yourself

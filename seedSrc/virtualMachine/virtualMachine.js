@@ -197,10 +197,20 @@ class VirtualMachine {
     }
 
     incomingTransaction(transaction) {
-        if (transactionExporter.isTransactionValid(transaction)) {
+        // If its a proper, formed transaction
+        if (transactionExporter.isTransactionProper(transaction)) {
+            // We add it to the entanglement
             entanglement.tryAddTransaction(transaction);
+            //if (transactionExporter.isTransactionValid(transaction)) {
+            //    console.info("IncomingTransaction::Valid", transaction);
+            //    transactionExporter.notifyTransactionValidation(transaction.transactionHash);
+            //    entanglement.tryAddTransaction(transaction);
+            //} else {
+            //    console.info("IncomingTransaction::Proper", transaction);
+            //    transactionExporter.waitToBeNotified(transaction);
+            //}
         } else {
-            console.log("FAILED TO CREATE TRANSACTION. FAILED VALIDATION");
+            console.info("IncomingTransaction::Malformed", transaction);
         }
     }
 

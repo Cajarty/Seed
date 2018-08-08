@@ -83,10 +83,14 @@ module.exports = {
         }
     },
     isValid : function(transactionHash) {
+        // Has to be contained already, wellformed and the sum of its trust coefficient == 1
+        console.info("IsValid", entanglement.vertices[transactionHash]);
         if (entanglement.contains(transactionHash)) {
-            if (!entanglement.tips[transactionHash]) {
-                return true;
-            }
+
+            // Instead of "looking at tips", we need to count how much we trust each tip
+            //if (!entanglement.tips[transactionHash]) {
+            //    return true;
+            //}
         }
         return false;
     }
@@ -116,6 +120,25 @@ let visit = function (vertex, func, visited, path) {
     }
     func(vertex, path);
     path.pop();
+}
+
+let tryTrust = function(transactionHash, entanglement) {
+    if (entanglement.vertices[transactionHash].trust == 1) {
+        console.info("ENTANGLEMENT now TRUSTS " + transactionHash);
+        let toTransaction = entanglement.transactions[transactionHash];
+        svmExporter.getVirtualMachine().invoke(
+            { 
+                module : toTransaction.execution.moduleName, 
+                function : toTransaction.execution.functionName, 
+                user : toTransaction.sender, 
+                args : toTransaction.execution.args,
+                txHashes : toTransaction.txHashes
+            }, toTransaction.execution.changeSet);
+            entanglement.tips[transactionHash] = undefined;
+    } else {
+        console.info("ENTANGLEMENT failed to TRUST ", transactionHash, entanglement.vertices[transactionHash].trust);
+    }
+    
 }
 
  class Entanglement {
@@ -149,7 +172,9 @@ let visit = function (vertex, func, visited, path) {
 
     addTransaction(transaction) {
         this.transactions[transaction.transactionHash] = transaction;
-        return this.addNode(transaction.transactionHash);
+        let result = this.addNode(transaction.transactionHash);
+        let transactionsToTrust = transaction.validatedTransactions;
+        this.trustTransactions(transactionsToTrust);
     }
 
     addNode(node) {
@@ -167,7 +192,8 @@ let visit = function (vertex, func, visited, path) {
             incoming: {}, 
             incomingNodes: [], 
             hasOutgoing: false, 
-            value: null
+            value: null,
+            trust: 0
         };
         this.vertices[node] = vertex;
         this.nodes.push(node);
@@ -188,22 +214,7 @@ let visit = function (vertex, func, visited, path) {
         from.hasOutgoing = true;
         to.incoming[fromName] = from;
         to.incomingNodes.push(fromName);
-        if (this.tips[toName] != undefined && this.tips[toName] > 0) {
-            this.tips[toName]--;
-            if (this.tips[toName] == 0) {
-                console.info("ENTANGLEMENT now TRUSTS " + toName);
-                let toTransaction = this.transactions[toName];
-                svmExporter.getVirtualMachine().invoke(
-                    { 
-                        module : toTransaction.execution.moduleName, 
-                        function : toTransaction.execution.functionName, 
-                        user : toTransaction.sender, 
-                        args : toTransaction.execution.args,
-                        txHashes : toTransaction.txHashes
-                    }, toTransaction.execution.changeSet);
-                this.tips[toName] = undefined;
-            }
-        }
+        tryTrust(toName, this);
     }
 
     checkForCycle(fromName, toName) {
@@ -214,5 +225,24 @@ let visit = function (vertex, func, visited, path) {
             }
         }
         visit(from, checkCycle);
+    }
+
+    trustTransactions(transactionsToTrust) {
+        for(let i = 0; i < transactionsToTrust.length; i++) {
+            let hashToTrust = transactionsToTrust[i].transactionHash;
+            if (this.contains(hashToTrust) && this.vertices[hashToTrust].trust < 1) {
+                this.increaseTrust(hashToTrust);
+            }
+        }
+    }
+
+    increaseTrust(transactionHash) {
+        this.vertices[transactionHash].trust += 0.5;
+        if (this.vertices[transactionHash].trust > 1) {
+            this.vertices[transactionHash].trust = 1;
+        }
+
+        let transactionsToTrust = this.transactions[transactionHash].validatedTransactions;
+        this.trustTransactions(transactionsToTrust);
     }
  }
