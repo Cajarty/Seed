@@ -1,19 +1,44 @@
-// Will be where the DAG itself is.
+/*******************
+ * entanglement.js *
+ *******************
+ * 
+ * This is the Directed Acyclic Graph (DAG) of Seed, known as the "Entanglement", which holds all temporary/short-term transactions in memory and aids in validation.
+ * 
+ * Exported Functions:
+ *      getEntanglement()
+ *          - Returns the current Entanglement, creating one if none exists
+ *      tryAddTransaction(transaction)
+ *          - Adds the incoming transaction to the entanglement
+ *      doesTransactionCauseCycle(transaction)
+ *          - Checks if adding this transaction would cause a cycle to occur, as DAG's are acyclic by nature
+ *      getTipsToValidate(sender, numberOfTips)
+ *          - Returns a list of transaction hashes for transactions that need to be validated. These are transactions with zero or few validations
+ *      hasTransaction(transactionHash)
+ *          - Returns whether or not the given transaction exists in the entanglement yet
+ *      isValid(transactionHash)
+ *          - Returns whether or not the given transaction is considered valid or not
+ */
 
-//New transactions get added to this DAG
-
+ // The current entanglement object
 let entanglement = null;
 
 module.exports = {
+    /**
+     * Returns the current Entanglement, creating one if none exists
+     * 
+     * @return - The current entanglement
+     */
     getEntanglement : function() {
         if (entanglement == null) {
             entanglement = new Entanglement();
         }
         return entanglement;
     },
-    tryAddGenesisTransaction : function(transaction) {
-
-    },
+    /**
+     * Adds the incoming transaction to the entanglement
+     * 
+     * @param transaction - The transaction to add
+     */
     tryAddTransaction : function(transaction) {
         let children = [];
         for(let i = 0; i < transaction.validatedTransactions.length; i++) {
@@ -28,6 +53,11 @@ module.exports = {
             entanglement.addEdge(transaction.transactionHash, children[i]);
         }
     },
+    /**
+     * Checks if adding this transaction would cause a cycle to occur, as DAG's are acyclic by nature
+     * 
+     * @param transaction - The transaction to check whether it would cause a cycle if added
+     */
     doesTransactionCauseCycle : function(transaction) {
         let children = [];
         if (entanglement.contains(transaction.transactionHash)) {
@@ -59,6 +89,15 @@ module.exports = {
         entanglement.remove(transaction.transactionHash);
         return result;
     },
+    /**
+     * Returns a list of transaction hashes for transactions that need to be validated. These are transactions with zero or few validations
+     * The returned transactions will not belong to the sender
+     * 
+     * @param sender - The user making the request
+     * @param numberOfTips - The amount of "tips" (unvalidated transactions) to fetch
+     * 
+     * @return - An array of hashes representing transactions in the DAG
+     */
     getTipsToValidate : function(sender, numberOfTips) {
         let tips = Object.keys(entanglement.tips);
         let result = [];
@@ -74,6 +113,13 @@ module.exports = {
 
         return result;
     },
+    /**
+     * Returns whether or not the current state of the Entanglement has the given transaction in it
+     * 
+     * @param transactionHash - The transaction to check in the DAG if its there or not yet
+     * 
+     * @return - True or false for whether transactionHash already exists
+     */
     hasTransaction : function(transactionHash) {
         if (entanglement.transactions[transactionHash]) {
             return true;
@@ -82,6 +128,13 @@ module.exports = {
             return false;
         }
     },
+    /**
+     * Returns whether the given transactionHash is in the entanglement and if it is, is it valid
+     * 
+     * @param transactionHash - The transaction to check in the DAG if its valid or not yet
+     * 
+     * @return - True or false for whether its valid
+     */
     isValid : function(transactionHash) {
         // Has to be contained already, wellformed and the sum of its trust coefficient == 1
         //console.info("IsValid", entanglement.vertices[transactionHash]);
@@ -98,6 +151,14 @@ module.exports = {
 
  const svmExporter = require("./virtualMachine/virtualMachine.js");
 
+ /**
+  *  Helper function used recursively by the Entanglement with regards to visiting nodes when traversing the DAG
+  *
+  * @param {*} vertex - The vertex structure relating to a transaction in the DAG
+  * @param {*} func - The function to execute once visiting the node
+  * @param {*} visited - The mapping of nodes regarding whether they're visited or not
+  * @param {*} path - The current path iterated through when visiting
+  */
 let visit = function (vertex, func, visited, path) {
     let name = vertex.name;
     let vertices = vertex.incoming;
@@ -122,6 +183,12 @@ let visit = function (vertex, func, visited, path) {
     path.pop();
 }
 
+/**
+ * Helper function used when checking whether the entanglement now trusts a transaction or not
+ * 
+ * @param {*} transactionHash - The hash of the transaction to check
+ * @param {*} entanglement  - The entanglement we're asking the trust of
+ */
 let tryTrust = function(transactionHash, entanglement) {
     if (entanglement.vertices[transactionHash].trust == 1) {
         //console.info("ENTANGLEMENT now TRUSTS " + transactionHash);
@@ -141,19 +208,31 @@ let tryTrust = function(transactionHash, entanglement) {
     
 }
 
+/**
+ * The Entanglement class, which is the DAG of the Seed system
+ */
  class Entanglement {
+     /**
+      * The constructor used to initialize the variables of
+      */
     constructor() {
-        this.vertices = {};
-        this.nodes = [];
-        this.transactions = {};
-        this.tips = {};
-        this.tipThreshold = 2;
+        this.vertices = {}; // Current mapping of vertexes stored: mapping (transactionHash => transactionVertexStruct)
+        this.nodes = []; // Array of nodes/transactionHashs stored
+        this.transactions = {}; // Mapping of transations stored: mapping (transactionHash => transactionVertexStruct)
+        this.tips = {}; // Mapping of tips: mapping (transactionHash => tips)
+        this.tipThreshold = 2; // Minimum amount of tips we use when checking for transactions that need more tips
     }
 
+    /**
+     * @param {*} node - Whether or not the given node exists in the Entanglement
+     */
     contains(node) {
         return (this.vertices[node] && this.transactions[node]);
     }
 
+    /**
+     * @param {*} node - Node to remove from the Entanglement
+     */
     remove(node) {
         delete this.vertices[node]
         delete this.tips[node];
@@ -166,10 +245,21 @@ let tryTrust = function(transactionHash, entanglement) {
         }
     }
 
+    /**
+     * Returns the given transaction from the entanglement
+     * 
+     * @param {*} transactionHash - The transaction hash mapped to the transaction in the entanglement
+     */
     getTransaction(transactionHash) {
         return this.transactions[transactionHash];
     }
 
+    /**
+     * Adds the given transaction to the entanglement, and increases trust to transactions they depend on.
+     * Internally turns transaction into a node and invokes addNode to add it to the DAG
+     * 
+     * @param {*} transaction  - The transaction to add to the entanglement
+     */
     addTransaction(transaction) {
         this.transactions[transaction.transactionHash] = transaction;
         let result = this.addNode(transaction.transactionHash);
@@ -177,6 +267,11 @@ let tryTrust = function(transactionHash, entanglement) {
         this.trustTransactions(transactionsToTrust);
     }
 
+    /**
+     * Adds the given node to the entanglement's DAG
+     * 
+     * @param {*} node - The node/transactionHash to add to the DAG
+     */
     addNode(node) {
         if (!node) {
             return;
@@ -201,6 +296,12 @@ let tryTrust = function(transactionHash, entanglement) {
         return vertex;
     }
 
+    /**
+     * Adds an edge between two nodes in the DAG
+     * 
+     * @param {*} fromName - The node the edge starts at
+     * @param {*} toName - The node the edge ends at
+     */
     addEdge(fromName, toName) {
         if (!fromName || !toName || fromName === toName) {
             return;
@@ -217,6 +318,12 @@ let tryTrust = function(transactionHash, entanglement) {
         tryTrust(toName, this);
     }
 
+    /**
+     * Checks if adding the "from" node will cause a cycle when traversing to "to" node
+     * 
+     * @param {*} fromName - The node to start the check from
+     * @param {*} toName  - The node to finish the check from
+     */
     checkForCycle(fromName, toName) {
         let from = this.addNode(fromName)
         let checkCycle = function(vertex, path) {
@@ -227,6 +334,11 @@ let tryTrust = function(transactionHash, entanglement) {
         visit(from, checkCycle);
     }
 
+    /**
+     * Takes an array of transactions that are now trusted in the DAG, and increase the trust of them
+     * 
+     * @param {*} transactionsToTrust - Array of transactions to trust
+     */
     trustTransactions(transactionsToTrust) {
         for(let i = 0; i < transactionsToTrust.length; i++) {
             let hashToTrust = transactionsToTrust[i].transactionHash;
@@ -236,13 +348,20 @@ let tryTrust = function(transactionHash, entanglement) {
         }
     }
 
+    /**
+     * Increases the trust of a given transaction, and then invokes trustTransactions on its validatedTransactions
+     * 
+     * @param {*} transactionHash - The hash of the transaction to increase in trust
+     */
     increaseTrust(transactionHash) {
-        this.vertices[transactionHash].trust += 0.5;
-        if (this.vertices[transactionHash].trust > 1) {
-            this.vertices[transactionHash].trust = 1;
+        if (this.vertices[transactionHash].trust < 1) {
+            this.vertices[transactionHash].trust += 0.5;
+            if (this.vertices[transactionHash].trust > 1) {
+                this.vertices[transactionHash].trust = 1;
+            }
+    
+            let transactionsToTrust = this.transactions[transactionHash].validatedTransactions;
+            this.trustTransactions(transactionsToTrust);
         }
-
-        let transactionsToTrust = this.transactions[transactionHash].validatedTransactions;
-        this.trustTransactions(transactionsToTrust);
     }
  }
