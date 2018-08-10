@@ -84,7 +84,7 @@ module.exports = {
     },
     isValid : function(transactionHash) {
         // Has to be contained already, wellformed and the sum of its trust coefficient == 1
-        console.info("IsValid", entanglement.vertices[transactionHash]);
+        //console.info("IsValid", entanglement.vertices[transactionHash]);
         if (entanglement.contains(transactionHash)) {
 
             // Instead of "looking at tips", we need to count how much we trust each tip
@@ -124,7 +124,7 @@ let visit = function (vertex, func, visited, path) {
 
 let tryTrust = function(transactionHash, entanglement) {
     if (entanglement.vertices[transactionHash].trust == 1) {
-        console.info("ENTANGLEMENT now TRUSTS " + transactionHash);
+        //console.info("ENTANGLEMENT now TRUSTS " + transactionHash);
         let toTransaction = entanglement.transactions[transactionHash];
         svmExporter.getVirtualMachine().invoke(
             { 
@@ -136,7 +136,7 @@ let tryTrust = function(transactionHash, entanglement) {
             }, toTransaction.execution.changeSet);
             entanglement.tips[transactionHash] = undefined;
     } else {
-        console.info("ENTANGLEMENT failed to TRUST ", transactionHash, entanglement.vertices[transactionHash].trust);
+        //console.info("ENTANGLEMENT failed to TRUST ", transactionHash, entanglement.vertices[transactionHash].trust);
     }
     
 }

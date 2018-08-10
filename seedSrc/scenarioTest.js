@@ -25,15 +25,15 @@ const ledgerExporter = require("./ledger.js");
 const messagingExporter = require("./messaging.js");
 
 let messageReply = function(payload) {
-    console.info("FunctionInvoke: " , payload);
+    //console.info("FunctionInvoke: " , payload);
 }
 
 let dataChangeReply = function(payload) {
-    console.info("DataChange: " , payload);
+    //console.info("DataChange: " , payload);
 }
 
 let userChangeReply = function(payload) {
-    console.info("UserChange: " , payload);
+    //console.info("UserChange: " , payload);
 }
 
 module.exports = {

@@ -2,32 +2,42 @@
  * transaction.js *
  ******************
  * 
- * Exports the creation of transactions.
- * 
- * Transaction:
- *      Transaction Hash
- *      Sender Address
- *      Execution:
- *          ModuleName
- *          FunctionName
- *          Arguments
- *          ModuleChecksum
- *          FunctionChecksum
- *          ChangeSet
- *      Trusted Transactions:
- *          Transaction Hash
- *          Module Checksum
- *          Function Checksum
- *          ChangeSet
- *      Signature
+ * Exports the creation of transactions, as well as helper functions related to transaction validation,
+ * and re-testing transactions for validation once dependant transactions become validated.
  * 
  * Exported Functions:
- *      createTransaction(children, updateData)
+ *      createNewTransaction(sender, execution, trustedTransactions ) 
  *          - Creates a new transaction object
- *      
+ *      createExistingTransaction(sender, execution, trustedTransactions, transactionHash, transactionSignature )
+ *          - Creates a new transaction object based on an existing transactions data
+ *      isTransactionValid(transaction)
+ *          - Determines if the transaction is considered valid or not
+ *      isTransactionProper(transaction) 
+ *          - Determines if the transaction is "Proper", meaning well-formed with its validated transactions being proper as well
+ *      notifyTransactionValidation(transactionHash)
+ *          - Notifies all Proper transactions awaiting Validation that transactionHash is now valid, therefore retest if we were dependant on it
+ *      waitToBeNotified(transaction)
+ *          - A Proper transaction starts awaiting for its dependant transactions to be validated. Will be retested upon "notifyTransactionValidation" being invoked
+ * 
+ * IMPORTANT NOTES:
+ *      "Proper"
+ *      - A transaction is Proper if it meets all rules regarding being well-formed, except does not yet pass Rule #10
+ *      "Valid"
+ *      - A transaction is Valid if it is "Proper" and also meetes Rule #10
+ * 
+ *      Breaking Rule #4 may mean its too new or too old. It can still be "Proper", we just can't validate it as we have an incomplete picture
  */
 
 module.exports = {
+    /**
+     * Creates a new transaction, signs it and returns it.
+     * 
+     * @param sender - The sending address creating the new transaction
+     * @param execution - The Execution object to be assigned relating to "what this transaction did"
+     * @param trustedTransactions - And array of transaction hashes and work done that this transactions deems valid
+     * 
+     * @return - Returns a new transaction based on the given data
+     */
     createNewTransaction : function(sender, execution, trustedTransactions ) {
         let cryptoHelper = cryptoExporter.newCryptoHelper();
         let svm = svmExporter.getVirtualMachine();
@@ -46,6 +56,17 @@ module.exports = {
         }
         return undefined;
     },
+    /**
+     * Creates a new transaction out of purely existing data
+     * 
+     * @param sender - The sending address creating the new transaction
+     * @param execution - The Execution object to be assigned relating to "what this transaction did"
+     * @param trustedTransactions - And array of transaction hashes and work done that this transactions deems valid
+     * @param transactionHash - The hash of the existing transaction
+     * @param transactionSignature - The signature by the sender which signed the transactionHash
+     * 
+     * @return - Returns a new transaction created from existing data
+     */
     createExistingTransaction : function(sender, execution, trustedTransactions, transactionHash, transactionSignature ) {
         let cryptoHelper = cryptoExporter.newCryptoHelper();
         let svm = svmExporter.getVirtualMachine();
@@ -67,14 +88,34 @@ module.exports = {
         }
         return undefined;
     },
+    /**
+     * Determines whether a transaction is considered valid or not.
+     * 
+     * @param transaction - The transaction being tested
+     * 
+     * @return - True or false regarding whether the transaction is valid or not
+     */
     isTransactionValid: function(transaction) {
         let validator = new TransactionValidator();
         return isValid(transaction, validator);
     },
+    /**
+     * Determines whether a transaction is considered proper or not
+     * 
+     * @param transaction - The transaction being tested
+     * 
+     * @return - True or false regarding whether the transaction is proper or not
+     */
     isTransactionProper : function(transaction) {
         let validator = new TransactionValidator();
         return isProper(transaction, validator);
     },
+    /**
+     * Notifies "Proper" transaction awaiting validation that a transaction has just been validated. Therefore, if a Proper transaction is
+     * dependant on the transactionHash for validation, it will be re-tested and potentially approved.
+     * 
+     * @param transactionHash - The hash of a transaction which has just been validated
+     */
     notifyTransactionValidation : function(transactionHash) {
         if (validCheckWaiting[transactionHash]) {
             for(let i = 0; i < validCheckWaiting[transactionHash].length; i++) {
@@ -86,6 +127,12 @@ module.exports = {
             }
         }
     },
+    /**
+     * Takes a "Proper" transaction and has it wait on all dependant "Proper" transactions. Once one of these dependant transactions becomes valid,
+     * the passed in transaction can then be retested for validation.
+     * 
+     * @param transaction - The transaction to wait for dependant transactions to be validated
+     */
     waitToBeNotified : function(transaction) {
         let validateCheck = { transaction : transaction.transaction, checksLeft : 0 }
         for(let i = 0; i < transaction.validatedTransactions.length; i++) {
@@ -107,13 +154,15 @@ module.exports = {
  const conformHelper = require("./helpers/conformHelper.js");
  const entanglementExporter = require("./entanglement.js");
 
- 
-// Lacks rule10 for validation
-/*
-    NOTES:
-    Breaking rule4 may mean its too new or too old. It can still be "Proper", we just can't validate it. Wait a bit then retry in case its just too new
-    Breaking rule10 may mean they are too recent and just need more time. This is fully "Proper"
-*/
+ /**
+  * Helper function used by exporter and Validator object. Determines whether the passed in transaction is proper or not.
+  * A transaction is "Proper" if it passes every rule other than Rule #10.
+  *
+  * @param {*} transaction - The transaction to check
+  * @param {*} validator - A validator object to use for testing
+  *
+  * @return - True or false regarding whether the transaction is Proper or not
+  */
  let isProper = function(transaction, validator) {
     //Prove the Transaction.Sender, Transaction.Execution and Transaction.ValidatedTransactions are the content that creates the Transaction.TransactionHash
     let rule1 = validator.doesFollowRule1(transaction);
@@ -152,15 +201,34 @@ module.exports = {
     return result;
  }
 
+ /**
+  * Helper function used by exporter and Validator object. Determines whether the passed in transaction is valid or not.
+  * A transaction is "Valid" if it passes every rule, i.e. is Proper and passes Rule #10
+  *
+  * @param {*} transaction - The transaction to check
+  * @param {*} validator - A validator object to use for testing
+  *
+  * @return - True or false regarding whether the transaction is Valid or not
+  */
  let isValid = function(transaction, validator) {
     let rule10 = validator.doesFollowRule10(transaction);
     return isProper(transaction, validator) && rule10;
 }
 
+// Proper transactions waiting to be rechecked for pending validity
  let validCheckWaiting = {};
 
+ /**
+  * Encompasses the logic regarding the 11 rules a transaction must pass to be considered Valid
+  */
 class TransactionValidator {
-    //Prove the Transaction.Sender, Transaction.Execution and Transaction.ValidatedTransactions are the content that creates the Transaction.TransactionHash
+    /**
+     * Prove the Transaction.Sender, Transaction.Execution and Transaction.ValidatedTransactions are the content that creates the Transaction.TransactionHash
+     * 
+     * @param {*} transaction - Transaction to test
+     * 
+     * @return - True or false regarding if the check passes
+     */
     doesFollowRule1(transaction) {
         let dataToHash = transaction.getHashableData();
         let cryptoHelper = cryptoExporter.newCryptoHelper();
@@ -168,20 +236,39 @@ class TransactionValidator {
         return hash == transaction.transactionHash;
     }
 
-    //Prove that the Transaction.Sender is a valid public key, and therefore was derived from a valid private key
+    /**
+     * Prove that the Transaction.Sender is a valid public key, and therefore was derived from a valid private key
+     * 
+     * @param {*} transaction - Transaction to test
+     * 
+     * @return - True or false regarding if the check passes
+     */
     doesFollowRule2(transaction) {
         let cryptoHelper = cryptoExporter.newCryptoHelper();
         return cryptoHelper.isPublicKeyValid(transaction.sender);
     }
 
-    //Prove that the Transaction.Sender is the public key consenting to the transaction
+    /**
+     * Prove that the Transaction.Sender is the public key consenting to the transaction
+     * 
+     * @param {*} transaction - Transaction to test
+     * 
+     * @return - True or false regarding if the check passes
+     */
     doesFollowRule3(transaction) {
         let account = accountExporter.newAccount( { publicKey : transaction.sender, network : "00" });
         return account.verifySignature(transaction.signature, transaction.transactionHash);
     }
 
-    //Prove that the Transaction.ValidatedTransactions is using verifiable data that other users have verified, while still being new-enough that its in the DAG still. If we don't have these Hash's, this is an indicator that
-    //we may have differing versions of history, OR that we simply do not know of these transactions yet
+    
+    /**
+     * Prove that the Transaction.ValidatedTransactions is using verifiable data that other users have verified, while still being new-enough that its in the DAG still. 
+     * If we don't have these Hash's, this is an indicator that we may have differing versions of history, OR that we simply do not know of these transactions yet
+     * 
+     * @param {*} transaction - Transaction to test
+     * 
+     * @return - True or false regarding if the check passes
+     */
     doesFollowRule4(transaction) {
         for(let i = 0;  i < transaction.validatedTransactions.length; i++) {
             if (!entanglementExporter.hasTransaction(transaction.validatedTransactions[i].transactionHash)) {
@@ -191,14 +278,26 @@ class TransactionValidator {
         return true;
     }
 
-    //Prove that this new Transaction and its validate transactions do not create a cycle in the DAG
+    /**
+     * Prove that this new Transaction and its validate transactions do not create a cycle in the DAG
+     * 
+     * @param {*} transaction - Transaction to test
+     * 
+     * @return - True or false regarding if the check passes
+     */
     doesFollowRule5(transaction) {
         return !entanglementExporter.doesTransactionCauseCycle(transaction);
     }
 
-    //Prove that we agree on the module code being executed, so we're using the same versions
-    //6) The Transaction.Execution.ModuleName and Transaction.Execution.ModuleChecksum matches the version of the module we're using
-    //7) The Transaction.Execution.FunctionName and Transaction.Execution.FunctionChecksum matches the version of the function we're using
+    /**
+     * Prove that we agree on the module code being executed, so we're using the same versions
+     * 6) The Transaction.Execution.ModuleName and Transaction.Execution.ModuleChecksum matches the version of the module we're using
+     * 7) The Transaction.Execution.FunctionName and Transaction.Execution.FunctionChecksum matches the version of the function we're using
+     * 
+     * @param {*} transaction - Transaction to test
+     * 
+     * @return - True or false regarding if the check passes
+     */
     doesFollowRules6And7(transaction) {
         let cryptoHelper = cryptoExporter.newCryptoHelper();
         let svm = svmExporter.getVirtualMachine();
@@ -216,8 +315,15 @@ class TransactionValidator {
         return false;
     }
 
-    //Prove that, when we simulate the execution, we get the same ChangeSet (Prove their statement of change was right)
-    //8) SVM.Simulate(Transaction.Execution) == Transaction.Execution.ChangeSet
+    
+    /**
+     * Prove that, when we simulate the execution, we get the same ChangeSet (Prove their statement of change was right)
+     * 8) SVM.Simulate(Transaction.Execution) == Transaction.Execution.ChangeSet
+     * 
+     * @param {*} transaction - Transaction to test
+     * 
+     * @return - True or false regarding if the check passes
+     */
     doesFollowRule8(transaction) {
         let svm = svmExporter.getVirtualMachine();
         let functionToInvoke = svm.getModule({ module : transaction.execution.moduleName }).getFunctionByName(transaction.execution.functionName);
@@ -237,9 +343,17 @@ class TransactionValidator {
         return result == transaction.execution.changeSet;
     }
 
-    //Prove that their Transaction.ValidatedTransactions.ChangeSets aggree with the transactions they're validatings results.
-    //NOTE: If they didn't agree, they shouldn't have mentioned them. We only submit validated transactions we agree with. Ones we disagree with are simply ignored, never referenced, and therefore never validated
-    //9) foreach Transaction.ValidatedTransactions { SVM.DoesChangeSetMatch(ValidatedTransaction.Hash, ValidatedTransaction.ChangeSet) }
+    
+    /**
+     * Prove that their Transaction.ValidatedTransactions.ChangeSets aggree with the transactions they're validatings results.
+     * NOTE: If they didn't agree, they shouldn't have mentioned them. We only submit validated transactions we agree with. 
+     * Ones we disagree with are simply ignored, never referenced, and therefore never validated
+     * 9) foreach Transaction.ValidatedTransactions { SVM.DoesChangeSetMatch(ValidatedTransaction.Hash, ValidatedTransaction.ChangeSet) }
+     * 
+     * @param {*} transaction - Transaction to test
+     * 
+     * @return - True or false regarding if the check passes
+     */
     doesFollowRule9(transaction) {
         let entanglement = entanglementExporter.getEntanglement();
         for(let i = 0; i < transaction.validatedTransactions.length; i++) {
@@ -256,24 +370,33 @@ class TransactionValidator {
         return true;
     }
 
-    //Prove that, when we simulate the execution of their validated transactions, their execution was also right (Prove their "work" was right).
-    //10) SVM.WaitForValidation(Transaction.ValidatedTransactions, simulateTrustedParent : Transaction.Hash)
+    /**
+     * Prove that, when we simulate the execution of their validated transactions, their execution was also right (Prove their "work" was right).
+     * 10) SVM.WaitForValidation(Transaction.ValidatedTransactions, simulateTrustedParent : Transaction.Hash)
+     * 
+     * @param {*} transaction - Transaction to test
+     * 
+     * @return - True or false regarding if the check passes
+     */
     doesFollowRule10(transaction) {
         let trusted = true
         let validateCheck = { transaction : transaction.transactionHash, checksLeft : 0 }
-        console.info("Does follow Rule 10", transaction);
         for(let i = 0; i < transaction.validatedTransactions.length; i++) {
             let toBeValidatedHash = transaction.validatedTransactions[i].transactionHash;
-            console.info("Checking for validation", transaction.validatedTransactions[i]);
             if (!entanglementExporter.isValid(toBeValidatedHash)) {
                 trusted = false;
-                console.info("Fail Rule #10", transaction);
             }
         }
         return trusted;
     }
 
-    //You cannot validate other transactions owned by yourself
+    /**
+     * You cannot validate other transactions owned by yourself
+     * 
+     * @param {*} transaction - Transaction to test
+     * 
+     * @return - True or false regarding if the check passes
+     */
     doesFollowRule11(transaction) {
         for(let i = 0; i < transaction.validatedTransactions.length; i++) {
             let transactionValidated = entanglementExporter.getEntanglement().transactions[transaction.validatedTransactions[i].transactionHash];
@@ -285,7 +408,36 @@ class TransactionValidator {
     }
 }
 
+/**
+ * Class describing a "Transaction" in Seed
+ * 
+ * Transaction Schema:
+ *      Transaction Hash
+ *      Sender Address
+ *      Execution:
+ *          ModuleName
+ *          FunctionName
+ *          Arguments
+ *          ModuleChecksum
+ *          FunctionChecksum
+ *          ChangeSet
+ *      Trusted Transactions:
+ *          Transaction Hash
+ *          Module Checksum
+ *          Function Checksum
+ *          ChangeSet
+ *      Signature
+ */
 class Transaction {
+    /**
+     * Constructor for a transaction, taking in all information needed to be a well formed transaction
+     * 
+     * @param {*} sender - Creator of the transaction
+     * @param {*} execution - The changes that were done by the transaction
+     * @param {*} trustedTransactions - Validation info regarding what this transaction deemed valid as work
+     * @param {*} transactionHash - The hash of this transaction information
+     * @param {*} signature - A cryptographic signature between the sender and the transactionHash
+     */
     constructor(sender, execution, trustedTransactions, transactionHash, signature) {
         this.transactionHash = transactionHash;
         this.sender = sender;
@@ -301,11 +453,17 @@ class Transaction {
         this.signature = signature;
     }
 
+    /**
+     * Recalcualtes the transaction hash based on the internal hashable data
+     */
     updateHash() {
         let cryptoHelper = cryptoExporter.newCryptoHelper();
         this.transactionHash = cryptoHelper.sha256(this.getHashableData());
     }
 
+    /**
+     * Rebuilds the data into a long string that can then be hashed
+     */
     getHashableData() {
         let hashable = "";
         hashable += this.sender;
@@ -324,6 +482,9 @@ class Transaction {
         return hashable;
     }
 
+    /**
+     * Gets the validated transaction hashes as an array from the validatedTransactions data
+     */
     getValidatedTXHashes() {
         let result = [];
         for(let i = 0; i < this.validatedTransactions.length; i++) {
@@ -331,26 +492,4 @@ class Transaction {
         }
         return result;
     }
-
-    /*toHashableString() {
-        let result = "";
-        result += this.merkelDAGHash;
-        result += this.work.toString();
-        result += moduleName;
-        result += merkelData;
-        result += updateData.toString();
-        return result;
-    }
-
-    getValidationInfo() {
-        let result = "";
-        result += this.transactionHash;
-        result += "|";
-        result += cryptoExporter.newCryptoHelper().sha256(this.updateData);
-        result += "|";
-        result += this.merkelDAGHash;
-        result += "|";
-        result += this.signature;
-        return result;
-    }*/
 }

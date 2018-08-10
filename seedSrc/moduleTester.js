@@ -77,12 +77,10 @@ class ModuleTester{
     }
 
     createTransactionWithRelay(functionName, args) {
-        console.info("CreatingTransaction", functionName, args);
+        //console.info("CreatingTransaction", functionName, args);
         let transaction = this.createTransaction(functionName, args);
         if (transaction == null) {
-            console.info("Rerolling");
             this.relay();
-            console.info("Back to failed");
             return this.createTransactionWithRelay(functionName, args);
         }
         return transaction;
