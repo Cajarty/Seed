@@ -180,6 +180,20 @@ class VirtualMachine {
         return result;
     }
 
+    /**
+     * Creates a transaction
+     * 
+     * First it determines transactions that need to be validated, validates them, simulates our code execution, wraps it into a transaction,
+     * signs it, "receives" our new transaction for interpreting, and then return is.
+     * 
+     * @param {*} account - The account used to create the transactiona nd sign it
+     * @param {*} mod  - The name of the module who's code we are executing
+     * @param {*} func - The name of the function on the module who's code we are executing
+     * @param {*} args - The arguments passed into the function during execution
+     * @param {*} transactionsToValidate - The amount fo transactions we will validate as work
+     * 
+     * @return - A newly created transaction, or null if transaction creation failed
+     */
     createTransaction(account, mod, func, args, transactionsToValidate) {
         let tips = entanglement.getTipsToValidate(account.publicKey, transactionsToValidate);
         console.info("createTransaction", account, mod, func, args, transactionsToValidate, tips);
@@ -196,24 +210,29 @@ class VirtualMachine {
         }
     }
 
+    /**
+     * Receives an incoming transaction and, if it is Proper and well formed, it tries to add it to the entanglement
+     * 
+     * @param {*} transaction - The transaction to attempt to receive
+     */
     incomingTransaction(transaction) {
         // If its a proper, formed transaction
         if (transactionExporter.isTransactionProper(transaction)) {
             // We add it to the entanglement
             entanglement.tryAddTransaction(transaction);
-            //if (transactionExporter.isTransactionValid(transaction)) {
-            //    console.info("IncomingTransaction::Valid", transaction);
-            //    transactionExporter.notifyTransactionValidation(transaction.transactionHash);
-            //    entanglement.tryAddTransaction(transaction);
-            //} else {
-            //    console.info("IncomingTransaction::Proper", transaction);
-            //    transactionExporter.waitToBeNotified(transaction);
-            //}
         } else {
             console.info("IncomingTransaction::Malformed", transaction);
         }
     }
 
+    /**
+     * Takes an account and an array of tips to validate. It then validates them by doing work.
+     * 
+     * @param {*} account - The account used to sign our work
+     * @param {*} tips - The transactions that we want to validate
+     * 
+     * @return - An array of validation work
+     */
     doWork(account, tips) {
         let result = [];
         for(let i = 0; i < tips.length; i++) {
