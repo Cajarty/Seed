@@ -161,7 +161,7 @@ module.exports = {
         //Before DEF has an account, should fail
         tester.assertInvokeFailToChangeState("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GEH"), value : 100 });
 
-        vm.addUser({ module : "Seed" }, tester.getAccount("DEF")); // I don't think we need, or want to need, this
+        vm.addUser({ module : "Seed" }, "DEF");
 
         // Before DEF has allowance, should fail
         tester.assertInvokeFailToChangeState("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GEH"), value : 100 });
