@@ -48,13 +48,17 @@ The Client source code is an Electron wallet being created for both the Seed cry
     - [x] Transaction Squashing [(Part 1)](https://steemit.com/blockchain/@carsonroscoe/seed-dev-discussion-transaction-squashing-proposition-part-1)/[(Part 2)](https://steemit.com/blockchain/@carsonroscoe/seed-dev-discussion-transaction-squashing-considerations-for-jitter-part-2)
 - [ ] Design Blockchain & Entanglement Portion
     - [x] [High-Level Design](https://steemit.com/blockchain/@carsonroscoe/seed-development-design-entanglement-and-blockchain-hybrid)
-    - [ ] Design Transaction Structure
-    - [ ] Design Entanglement Portion
+    - [x] [Design Transaction Structure](https://steemit.com/crypto/@carsonroscoe/seed-development-design-transactions-and-entanglement)
+    - [x] [Design Entanglement Portion](https://steemit.com/crypto/@carsonroscoe/seed-development-design-transactions-and-entanglement)
     - [ ] Design Blockchain Portion
-- [ ] Implement Entanglement Portion
-- [ ] Implement Transaction Squashing
-- [ ] Implement Blockchain Portion
-- [ ] Implement Unit Tests For Entanglement, Transaction Squashing And Blockchain Portions
+- [ ] Implement
+    - [x] Entanglement Portion
+    - [ ] Transaction Squashing
+    - [ ] Blockchain Portion
+- [ ] Implement Unit Tests Unit Test
+    - [x] For Entanglement
+    - [ ] For Transaction Squashing
+    - [ ] For Blockchain Portions
 
 ## DApp Modules & Virtual Machine
 
@@ -65,8 +69,8 @@ The Client source code is an Electron wallet being created for both the Seed cry
 - [x] [Implement Basic Module Design](https://steemit.com/utopian-io/@carsonroscoe/seed-development-modules-smart-contracts-and-the-svm)
 - [x] [Implement Virtual Machine](https://steemit.com/utopian-io/@carsonroscoe/seed-development-modules-smart-contracts-and-the-svm)
 - [x] [Implement Unit Tests For Example Modules & Virtual Machine](https://steemit.com/utopian-io/@carsonroscoe/seed-development-modules-smart-contracts-and-the-svm)
-- [ ] Connect Virtual Machine To Blockchain Ledger
-- [ ] Subscription System For External DApp Integration
+- [x] Connect Virtual Machine To Blockchain/Entanglement Ledger
+- [x] Subscription System For External DApp Integration
 
 ## Client
 
