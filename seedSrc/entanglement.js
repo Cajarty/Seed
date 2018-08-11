@@ -207,11 +207,14 @@ let tryTrust = function(transactionHash, entanglement) {
     
 }
 
+/**
+ * Validation levels a transaction can achieve
+ */
 const VALIDATION_LEVEL = {
-    WELL_FORMED : 0,
-    PROPER : 1,
-    VALID : 2,
-    TRUSTED : 3
+    WELL_FORMED : 0,    // WELL_FORMED means the transaction follows rules #1, #2, #3, #4
+    PROPER : 1,         // PROPER means it also follows rules #5, #6, #7, #8, #9, #11
+    VALID : 2,          // VALID means it also follows rule #10
+    TRUSTED : 3         // TRUSTED means it also has adequate trust from transactions validating it
 }
 
 /**
