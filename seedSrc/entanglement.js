@@ -40,17 +40,19 @@ module.exports = {
      * @param transaction - The transaction to add
      */
     tryAddTransaction : function(transaction) {
-        let children = [];
-        for(let i = 0; i < transaction.validatedTransactions.length; i++) {
-            let child = transaction.validatedTransactions[i].transactionHash;
-            children.push(child);
-            if (!entanglement.contains(child)) {
-                throw new Error("Trying to add transaction who's childs do not exist");
+        if (!entanglement.contains(transaction.transactionHash)) {
+            let children = [];
+            for(let i = 0; i < transaction.validatedTransactions.length; i++) {
+                let child = transaction.validatedTransactions[i].transactionHash;
+                children.push(child);
+                if (!entanglement.contains(child)) {
+                    throw new Error("Trying to add transaction who's childs do not exist");
+                }
             }
-        }
-        entanglement.addTransaction(transaction);
-        for(let i = 0; i < children.length; i++) {
-            entanglement.addEdge(transaction.transactionHash, children[i]);
+            entanglement.addTransaction(transaction);
+            for(let i = 0; i < children.length; i++) {
+                entanglement.addEdge(transaction.transactionHash, children[i]);
+            }
         }
     },
     /**
@@ -138,18 +140,15 @@ module.exports = {
     isValid : function(transactionHash) {
         // Has to be contained already, wellformed and the sum of its trust coefficient == 1
         //console.info("IsValid", entanglement.vertices[transactionHash]);
-        if (entanglement.contains(transactionHash)) {
-
-            // Instead of "looking at tips", we need to count how much we trust each tip
-            //if (!entanglement.tips[transactionHash]) {
-            //    return true;
-            //}
+        if (entanglement.contains(transactionHash) && entanglement.transactions[transactionHash].trust == 1 && entanglement.transaction[transactionHash].validationLevel >= VALIDATION_LEVEL.VALID) {
+            return true;
         }
         return false;
     }
  }
 
  const svmExporter = require("./virtualMachine/virtualMachine.js");
+ const transactionExporter = require("./transaction.js");
 
  /**
   *  Helper function used recursively by the Entanglement with regards to visiting nodes when traversing the DAG
@@ -208,6 +207,13 @@ let tryTrust = function(transactionHash, entanglement) {
     
 }
 
+const VALIDATION_LEVEL = {
+    WELL_FORMED : 0,
+    PROPER : 1,
+    VALID : 2,
+    TRUSTED : 3
+}
+
 /**
  * The Entanglement class, which is the DAG of the Seed system
  */
@@ -261,10 +267,12 @@ let tryTrust = function(transactionHash, entanglement) {
      * @param {*} transaction  - The transaction to add to the entanglement
      */
     addTransaction(transaction) {
-        this.transactions[transaction.transactionHash] = transaction;
-        let result = this.addNode(transaction.transactionHash);
-        let transactionsToTrust = transaction.validatedTransactions;
-        this.trustTransactions(transactionsToTrust);
+        if (transactionExporter.isTransactionProper(transaction)) {
+            this.transactions[transaction.transactionHash] = transaction;
+            let result = this.addNode(transaction.transactionHash);
+            let transactionsToTrust = transaction.validatedTransactions;
+            this.trustTransactions(transactionsToTrust);
+        }
     }
 
     /**
@@ -288,7 +296,8 @@ let tryTrust = function(transactionHash, entanglement) {
             incomingNodes: [], 
             hasOutgoing: false, 
             value: null,
-            trust: 0
+            trust: 0,
+            validationLevel : VALIDATION_LEVEL.PROPER
         };
         this.vertices[node] = vertex;
         this.nodes.push(node);
@@ -356,8 +365,9 @@ let tryTrust = function(transactionHash, entanglement) {
     increaseTrust(transactionHash) {
         if (this.vertices[transactionHash].trust < 1) {
             this.vertices[transactionHash].trust += 0.5;
-            if (this.vertices[transactionHash].trust > 1) {
+            if (this.vertices[transactionHash].trust >= 1) {
                 this.vertices[transactionHash].trust = 1;
+                this.vertices[transactionHash].validationLevel = VALIDATION_LEVEL.TRUSTED;
             }
     
             let transactionsToTrust = this.transactions[transactionHash].validatedTransactions;

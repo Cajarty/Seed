@@ -18,6 +18,8 @@
  *          - Notifies all Proper transactions awaiting Validation that transactionHash is now valid, therefore retest if we were dependant on it
  *      waitToBeNotified(transaction)
  *          - A Proper transaction starts awaiting for its dependant transactions to be validated. Will be retested upon "notifyTransactionValidation" being invoked
+ *      createTransactionValidator()
+ *          - Creates a new transaction validator
  * 
  * IMPORTANT NOTES:
  *      "Proper"
@@ -145,6 +147,12 @@ module.exports = {
                 validateCheck.checksLeft++;
             }
         }
+    },
+    /**
+     * @return - A new transaction validator
+     */
+    createTransactionValidator: function() {
+        return  new TransactionValidator();
     }
  }
 
