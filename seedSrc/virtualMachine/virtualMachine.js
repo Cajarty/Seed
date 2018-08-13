@@ -34,8 +34,10 @@ module.exports = {
 const changeContextExporter = require("./changeContext.js");
 const containerExporter = require("./container.js");
 const conformHelper = require("../helpers/conformHelper.js");
-let cryptoHelper = require("../helpers/cryptoHelper.js").newCryptoHelper();
 const ledgerExporter = require("../ledger.js");
+const entanglement = require("../entanglement.js");
+const transactionExporter = require("../transaction.js");
+const messagingExporter = require("../messaging.js");
 
 class VirtualMachine {
     
@@ -112,9 +114,6 @@ class VirtualMachine {
     simulate(info) {
         let moduleToInvoke = this.getModule(info);
         let moduleDataToInvoke = ledgerExporter.getLedger().getModuleData(info.module);
-        if (info.function == "constructor" && Object.keys(moduleDataToInvoke.userData).length != 0) {
-            throw "VirtualMachine::ERROR::simulate: Constructor can only be called if the module has not yet been used";
-        }
         //If the user simulating this does not exist, add them to our ledger
         if (!moduleToInvoke.doesUserExist(info.user)) {
             this.addUser(info, info.user);
@@ -166,8 +165,8 @@ class VirtualMachine {
      * 
      * @return - ChangeContext if state-modifying function. Fetched data if getter function.
      */
-    invoke(info) {
-        let result = this.simulate(info);
+    invoke(info, resultIfSimulate) {
+        let result = resultIfSimulate == undefined ? this.simulate(info) : JSON.parse(resultIfSimulate);
         if (result != undefined && conformHelper.doesFullyConform(result, { moduleData : "object", userData : "object" })) {
             let users = Object.keys(result.userData);
             let moduleDataKeys = Object.keys(result.moduleData);
@@ -175,6 +174,84 @@ class VirtualMachine {
                 this.applyChangeContext(info, result);
             } else {
                 return this.ERROR.FailedToChangeState;
+            }
+        }
+        messagingExporter.invoke(info.module, info.function, "txHash", result);
+        return result;
+    }
+
+    /**
+     * Creates a transaction
+     * 
+     * First it determines transactions that need to be validated, validates them, simulates our code execution, wraps it into a transaction,
+     * signs it, "receives" our new transaction for interpreting, and then return is.
+     * 
+     * @param {*} account - The account used to create the transactiona nd sign it
+     * @param {*} mod  - The name of the module who's code we are executing
+     * @param {*} func - The name of the function on the module who's code we are executing
+     * @param {*} args - The arguments passed into the function during execution
+     * @param {*} transactionsToValidate - The amount fo transactions we will validate as work
+     * 
+     * @return - A newly created transaction, or null if transaction creation failed
+     */
+    createTransaction(account, mod, func, args, transactionsToValidate) {
+        let tips = entanglement.getTipsToValidate(account.publicKey, transactionsToValidate);
+        console.info("createTransaction", account, mod, func, args, transactionsToValidate, tips);
+        let localSimulation = this.simulate({ module : mod, function : func, args : args, user : account.publicKey, txHashes : tips });
+        if (localSimulation.didChange()) {
+            let work = this.doWork(account, tips);
+            let transaction = transactionExporter.createNewTransaction(account.publicKey, { moduleName : mod, functionName : func, args : args, changeSet : JSON.stringify(localSimulation) }, work);
+            transaction.signature = account.sign(transaction.transactionHash);
+            this.incomingTransaction(transaction);
+            return transaction;
+        } else {
+            console.info("FAILED", localSimulation);
+            return null;
+        }
+    }
+
+    /**
+     * Receives an incoming transaction and, if it is Proper and well formed, it tries to add it to the entanglement
+     * 
+     * @param {*} transaction - The transaction to attempt to receive
+     */
+    incomingTransaction(transaction) {
+        // If its a proper, formed transaction
+        if (transactionExporter.isTransactionProper(transaction)) {
+            // We add it to the entanglement
+            entanglement.tryAddTransaction(transaction);
+        } else {
+            console.info("IncomingTransaction::Malformed", transaction);
+        }
+    }
+
+    /**
+     * Takes an account and an array of tips to validate. It then validates them by doing work.
+     * 
+     * @param {*} account - The account used to sign our work
+     * @param {*} tips - The transactions that we want to validate
+     * 
+     * @return - An array of validation work
+     */
+    doWork(account, tips) {
+        let result = [];
+        for(let i = 0; i < tips.length; i++) {
+            let transaction = tips[i];
+            let localSimulation = this.simulate({ module : transaction.execution.moduleName, function : transaction.execution.functionName, args : transaction.execution.args, user : transaction.sender, txHashes : transaction.getValidatedTXHashes() });
+            let localSimAsString = JSON.stringify(localSimulation);
+            if (localSimAsString == transaction.execution.changeSet) {
+                let moduleUsed = this.getModule({ module : transaction.execution.moduleName });
+                
+                if (moduleUsed != undefined) {
+                    let functionChecksum = moduleUsed.functionChecksums[transaction.execution.functionName];
+                    let moduleChecksum = moduleUsed.moduleChecksum;
+                    result.push( { transactionHash : transaction.transactionHash, moduleChecksum : moduleChecksum, functionChecksum : functionChecksum, changeSet : localSimAsString });
+                } else {
+                    throw new Error("Failed to get module");
+                }
+            } else {
+                console.info("Simulated", localSimAsString, "Actual", transaction.execution.changeSet);
+                throw new Error("Failed to simulate tip");
             }
         }
         return result;

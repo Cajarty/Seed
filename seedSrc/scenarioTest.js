@@ -17,9 +17,129 @@ const cryptographyHelper = cryptoHelperExporter.newCryptoHelper();
 const virtualMachineExporter = require("./virtualMachine/virtualMachine.js");
 const moduleExporter = require("./module.js");
 const seedExporter = require("./modules/seed.js");
+const relayExporter = require("./modules/relay.js");
 const moduleTester = require("./moduleTester.js");
+const transactionExporter = require("./transaction.js");
+const entanglementExporter = require("./entanglement.js");
+const ledgerExporter = require("./ledger.js");
+const messagingExporter = require("./messaging.js");
+
+let messageReply = function(payload) {
+    //console.info("FunctionInvoke: " , payload);
+}
+
+let dataChangeReply = function(payload) {
+    //console.info("DataChange: " , payload);
+}
+
+let userChangeReply = function(payload) {
+    //console.info("UserChange: " , payload);
+}
 
 module.exports = {
+    seedAndSVMTransactionTest : function() {
+        console.log("### Seed & SVM Transaction Test ###");
+
+        messagingExporter.subscribeToFunctionCallback("Seed", "transfer", messageReply);
+        messagingExporter.subscribeToDataChange("Seed", "totalSupply", dataChangeReply);
+
+        //Prep seed module
+        let vm = virtualMachineExporter.getVirtualMachine();
+        let seedModule = seedExporter.getSeed();
+        vm.addModule(seedModule);
+        vm.addModule(relayExporter.getRelay());
+
+        let tester = moduleTester.beginTest("Seed", "ABC", true);
+        messagingExporter.subscribeToDataChange("Seed", "balance", userChangeReply, tester.currentUser.publicKey);
+        tester.createTransactionWithRelay("constructor", { initialSeed : 1000 });
+        tester.relay();
+        tester.relay();
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 1000, "Creator should start with 1000 SEED");
+        tester.assertEqual("getSymbol", {}, "SEED", "The symbol of Seed should be \"SEED\"");
+        tester.assertEqual("getDecimals", {}, 4, "Seed should have 4 decimal points");
+        tester.assertEqual("getTotalSupply", {}, 1000, "1000 SEED should be in circulation upon creation");
+        tester.assertEqual("getAllowance", { owner : tester.getAccount("ABC"), spender : tester.getAccount("DEF") }, undefined, "Get allowance is unset for user who has never used Seed before" );
+
+        tester.switchUser("ABC");
+        tester.createTransactionWithRelay("approve", { spender : tester.getAccount("DEF"), value : 250 });
+        tester.relay();
+
+        tester.switchUser("DEF");
+        tester.createTransactionWithRelay("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("DEF"), value : 100 });
+        tester.createTransactionWithRelay("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GHI"), value : 100 });
+        tester.relay();
+        tester.relay();
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 800, "Owner should still have 800 SEED");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("DEF") }, 100, "DEF sent 100 SEED to himself");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("GHI") }, 100, "GHI received 100 SEED from DEF on ABC's behalf");
+
+        tester.switchUser("GHI");
+        tester.createTransactionWithRelay("transfer", { to : tester.getAccount("ABC"), value : 50 });
+        tester.relay();
+        tester.relay();
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 850, "ABC should have received 50 from GHI");
+
+        tester.switchUser("DEF");
+        tester.createTransactionWithRelay("burn", { value : 25 });
+        tester.relay();
+        tester.relay();
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("DEF") }, 75, "DEF should have 75 after burning 25, removing it from circulation");
+        tester.assertEqual("getTotalSupply", {}, 975, "25 coins were burned, removed from circulation, since initial 1000 creation");
+
+        tester.endTest();
+
+        console.info("Entanglement", entanglementExporter.getEntanglement(), "Ledger", ledgerExporter.getLedger());
+        
+    },
+    seedAndSVMTransactionTest_NoDAG : function() {
+        console.log("### Seed & SVM Transaction Test ###");
+
+        //Prep seed module
+        let vm = virtualMachineExporter.getVirtualMachine();
+        let seedModule = seedExporter.getSeed();
+        vm.addModule(seedModule);
+
+        let tester = moduleTester.beginTest("Seed", "ABC");
+        tester.createAndInvokeTransaction("constructor", { initialSeed : 1000 });
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 1000, "Creator should start with 1000 SEED");
+        tester.assertEqual("getSymbol", {}, "SEED", "The symbol of Seed should be \"SEED\"");
+        tester.assertEqual("getDecimals", {}, 4, "Seed should have 4 decimal points");
+        tester.assertEqual("getTotalSupply", {}, 1000, "1000 SEED should be in circulation upon creation");
+
+        tester.assertEqual("getAllowance", { owner : tester.getAccount("ABC"), spender : tester.getAccount("DEF") }, undefined, "Get allowance is unset for user who has never used Seed before" );
+        tester.switchUser("DEF");
+
+        //Before DEF has an account, should fail
+        tester.assertInvokeFailToChangeState("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GEH"), value : 100 });
+        vm.addUser({ module : "Seed" }, tester.getAccount("DEF")); // I don't think we need, or want to need, this
+    
+        // Before DEF has allowance, should fail
+        tester.assertInvokeFailToChangeState("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GEH"), value : 100 });
+
+        tester.switchUser("ABC");
+        tester.createAndInvokeTransaction("approve", { spender : tester.getAccount("DEF"), value : 250 });
+        tester.switchUser("DEF");
+        tester.createAndInvokeTransaction("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("DEF"), value : 100 });
+        tester.createAndInvokeTransaction("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GHI"), value : 100 });
+
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 800, "Owner should still have 800 SEED");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("DEF") }, 100, "DEF sent 100 SEED to himself");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("GHI") }, 100, "GHI received 100 SEED from DEF on ABC's behalf");
+
+        tester.switchUser("GHI");
+        tester.createAndInvokeTransaction("transfer", { to : tester.getAccount("ABC"), value : 50 });
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 850, "ABC should have received 50 from GHI");
+
+        tester.switchUser("DEF");
+        tester.createAndInvokeTransaction("burn", { value : 25 });
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("DEF") }, 75, "DEF should have 75 after burning 25, removing it from circulation");
+        tester.assertEqual("getTotalSupply", {}, 975, "25 coins were burned, removed from circulation, since initial 1000 creation");
+
+        tester.endTest();
+
+        console.info("Entanglement", entanglementExporter.getEntanglement(), "Ledger", ledgerExporter.getLedger().getModuleData("Seed"));
+        
+    },
     /**
      * Runs the Seed Module test scenario, confirming the Seed cryptocurrency module behaves as expected
      */
@@ -27,43 +147,42 @@ module.exports = {
         let vm = virtualMachineExporter.getVirtualMachine();
         let seedModule = seedExporter.getSeed();
         vm.addModule(seedModule);
-
         
         let tester = moduleTester.beginTest("Seed", "ABC");
         tester.invoke("constructor", { initialSeed : 1000 });
-        tester.assertEqual("getBalanceOf", { owner : "ABC" }, 1000, "Creator should start with 1000 SEED");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 1000, "Creator should start with 1000 SEED");
         tester.assertEqual("getSymbol", {}, "SEED", "The symbol of Seed should be \"SEED\"");
         tester.assertEqual("getDecimals", {}, 4, "Seed should have 4 decimal points");
         tester.assertEqual("getTotalSupply", {}, 1000, "1000 SEED should be in circulation upon creation");
 
-        tester.assertEqual("getAllowance", { owner : "ABC", spender : "DEF" }, undefined, "Get allowance is unset for user who has never used Seed before" );
+        tester.assertEqual("getAllowance", { owner : tester.getAccount("ABC"), spender : tester.getAccount("DEF") }, undefined, "Get allowance is unset for user who has never used Seed before" );
         tester.switchUser("DEF");
 
         //Before DEF has an account, should fail
-        tester.assertInvokeFailToChangeState("transferFrom", { from : "ABC", to : "GEH", value : 100 });
+        tester.assertInvokeFailToChangeState("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GEH"), value : 100 });
 
         vm.addUser({ module : "Seed" }, "DEF");
 
         // Before DEF has allowance, should fail
-        tester.assertInvokeFailToChangeState("transferFrom", { from : "ABC", to : "GEH", value : 100 });
+        tester.assertInvokeFailToChangeState("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GEH"), value : 100 });
 
         tester.switchUser("ABC");
-        tester.invoke("approve", { spender : "DEF", value : 250 });
+        tester.invoke("approve", { spender : tester.getAccount("DEF"), value : 250 });
         tester.switchUser("DEF");
-        tester.invoke("transferFrom", { from : "ABC", to : "DEF", value : 100 });
-        tester.invoke("transferFrom", { from : "ABC", to : "GHI", value : 100 });
+        tester.invoke("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("DEF"), value : 100 });
+        tester.invoke("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GHI"), value : 100 });
 
-        tester.assertEqual("getBalanceOf", { owner : "ABC" }, 800, "Owner should still have 800 SEED");
-        tester.assertEqual("getBalanceOf", { owner : "DEF" }, 100, "DEF sent 100 SEED to himself");
-        tester.assertEqual("getBalanceOf", { owner : "GHI" }, 100, "GHI received 100 SEED from DEF on ABC's behalf");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 800, "Owner should still have 800 SEED");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("DEF") }, 100, "DEF sent 100 SEED to himself");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("GHI") }, 100, "GHI received 100 SEED from DEF on ABC's behalf");
 
         tester.switchUser("GHI");
-        tester.invoke("transfer", { to : "ABC", value : 50 });
-        tester.assertEqual("getBalanceOf", { owner : "ABC" }, 850, "ABC should have received 50 from GHI");
+        tester.invoke("transfer", { to : tester.getAccount("ABC"), value : 50 });
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 850, "ABC should have received 50 from GHI");
 
         tester.switchUser("DEF");
         tester.invoke("burn", { value : 25 });
-        tester.assertEqual("getBalanceOf", { owner : "DEF" }, 75, "DEF should have 75 after burning 25, removing it from circulation");
+        tester.assertEqual("getBalanceOf", { owner : tester.getAccount("DEF") }, 75, "DEF should have 75 after burning 25, removing it from circulation");
         tester.assertEqual("getTotalSupply", {}, 975, "25 coins were burned, removed from circulation, since initial 1000 creation");
 
         tester.endTest();
