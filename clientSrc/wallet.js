@@ -4,34 +4,13 @@ const seed = require("../seedSrc/index.js");
 const scenarioExporter = seed.getScenarioTestExporter();
 const ipc = require('electron').ipcRenderer;
 
-let balance = 0.0;
 let svm = seed.getSVMExporter().getVirtualMachine();
 let seedModule = seed.getSeedExporter().getSeed();
 
-//scenarioExporter.cryptographyTest();
-
-let account = seed.getAccountExporter().newAccount( { entropy : "ABC_123456789012345678901234567890", network : "00" });
+let balance = 0.0;
+let account = undefined;
 
 scenarioExporter.seedAndSVMTransactionTest();
-//scenarioExporter.seedModuleTest();
-//scenarioExporter.vmModuleTest();
-
-
-function reloadBalance() {
-    console.info("reloadBalance", balance);
-}
-
-balance = svm.invoke({ 
-    module : "Seed",
-    function : "getBalanceOf",
-    args : { owner : account.publicKey },
-    user : account.publicKey,
-    txHashes : []
-});
-
-
-// Load an account and store in "address"
-//seed.subscribeToDataChange("Seed", "balance", reloadBalance, address);
 
 function seedSend() {
     console.log("SEND");
@@ -43,13 +22,28 @@ function seedApprove() {
 }
 
 function seedDestroy() {
-    ipc.send('reloadBalance', balance);
+    console.log("DESTROY");
 }
 
 function seedUpdate() {
+    // Request which user is the active user
+    ipc.send('activeUserRequest');
+}
+
+// On receiving "this is the active user", reload data
+ipc.on('activeUserResponse', function(event, activeUserEntropy) {
+    account = seed.getAccountExporter().newAccount( { entropy : activeUserEntropy, network : "00" });
+    balance = svm.invoke({ 
+        module : "Seed",
+        function : "getBalanceOf",
+        args : { owner : account.publicKey },
+        user : account.publicKey,
+        txHashes : []
+    });
     ipc.send('reloadBalance', balance);
     ipc.send('reloadAddress', account.publicKey);
-}
+});
+
 
 
 /*ipc.on('invokeAction', function(arg) {

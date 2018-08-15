@@ -8,11 +8,36 @@ const url = require('url');
 //'debug': Debug tools active, e.g. print lines
 process.env.NODE_ENV = 'development'; 
 let mainWindow = undefined;
+let activeAccountEntropy = undefined;//switchAccount("ABC");
 
 let menuTemplate = [
     {
+        label : "Edit",
+        submenu: [
+            { role : "undo" },
+            { role : "redo" },
+            { role : "separator" },
+            { role : "cut" },
+            { role : "copy" },
+            { role : "paste" },
+            { role : "pasteandmatchstyle" },
+            { role : "delete" },
+            { role : "selectall" },
+        ]
+    },
+    {
         label: "Seed",
         submenu: [
+            {
+                label : "Accounts",
+                submenu : [
+                    { label : "Account #1", click() { switchAccount("ABC"); } },
+                    { label : "Account #2", click() { switchAccount("DEF"); } },
+                    { label : "Account #3", click() { switchAccount("GHI"); } },
+                    { label : "Account #4", click() { switchAccount("JKL"); } },
+                    { label : "Account #5", click() { switchAccount("MNO"); } }
+                ]
+            },
             { 
                 label: "About (version 0.0.1)",
                 click() {
@@ -65,21 +90,21 @@ if (process.env.NODE_ENV !== 'production') {
     });
 }
 
-ipcMain.on("reloadBalance", function(args, balance) {
+ipcMain.on("reloadBalance", function(event, balance) {
     let repaintStr = "document.getElementById(\"seedBalance\").innerHTML = " + balance + ";";
     mainWindow.webContents.executeJavaScript(repaintStr, function (result) {})
 });
 
-ipcMain.on("reloadAddress", function(args, address) {
+ipcMain.on("reloadAddress", function(event, address) {
     let repaintStr = "document.getElementById(\"seedAddress\").innerHTML = \"" + address + "\";";
     mainWindow.webContents.executeJavaScript(repaintStr, function (result) {})
 });
 
-/*let loadIPC = function() {
-    let el = document.getElementById("seedSend");
-    el.addEventListener('click', function(){
-        ipcMain.send('invokeAction', el);
-    });
-}
+ipcMain.on("activeUserRequest", function(event) {
+    event.sender.send("activeUserResponse", activeAccountEntropy);
+});
 
-loadIPC();*/
+function switchAccount(accountEntropy) {
+    activeAccountEntropy = accountEntropy + "_123456789012345678901234567890";
+    // Ideally send to the 
+}
