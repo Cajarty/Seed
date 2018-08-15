@@ -7,6 +7,7 @@ const url = require('url');
 //'development': Development tools enabled
 //'debug': Debug tools active, e.g. print lines
 process.env.NODE_ENV = 'development'; 
+let mainWindow = undefined;
 
 let menuTemplate = [
     {
@@ -63,3 +64,22 @@ if (process.env.NODE_ENV !== 'production') {
         ]
     });
 }
+
+ipcMain.on("reloadBalance", function(args, balance) {
+    let repaintStr = "document.getElementById(\"seedBalance\").innerHTML = " + balance + ";";
+    mainWindow.webContents.executeJavaScript(repaintStr, function (result) {})
+});
+
+ipcMain.on("reloadAddress", function(args, address) {
+    let repaintStr = "document.getElementById(\"seedAddress\").innerHTML = \"" + address + "\";";
+    mainWindow.webContents.executeJavaScript(repaintStr, function (result) {})
+});
+
+/*let loadIPC = function() {
+    let el = document.getElementById("seedSend");
+    el.addEventListener('click', function(){
+        ipcMain.send('invokeAction', el);
+    });
+}
+
+loadIPC();*/
