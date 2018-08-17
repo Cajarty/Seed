@@ -35,8 +35,25 @@ function seedSend(value, toAddress) {
     }
 }
 
-function seedApprove() {
-    console.log("APPROVE");
+function seedApprove(value, spender) {
+    if (value == undefined && spender == undefined) {
+        //Fetch data
+        ipc.send('inputFieldsRequest', "seedApprove");
+    } else {
+        //Send
+        let transaction = svm.createTransaction(account, "Seed", "approve", { spender : spender, value : value }, 2);
+        let txHashes = [];
+        for(let i = 0; i < transaction.validatedTransactions.length; i++) {
+            txHashes.push(transaction.validatedTransactions[i].transactionHash);
+        }
+        svm.invoke({ 
+            module : transaction.execution.moduleName, 
+            function : transaction.execution.functionName, 
+            user : account.publicKey, 
+            args : transaction.execution.args,
+            txHashes : txHashes
+        }, transaction.execution.changeSet);
+    }
 }
 
 function seedDestroy() {
