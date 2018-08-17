@@ -6,8 +6,8 @@ const url = require('url');
 //'production': Release for public
 //'development': Development tools enabled
 //'debug': Debug tools active, e.g. print lines
-process.env.NODE_ENV = 'development'; 
-let mainWindow = undefined;
+process.env.NODE_ENV = 'development';
+let windows = {};
 let activeAccountEntropy = undefined;//switchAccount("ABC");
 
 let menuTemplate = [
@@ -38,6 +38,12 @@ let menuTemplate = [
                     { label : "Account #5", click() { switchAccount("MNO"); } }
                 ]
             },
+            {
+                label: "Relay",
+                click() {
+                    relayTransaction();
+                }
+            },
             { 
                 label: "About (version 0.0.1)",
                 click() {
@@ -56,12 +62,19 @@ let menuTemplate = [
 ];
 
 app.on('ready', function() {
-    mainWindow = new BrowserWindow({width: 800, height: 500, title: 'Seed'});
-    mainWindow.loadURL(url.format({
-        pathname: path.join(__dirname, 'wallet.html'),
+    windows["Launcher"] = new BrowserWindow({width: 800, height: 500, title: 'Seed Launcher'});
+    windows["Launcher"].loadURL(url.format({
+        pathname: path.join(__dirname, 'launcher.html'),
         protocol: 'file:',
         slashes: true
     }));
+
+    //windows["Seed"] = new BrowserWindow({width: 800, height: 500, title: 'Seed'});
+    //windows["Seed"].loadURL(url.format({
+    //    pathname: path.join(__dirname, 'seed.html'),
+    //    protocol: 'file:',
+    //    slashes: true
+    //}));
 
     const menu = Menu.buildFromTemplate(menuTemplate);
     Menu.setApplicationMenu(menu);
@@ -90,14 +103,29 @@ if (process.env.NODE_ENV !== 'production') {
     });
 }
 
+ipcMain.on("launchModule", function(event, windowName, htmlFile) {
+    windows[windowName] = new BrowserWindow({width: 800, height: 500, title: windowName});
+    windows[windowName].loadURL(url.format({
+        pathname: path.join(__dirname, htmlFile),
+        protocol: 'file:',
+        slashes: true
+    }));
+});
+
+ipcMain.on("runOnMainThread", function(event, windowName, funcToRun) {
+    if (funcToRun) {
+        funcToRun(windows[windowName]);
+    }
+});
+
 ipcMain.on("reloadBalance", function(event, balance) {
     let repaintStr = "document.getElementById(\"seedBalance\").innerHTML = " + balance + ";";
-    mainWindow.webContents.executeJavaScript(repaintStr, function (result) {});
+    windows["Seed"].webContents.executeJavaScript(repaintStr, function (result) {});
 });
 
 ipcMain.on("reloadAddress", function(event, address) {
     let repaintStr = "document.getElementById(\"seedAddress\").innerHTML = \"" + address + "\";";
-    mainWindow.webContents.executeJavaScript(repaintStr, function (result) {});
+    windows["Seed"].webContents.executeJavaScript(repaintStr, function (result) {});
 });
 
 ipcMain.on("activeUserRequest", function(event) {
@@ -106,10 +134,10 @@ ipcMain.on("activeUserRequest", function(event) {
 
 ipcMain.on("inputFieldsRequest", function(event, funcToCall) {
     let getBalance = "document.getElementById(\"inValue\").value;";
-    mainWindow.webContents.executeJavaScript(getBalance, function (balance) {
+    windows["Seed"].webContents.executeJavaScript(getBalance, function (balance) {
         balance = parseInt(balance);
         let getAddress = "document.getElementById(\"inAddress\").value;";
-        mainWindow.webContents.executeJavaScript(getAddress, function (address) {
+        windows["Seed"].webContents.executeJavaScript(getAddress, function (address) {
             event.sender.send("inputFieldsResponse", balance, address, funcToCall);
         });
     });
@@ -119,3 +147,8 @@ function switchAccount(accountEntropy) {
     activeAccountEntropy = accountEntropy + "_123456789012345678901234567890";
     // Ideally send to the 
 }
+
+function relayTransaction() {
+    console.info("relayTransaction");
+}
+

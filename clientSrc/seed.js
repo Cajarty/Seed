@@ -1,4 +1,4 @@
-console.log("Wallet.js");
+console.log("seed.js");
 
 const seed = require("../seedSrc/index.js");
 const scenarioExporter = seed.getScenarioTestExporter();
