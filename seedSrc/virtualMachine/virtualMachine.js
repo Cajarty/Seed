@@ -167,6 +167,7 @@ class VirtualMachine {
      */
     invoke(info, resultIfSimulate) {
         let result = resultIfSimulate == undefined ? this.simulate(info) : JSON.parse(resultIfSimulate);
+        // TODO: change doesFullyConform to somehow compare it to a module.functionSchema[info.function] to constraint to data types, so functions can ask for certain types
         if (result != undefined && conformHelper.doesFullyConform(result, { moduleData : "object", userData : "object" })) {
             let users = Object.keys(result.userData);
             let moduleDataKeys = Object.keys(result.moduleData);

@@ -9,12 +9,30 @@ let seedModule = seed.getSeedExporter().getSeed();
 
 let balance = 0.0;
 let account = undefined;
+let inputValue = 0.0;
+let inputAddress = undefined;
 
 scenarioExporter.seedAndSVMTransactionTest();
 
-function seedSend() {
-    console.log("SEND");
-    //reloadBalance(10);
+function seedSend(value, toAddress) {
+    if (value == undefined && toAddress == undefined) {
+        //Fetch data
+        ipc.send('inputFieldsRequest', "seedSend");
+    } else {
+        //Send
+        let transaction = svm.createTransaction(account, "Seed", "transfer", { to : toAddress, value : value }, 2);
+        let txHashes = [];
+        for(let i = 0; i < transaction.validatedTransactions.length; i++) {
+            txHashes.push(transaction.validatedTransactions[i].transactionHash);
+        }
+        svm.invoke({ 
+            module : transaction.execution.moduleName, 
+            function : transaction.execution.functionName, 
+            user : account.publicKey, 
+            args : transaction.execution.args,
+            txHashes : txHashes
+        }, transaction.execution.changeSet);
+    }
 }
 
 function seedApprove() {
@@ -44,6 +62,15 @@ ipc.on('activeUserResponse', function(event, activeUserEntropy) {
     ipc.send('reloadAddress', account.publicKey);
 });
 
+ipc.on('inputFieldsResponse', function(event, value, address, funcToCall) {
+    inputValue = value;
+    inputAddress = address;
+    if (funcToCall) {
+        if (funcToCall == "seedSend") {
+            seedSend(value, address);
+        }
+    }
+});
 
 
 /*ipc.on('invokeAction', function(arg) {

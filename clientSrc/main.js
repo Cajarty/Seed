@@ -92,16 +92,27 @@ if (process.env.NODE_ENV !== 'production') {
 
 ipcMain.on("reloadBalance", function(event, balance) {
     let repaintStr = "document.getElementById(\"seedBalance\").innerHTML = " + balance + ";";
-    mainWindow.webContents.executeJavaScript(repaintStr, function (result) {})
+    mainWindow.webContents.executeJavaScript(repaintStr, function (result) {});
 });
 
 ipcMain.on("reloadAddress", function(event, address) {
     let repaintStr = "document.getElementById(\"seedAddress\").innerHTML = \"" + address + "\";";
-    mainWindow.webContents.executeJavaScript(repaintStr, function (result) {})
+    mainWindow.webContents.executeJavaScript(repaintStr, function (result) {});
 });
 
 ipcMain.on("activeUserRequest", function(event) {
     event.sender.send("activeUserResponse", activeAccountEntropy);
+});
+
+ipcMain.on("inputFieldsRequest", function(event, funcToCall) {
+    let getBalance = "document.getElementById(\"inValue\").value;";
+    mainWindow.webContents.executeJavaScript(getBalance, function (balance) {
+        balance = parseInt(balance);
+        let getAddress = "document.getElementById(\"inAddress\").value;";
+        mainWindow.webContents.executeJavaScript(getAddress, function (address) {
+            event.sender.send("inputFieldsResponse", balance, address, funcToCall);
+        });
+    });
 });
 
 function switchAccount(accountEntropy) {
