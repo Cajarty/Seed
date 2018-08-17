@@ -56,8 +56,25 @@ function seedApprove(value, spender) {
     }
 }
 
-function seedDestroy() {
-    console.log("DESTROY");
+function seedDestroy(value) {
+    if (value == undefined) {
+        //Fetch data
+        ipc.send('inputFieldsRequest', "seedDestroy");
+    } else {
+        //Send
+        let transaction = svm.createTransaction(account, "Seed", "burn", { value : value }, 2);
+        let txHashes = [];
+        for(let i = 0; i < transaction.validatedTransactions.length; i++) {
+            txHashes.push(transaction.validatedTransactions[i].transactionHash);
+        }
+        svm.invoke({ 
+            module : transaction.execution.moduleName, 
+            function : transaction.execution.functionName, 
+            user : account.publicKey, 
+            args : transaction.execution.args,
+            txHashes : txHashes
+        }, transaction.execution.changeSet);
+    }
 }
 
 function seedUpdate() {
@@ -83,8 +100,16 @@ ipc.on('inputFieldsResponse', function(event, value, address, funcToCall) {
     inputValue = value;
     inputAddress = address;
     if (funcToCall) {
-        if (funcToCall == "seedSend") {
+        switch(funcToCall) {
+            case "seedSend":
             seedSend(value, address);
+            break;
+            case "seedApprove":
+            seedApprove(value, address);
+            break;
+            case "seedDestroy":
+            seedDestroy(value);
+            break;
         }
     }
 });
