@@ -118,29 +118,17 @@ ipcMain.on("runOnMainThread", function(event, windowName, funcToRun) {
     }
 });
 
-ipcMain.on("reloadBalance", function(event, balance) {
-    let repaintStr = "document.getElementById(\"seedBalance\").innerHTML = " + balance + ";";
-    windows["Seed"].webContents.executeJavaScript(repaintStr, function (result) {});
-});
-
-ipcMain.on("reloadAddress", function(event, address) {
-    let repaintStr = "document.getElementById(\"seedAddress\").innerHTML = \"" + address + "\";";
-    windows["Seed"].webContents.executeJavaScript(repaintStr, function (result) {});
-});
-
 ipcMain.on("activeUserRequest", function(event) {
     event.sender.send("activeUserResponse", activeAccountEntropy);
 });
 
-ipcMain.on("inputFieldsRequest", function(event, funcToCall) {
-    let getBalance = "document.getElementById(\"inValue\").value;";
-    windows["Seed"].webContents.executeJavaScript(getBalance, function (balance) {
-        balance = parseInt(balance);
-        let getAddress = "document.getElementById(\"inAddress\").value;";
-        windows["Seed"].webContents.executeJavaScript(getAddress, function (address) {
-            event.sender.send("inputFieldsResponse", balance, address, funcToCall);
-        });
-    });
+ipcMain.on("getAccountEntropy", function(event) {
+    event.returnValue = activeAccountEntropy;
+});
+
+ipcMain.on("executeJavaScript", function(event, windowName, javaScriptString, callback) {
+    console.info("executeJavaScript", windowName, javaScriptString, callback);
+    windows[windowName].webContents.executeJavaScript(javaScriptString, callback);
 });
 
 function switchAccount(accountEntropy) {

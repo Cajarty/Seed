@@ -3,6 +3,9 @@ const scenarioTestExporter = require("./scenarioTest.js");
 const messagingExporter = require("./messaging.js");
 const seedExporter = require("./modules/seed.js");
 const accountExporter = require("./account.js");
+const ledgerExporter = require("./ledger.js");
+const moduleExporter = require("./module.js");
+const entanglementExporter = require("./entanglement.js");
 
 module.exports = {
     getSVMExporter : function() {
@@ -16,6 +19,15 @@ module.exports = {
     },
     getAccountExporter : function() {
         return accountExporter;
+    },
+    getLedgerExporter : function() {
+        return ledgerExporter;
+    },
+    getModuleExporter : function() {
+        return moduleExporter;
+    },
+    getEntanglementExporter : function() {
+        return entanglementExporter;
     },
     /**
      * Subscribes for callback to be invoked whenever the given module has the given function validated

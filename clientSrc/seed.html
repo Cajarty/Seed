@@ -21,8 +21,8 @@
             </p>
             <hr />
             <p style="text-align: center;">
-                <input type="number" id="inValue" value="0" />
-                <input type="text" id="inAddress" value="[Address]" />
+                <input type="number" id="inValue" value="0" onchange="valueChange(this.value)" />
+                <input type="text" id="inAddress" value="[Address]" onchange="addressChange(this.value)" />
                 <hr/>
                 <input type="button" id="btnSend" value="Send" onclick="seedSend()" />
                 <input type="button" id="btnApprove" value="Approve" onclick="seedApprove()" />
