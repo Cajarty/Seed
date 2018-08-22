@@ -98,8 +98,10 @@ function transfer() {
     let value = inputData["transfer"].value;
     let address = inputData["transfer"].address;
     if (value != 0 && address != "") {
-        let transaction = seedHLAPI.createTransaction("Seed", "transfer", { to : address, value : value });
-        seedHLAPI.addTransaction(transaction);
+        seedHLAPI.createTransaction("Seed", "transfer", { to : address, value : value })
+            .then((transaction) => {
+                seedHLAPI.addTransaction(transaction);
+            });
     }
 }
 
@@ -108,8 +110,10 @@ function transferFrom() {
     let fromAddress = inputData["transferFrom"].fromAddress;
     let toAddress = inputData["transferFrom"].toAddress;
     if (value != 0 && fromAddress != "" && toAddress != "") {
-        let transaction = seedHLAPI.createTransaction("Seed", "transferFrom", { from : fromAddress, to : toAddress, value : value });
-        seedHLAPI.addTransaction(transaction);
+        seedHLAPI.createTransaction("Seed", "transferFrom", { from : fromAddress, to : toAddress, value : value })
+            .then((transaction) => {
+                seedHLAPI.addTransaction(transaction);
+            });
     }
 }
 
@@ -117,16 +121,20 @@ function approve() {
     let value = inputData["approve"].value;
     let address = inputData["approve"].address;
     if (value != 0 && address != undefined) {
-        let transaction = seedHLAPI.createTransaction("Seed", "approve", { spender : address, value : value });
-        seedHLAPI.addTransaction(transaction);
+        seedHLAPI.createTransaction("Seed", "approve", { spender : address, value : value })
+            .then((transaction) => {
+                seedHLAPI.addTransaction(transaction);
+            });
     }
 }
 
 function burn() {
     let value = inputData["burn"].value;
     if (value != 0) {
-        let transaction = seedHLAPI.createTransaction("Seed", "burn", { value : value });
-        seedHLAPI.addTransaction(transaction);
+        seedHLAPI.createTransaction("Seed", "burn", { value : value })
+            .then((transaction) => {
+                seedHLAPI.addTransaction(transaction);
+            });
     }
 }
 
