@@ -1,14 +1,14 @@
 console.log("seed.js");
 
 const seed = require("../../../seedSrc/index.js");
-const scenarioExporter = seed.getScenarioTestExporter();
 const ipc = require('electron').ipcRenderer;
-const seedHLAPI = require("../../seedHLAPI.js").getSeedHLAPI(ipc);
+const { PromiseIpc } = require('electron-promise-ipc');
+const promiseIpc = new PromiseIpc({ maxTimeoutMs: 2000 });
+const seedHLAPI = require("../../seedHLAPI.js").getSeedHLAPI(promiseIpc);
 
 let svm = seed.getSVMExporter().getVirtualMachine();
 let seedModule = seed.getSeedExporter().getSeed();
 
-scenarioExporter.seedAndSVMTransactionTest();
 
 // ## Input Form Default Data
 let inputData = {
@@ -132,20 +132,26 @@ function burn() {
 
 // ## Helper Functions
 function seedUpdate() {
-    let accountPublicKey = seedHLAPI.getAccount().publicKey;
-    let balance = seedHLAPI.getter("Seed", "getBalanceOf", { owner : accountPublicKey });
-    changeInnerHTML("seedBalance", balance);
-    changeInnerHTML("seedAddress", "\"" + accountPublicKey + "\"");
+    seedHLAPI.getAccount()
+        .then((account) => {
+            console.info("seedUpdate", account);
+            let accountPublicKey = account.publicKey;
+            seedHLAPI.getter("Seed", "getBalanceOf", { owner : accountPublicKey })
+                .then((balance) => {
+                    changeInnerHTML("seedBalance", balance);
+                    changeInnerHTML("seedAddress", "\"" + accountPublicKey + "\"");
+                });
+        });
 }
 
 function changeInnerHTML(elementID, value) {
     let javascript = "document.getElementById(\"" + elementID + "\").innerHTML = " + value;
-    seedHLAPI.executeJavaScript("Seed", javascript);
+    ipc.send("executeJavaScript", "Seed", javascript);
 }
 
 function changeFunctionFormDisplay(formID, display) {
     let javascript = "document.getElementById(\"" + formID + "\").style.display = \"" + display + "\"";
-    seedHLAPI.executeJavaScript("Seed", javascript);
+    ipc.send("executeJavaScript", "Seed", javascript);
 }
 
 onFunctionSelected("transfer");
