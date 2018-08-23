@@ -28,9 +28,10 @@ module.exports = {
 
 class SeedHLAPI {
     constructor(ipcPromiseRenderer) {
-        this.account = undefined;
-        this.seed = require("../seedSrc/index.js");
         this.ipcPromiseRenderer = ipcPromiseRenderer;
+    }
+    switchAccount(accountEntropy) {
+        return this.ipcPromiseRenderer.send("switchAccount", accountEntropy);
     }
     // Returns the account by asking main.js through IPC
     getAccount() {
@@ -40,8 +41,11 @@ class SeedHLAPI {
         return this.ipcPromiseRenderer.send("getTransaction", transactionHash);
     }
     // Returns a newly created transaction
-    createTransaction(moduleName, functionName, args) {
-        return this.ipcPromiseRenderer.send("createTransaction", moduleName, functionName, args);
+    createTransaction(moduleName, functionName, args, numOfValidations) {
+        if (!numOfValidations) {
+            numOfValidations = 2;
+        }
+        return this.ipcPromiseRenderer.send("createTransaction", moduleName, functionName, args, numOfValidations);
     }
     addTransaction(transaction) {
         return this.ipcPromiseRenderer.send("addTransaction", transaction);
@@ -61,8 +65,8 @@ class SeedHLAPI {
     unsubscribe(moduleName, funcNameOrDataKey, receipt, optionalUser) {
         return this.ipcPromiseRenderer.send("unsubscribe", moduleName, funcNameOrDataKey, receipt, optionalUser);
     }
-    addModule(newModule, creator) {
-        return this.ipcPromiseRenderer.send("addModule", newModule, creator);
+    addModule(newModule) {
+        return this.ipcPromiseRenderer.send("addModule", newModule);
     }
     createModule(moduleName, initialStateData, initialUserStateData) {
         return this.ipcPromiseRenderer.send("createModule", moduleName, initialStateData, initialUserStateData);

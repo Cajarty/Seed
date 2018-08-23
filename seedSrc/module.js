@@ -28,7 +28,7 @@ module.exports = {
      */
     createModule : function(info) {
         return new Module(info);
-    } 
+    }
  }
 
  class Module {

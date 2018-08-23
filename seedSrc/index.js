@@ -1,11 +1,13 @@
 const virtualMachineExporter = require("./virtualMachine/virtualMachine.js");
 const scenarioTestExporter = require("./scenarioTest.js");
 const messagingExporter = require("./messaging.js");
-const seedExporter = require("./modules/seed.js");
+const seedExporter = require("../clientSrc/modules/seed/seed.js");
+const relayExporter = require("../clientSrc/modules/relay/relay.js");
 const accountExporter = require("./account.js");
 const ledgerExporter = require("./ledger.js");
 const moduleExporter = require("./module.js");
 const entanglementExporter = require("./entanglement.js");
+const transactionExporter = require("./transaction.js");
 
 module.exports = {
     getSVMExporter : function() {
@@ -16,6 +18,9 @@ module.exports = {
     },
     getSeedExporter : function() {
         return seedExporter;
+    },
+    getRelayExporter : function() {
+        return relayExporter;
     },
     getAccountExporter : function() {
         return accountExporter;
@@ -28,6 +33,9 @@ module.exports = {
     },
     getEntanglementExporter : function() {
         return entanglementExporter;
+    },
+    getTransactionExporter : function() {
+        return transactionExporter;
     },
     /**
      * Subscribes for callback to be invoked whenever the given module has the given function validated

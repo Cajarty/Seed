@@ -4,17 +4,14 @@ const path = require('path');
 const url = require('url');
 const promiseIpc = require('electron-promise-ipc');
 const seed = require("../seedSrc/index.js");
-
-// TODO: REMOVE UNIT TEST RELIANCE FOR SETUP!!!
-const scenarioExporter = seed.getScenarioTestExporter();
-scenarioExporter.seedAndSVMTransactionTest();
+const moduleLoader = require("./moduleLoader");
 
 //'production': Release for public
 //'development': Development tools enabled
 //'debug': Debug tools active, e.g. print lines
 process.env.NODE_ENV = 'development';
 let windows = {};
-let activeAccountEntropy = undefined;//switchAccount("ABC");
+let activeAccountEntropy = undefined;
 
 let menuTemplate = [
     {
@@ -75,15 +72,23 @@ app.on('ready', function() {
         slashes: true
     }));
 
-    //windows["Seed"] = new BrowserWindow({width: 800, height: 500, title: 'Seed'});
-    //windows["Seed"].loadURL(url.format({
-    //    pathname: path.join(__dirname, 'seed.html'),
-    //    protocol: 'file:',
-    //    slashes: true
-    //}));
-
     const menu = Menu.buildFromTemplate(menuTemplate);
     Menu.setApplicationMenu(menu);
+
+    let javascript = "let moduleButtonsDiv = document.getElementById(\"moduleButtons\");\n";
+    let loadedModules = moduleLoader.loadModules();
+    let keys = Object.keys(loadedModules);
+    for(let i = 0; i < keys.length; i++) {
+        let loadedModule = loadedModules[keys[i]];
+        let moduleButtonName = "moduleButton" + loadedModule.name;
+        javascript += "let " + moduleButtonName + " = document.createElement(\"input\");\n";
+        javascript += moduleButtonName + ".type = \"button\";\n";
+        javascript += moduleButtonName + ".value = \"" + loadedModule.name + "\";\n";
+        javascript += moduleButtonName + ".onclick = function() { launch(\"" + loadedModule.name + "\", \"" + loadedModule.dappSource + "\"); };\n";
+        javascript += "moduleButtonsDiv.appendChild(" + moduleButtonName + ");\n";
+    }
+    console.info(javascript);
+    windows["Launcher"].webContents.executeJavaScript(javascript);
 });
 
 //If we're on a Mac, add an empty object to fix OS specific menubar issue
@@ -125,16 +130,29 @@ ipcMain.on("runOnMainThread", function(event, windowName, funcToRun) {
 });
 
 ipcMain.on("executeJavaScript", function(event, windowName, javaScriptString, callback) {
-    console.info("executeJavaScript", windowName, javaScriptString, callback);
     windows[windowName].webContents.executeJavaScript(javaScriptString, callback);
+});
+
+ipcMain.once("runUnitTests", () => {
+    seed.getScenarioTestExporter().seedScenarioSetupTest();
 });
 
 function switchAccount(accountEntropy) {
     activeAccountEntropy = accountEntropy + "_123456789012345678901234567890";
-    // Ideally send to the 
+    let account = seed.getAccountExporter().newAccount( { entropy : activeAccountEntropy, network : "00" });
+    let keys = Object.keys(windows);
+    for(let i = 0; i < keys.length; i++) {
+        windows[keys[i]].webContents.send("accountChanged", account.publicKey);
+    }
+    // Ideally send to the new account through IPC
 }
 
 // #### High Level API (HLAPI) wrapped in PromiseIPC ####
+promiseIpc.on("switchAccount", function(accountEntropy) {
+    switchAccount(accountEntropy);
+    return activeAccountEntropy;
+});
+
 promiseIpc.on("getAccount", () => {
     let account = seed.getAccountExporter().newAccount( { entropy : activeAccountEntropy, network : "00" });
     return account;
@@ -144,24 +162,14 @@ promiseIpc.on("getTransaction", (transactionHash) => {
     return seed.getEntanglementExporter().getEntanglement().transactions[transactionHash];
 });
 
-promiseIpc.on("createTransaction", (moduleName, functionName, args) => {
+promiseIpc.on("createTransaction", (moduleName, functionName, args, numOfValidations) => {
     let account = seed.getAccountExporter().newAccount( { entropy : activeAccountEntropy, network : "00" });
-    return seed.getSVMExporter().getVirtualMachine().createTransaction(account, moduleName, functionName, args, 2);
+    return seed.getSVMExporter().getVirtualMachine().createTransaction(account, moduleName, functionName, args, numOfValidations);
 });
 
-promiseIpc.on("addTransaction", (transaction) => {
-    let account = seed.getAccountExporter().newAccount( { entropy : activeAccountEntropy, network : "00" });
-    let txHashes = [];
-    for(let i = 0; i < transaction.validatedTransactions.length; i++) {
-        txHashes.push(transaction.validatedTransactions[i].transactionHash);
-    }
-    return seed.getSVMExporter().getVirtualMachine().invoke({ 
-        module : transaction.execution.moduleName, 
-        function : transaction.execution.functionName, 
-        user : account.publicKey, 
-        args : transaction.execution.args,
-        txHashes : txHashes
-    }, transaction.execution.changeSet);
+promiseIpc.on("addTransaction", (jsonTransaction) => {
+    let transaction = seed.getTransactionExporter().createExistingTransaction(jsonTransaction.sender, jsonTransaction.execution, jsonTransaction.validatedTransactions, jsonTransaction.transactionHash, jsonTransaction.signature);
+    return seed.getSVMExporter().getVirtualMachine().incomingTransaction(transaction);
 });
 
 promiseIpc.on("getter", (moduleName, getterName, args) => {
@@ -192,7 +200,7 @@ promiseIpc.on("subscribeToFunctionCallback", (moduleName, functionName) => {
 });
 
 promiseIpc.on("subscribeToDataChange", (moduleName, dataKey, user) => {
-    return seed.subscribeToDataChange(modulename, dataKey, callback, () => {
+    return seed.subscribeToDataChange(moduleName, dataKey, () => {
         console.info("TODO", "subscribeToDataChange", "When the callback happens, callback " + (moduleName+dataKey+user) + " through IPC renderer, so they ipc.on for it");
     }, user);
 });
@@ -201,9 +209,9 @@ promiseIpc.on("unsubscribe", (moduleName, funcNameOrDataKey, receipt, optionalUs
     return seed.unsubscribe(moduleName, funcNameOrDataKey, receipt, optionalUser);
 });
 
-promiseIpc.on("addModule", (newModule, creator) => {
+promiseIpc.on("addModule", (newModule) => {
     let svm = seed.getSVMExporter().getVirtualMachine();
-    return svm.addModule(newModule, creator);
+    return svm.addModule(newModule);
 });
 
 promiseIpc.on("createModule", (moduleName, initialStateData, initialUserStateData) => {
@@ -213,3 +221,6 @@ promiseIpc.on("createModule", (moduleName, initialStateData, initialUserStateDat
 promiseIpc.on("getModule", (moduleName) => {
     return seed.getSVMExporter().getModule({ module : moduleName });
 });
+
+seed.getEntanglementExporter().getEntanglement();
+switchAccount("ABC");

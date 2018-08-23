@@ -2,7 +2,7 @@
 <html>
     <head>
         <link rel="stylesheet">
-        <script type="text/javascript" src="seed.js"></script>
+        <script type="text/javascript" src="index.js"></script>
     </head>
     <body>
         <p>Click Control-D (or Command-D) to open the developers console and see the results of the unit tests.</p>
@@ -21,6 +21,7 @@
             </p>
             <p style="text-align: center;">
                 <select onchange="onFunctionSelected(this.value)">
+                    <option value="constructor">Constructor</option>
                     <option value="transfer">Transfer</option>
                     <option value="transferFrom">Transfer From</option>
                     <option value="approve">Approve</option>
@@ -29,6 +30,13 @@
             </p>
             <br />
             <center>
+                <!-- Seed.transfer Form -->
+                <div id="trConstructor">
+                    <b>Amount</b>
+                    <input type="number" id="transferValue" value="1000" onchange="constructorValueChange(this.value)" />
+                    <br />
+                    <input type="button" id="btnConstructor" value="Construct" onclick="construct()" />
+                </div>
                 <!-- Seed.transfer Form -->
                 <div id="trTransfer">
                     <b>Amount</b>

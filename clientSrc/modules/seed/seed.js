@@ -1,166 +1,308 @@
-console.log("seed.js");
+const moduleExporter = require("../../../seedSrc/module.js");
 
-const seed = require("../../../seedSrc/index.js");
-const ipc = require('electron').ipcRenderer;
-const { PromiseIpc } = require('electron-promise-ipc');
-const promiseIpc = new PromiseIpc({ maxTimeoutMs: 2000 });
-const seedHLAPI = require("../../seedHLAPI.js").getSeedHLAPI(promiseIpc);
+/**
+ * Name: 
+ *      Seed
+ * 
+ * Description:
+ *      The cryptocurrency of the Seed ecosystem.
+ *      The cryptocurrency's design & implementation is based on the Ethereum ERC-20 Standard
+ *      
+ * State Changing Functions:
+ *      transfer(to, amount)
+ *      transferFrom(from, to, amount)
+ *      approve(spender, amount)
+ *      burn(amount)
+ *      
+ * Getters:
+ *      getBalanceOf(owner)
+ *      getAllowance(owner, spender)
+ *      getTotalSupply()
+ *      getSymbol()
+ *      getDecimals()
+ *      
+ *  Module-Data:
+ *      totalSupply : number
+ *      symbol : string
+ *      decimals : number
+ *      
+ *  User-Data:
+ *      balance : number
+ *      allowance : { string : number }
+ */
 
-let svm = seed.getSVMExporter().getVirtualMachine();
-let seedModule = seed.getSeedExporter().getSeed();
+ let seedModule = null;
 
-
-// ## Input Form Default Data
-let inputData = {
-    transfer : {
-        value : 0,
-        address : ""
-    },
-    transferFrom : {
-        fromAddress : "",
-        toAddress : "",
-        value : 0
-    },
-    approve : {
-        address : "",
-        value : 0
-    },
-    burn : {
-        value : 0
-    }
-};
-
-// ## On Form Selection Dropdown Change
-function onFunctionSelected(functionName) {
-    let transferDisplay = 'none';
-    let transferFromDisplay = 'none';
-    let approveDisplay = 'none';
-    let burnDisplay = 'none';
-    switch(functionName) {
-        case "transfer": 
-            transferDisplay = '';
-            break;
-        case "transferFrom":
-            transferFromDisplay = '';
-            break;
-        case "approve":
-            approveDisplay = '';
-            break;
-        case "burn":
-            burnDisplay = '';
-            break;
-    }
-    changeFunctionFormDisplay("trTransfer", transferDisplay);
-    changeFunctionFormDisplay("trTransferFrom", transferFromDisplay);
-    changeFunctionFormDisplay("trApprove", approveDisplay);
-    changeFunctionFormDisplay("trBurn", burnDisplay);
-}
-
-// ####### Form Data OnChange Event Handlers ###########
-function transferValueChange(newValue) {
-    let value = parseInt(newValue, 10);
-    inputData["transfer"].value = value;
-}
-
-function transferAddressChange(newAddress) {
-    inputData["transfer"].address = newAddress;
-}
-
-function transferFromValueChange(newValue) {
-    let value = parseInt(newValue, 10);
-    inputData["transferFrom"].value = value;
-}
-
-function transferFromAddressFromChange(newAddress) {
-    inputData["transferFrom"].fromAddress = newAddress;
-}
-
-function transferFromAddressToChange(newAddress) {
-    inputData["transferFrom"].toAddress = newAddress;
-}
-
-function approveValueChange(newValue) {
-    let value = parseInt(newValue, 10);
-    inputData["approve"].value = value;
-}
-
-function approveAddressChange(newAddress) {
-    inputData["approve"].address = newAddress;
-}
-
-function burnValueChange(newValue) {
-    let value = parseInt(newValue, 10);
-    inputData["burn"].value = value;
-}
-
-// ## Seed Functions
-function transfer() {
-    let value = inputData["transfer"].value;
-    let address = inputData["transfer"].address;
-    if (value != 0 && address != "") {
-        seedHLAPI.createTransaction("Seed", "transfer", { to : address, value : value })
-            .then((transaction) => {
-                seedHLAPI.addTransaction(transaction);
+module.exports = {
+    getModule : function() {
+        if (seedModule == null) {
+            seedModule = moduleExporter.createModule({
+                module : "Seed", 
+                initialData : initialSeedState,
+                initialUserData : initialUserState,
+                functions : {
+                    constructor : constructor,
+                    transfer : transfer,
+                    transferFrom : transferFrom,
+                    approve : approve,
+                    burn : burn,
+                    getBalanceOf : getBalanceOf,
+                    getAllowance : getAllowance,
+                    getTotalSupply : getTotalSupply,
+                    getSymbol : getSymbol,
+                    getDecimals : getDecimals,
+                    mine : mine
+                }
             });
+        }
+        return seedModule;
     }
+ }
+
+/*  ### Seed's Initial Variable State ### */
+let initialSeedState = { 
+    totalSupply : 0, // Total supply of SEED in circulation
+    symbol : "SEED", // Symbol of SEED cryptocurrency for UI's
+    decimals : 4 // Amount of decimals used when displaying the SEED cryptocurrency. Maximum divisible amount
 }
 
-function transferFrom() {
-    let value = inputData["transferFrom"].value;
-    let fromAddress = inputData["transferFrom"].fromAddress;
-    let toAddress = inputData["transferFrom"].toAddress;
-    if (value != 0 && fromAddress != "" && toAddress != "") {
-        seedHLAPI.createTransaction("Seed", "transferFrom", { from : fromAddress, to : toAddress, value : value })
-            .then((transaction) => {
-                seedHLAPI.addTransaction(transaction);
-            });
+/*  ### Each Seed User's Initial Variable State ### */
+let initialUserState = {
+    balance : 0, // A users SEED balance
+    allowance : {} // How much SEED a given user allows other users to spend on their behalf
+}
+
+/*  
+    ################################
+    ### State Changing Functions ###
+    ################################ 
+*/
+
+/**
+ * Constructor for the Seed module, called upon creation.
+ * 
+ * args:
+ *      initialSeed - Initial amount of SEED to give to the creator
+ * 
+ * changes:
+ *      Increase "Sender" balance
+ *      Increase totalSupply
+ * 
+ * For testing purposes, initially gives SEED to the creator
+ * 
+ * @param {*} container - Container object that holds read-only data.
+ * @param {*} changeContext  - Write-Only object to hold changes to module and userData state
+ */
+let constructor = function(container, changeContext) {
+    let sender = container.sender;
+    let initialSeed = container.args.initialSeed;
+
+    changeContext.add(initialSeed, { user : sender, key : "balance" });
+    changeContext.add(initialSeed, { key : "totalSupply" });
+
+    return changeContext;
+}
+
+/**
+ * Transfer funds from a user to another user
+ * 
+ * args:
+ *      to - Who to send SEED to
+ *      value - How much SEED to send
+ * 
+ * changes:
+ *      Decrease "sender" balance
+ *      Increase "to" balance
+ * 
+ * @param {Container} container - Container object that holds read-only data.
+ *      Used to grab the arguments regarding who is sending SEED, who to send to, and how much
+ *      Used to access the user data to get balance
+ * @param {ChangeContext} changeContext - Write-Only object to hold changes to module and userData state
+ */
+let transfer = function(container, changeContext) {
+    // Gather readonly data
+    let to = container.args.to;
+    let value = container.args.value;
+    let sender = container.sender;
+    let fromBalance = container.getSenderData().balance;
+
+    // Confirm adequate balance for the transaction
+    if (fromBalance >= value && value > 0) {
+         changeContext.subtract(value, {user : sender, key : "balance"});
+         changeContext.add(value, { user : to, key : "balance"} );
     }
+
+    return changeContext;
 }
 
-function approve() {
-    let value = inputData["approve"].value;
-    let address = inputData["approve"].address;
-    if (value != 0 && address != undefined) {
-        seedHLAPI.createTransaction("Seed", "approve", { spender : address, value : value })
-            .then((transaction) => {
-                seedHLAPI.addTransaction(transaction);
-            });
+/**
+ * Transfer funds from user "from" to user "to" on the sender behalf based on "from" users given allowance to "sender" user
+ * 
+ * args:
+ *      to - Who to send SEED to
+ *      from - On who's behalf is the sender spender the SEED of
+ *      value - How much SEED to send
+ * 
+ * changes:
+ *      Decrease "from" balance
+ *      Decrease "from"-"sender" allowance
+ *      Increase "to" balance
+ * 
+ * @param {Container} container - Container object that holds read-only data.
+ *      Used to grab the arguments regarding on who's behalf the sender is sending SEED, who to send to, and how much
+ *      Used to access the user data to get balance and allowance amount
+ * @param {ChangeContext} changeContext - Write-Only object to hold changes to module and userData state
+ */
+let transferFrom = function(container, changeContext) {
+    // Gather readonly data
+    let to = container.args.to;
+    let from = container.args.from;
+    let value = container.args.value;
+    let sender = container.sender;
+    let fromBalance = container.getUserData(from).balance;
+    let senderAllowance = container.getUserData(from).allowance[sender];
+    // Confirm adequate balance and allowance for the transaction
+    if (fromBalance >= value && senderAllowance >= value && value > 0) {
+         changeContext.subtract(value, { user : from, key : "balance" });
+         changeContext.subtract(value, { user : from, outerKey : "allowance", innerKey : sender });
+         changeContext.add(value, { user : to, key : "balance" });
     }
+    
+    return changeContext;
 }
 
-function burn() {
-    let value = inputData["burn"].value;
-    if (value != 0) {
-        seedHLAPI.createTransaction("Seed", "burn", { value : value })
-            .then((transaction) => {
-                seedHLAPI.addTransaction(transaction);
-            });
+/**
+ * The sender approves an allowance for the spender of a set amount, allowing the spender to spend on the senders behalf.
+ * 
+ * args:
+ *      spender - Who is receiving an allowance on the Senders behalf
+ *      value - How much SEED is the allowance for
+ * 
+ * changes:
+ *      Increases/Decreases "sender"-"spender" allowance
+ * 
+ * @param {*} container - Container object that holds read-only data
+ *          Used to grab arguments regarding who is giving an allowance, who is receiving the allowance, and how much the allowance is for
+ * @param {*} changeContext - Write-Only object to hold changes to module and userData state
+ */
+let approve = function(container, changeContext) {
+    //Gather readonly data
+    let spender = container.args.spender;
+    let value = container.args.value;
+    let currentApproval = container.getSenderData().allowance[spender];
+
+    let dif = value - (currentApproval != undefined ? currentApproval : 0); 
+
+    if (dif > 0) {
+        changeContext.add(dif, { user : container.sender, outerKey : "allowance", innerKey : spender });
+    } else if (dif < 0) {
+        changeContext.subtract(dif, { user : container.sender, outerKey : "allowance", innerKey : spender });
     }
+
+    return changeContext;
 }
 
-// ## Helper Functions
-function seedUpdate() {
-    seedHLAPI.getAccount()
-        .then((account) => {
-            console.info("seedUpdate", account);
-            let accountPublicKey = account.publicKey;
-            seedHLAPI.getter("Seed", "getBalanceOf", { owner : accountPublicKey })
-                .then((balance) => {
-                    changeInnerHTML("seedBalance", balance);
-                    changeInnerHTML("seedAddress", "\"" + accountPublicKey + "\"");
-                });
-        });
+/**
+ * The sender burns value worth of SEED coin, removing it from circulation
+ * 
+ * args:
+ *      value - How much SEED to burn
+ * 
+ * changes:
+ *      Decreases "sender" balance by value
+ *      Decreases "totalSupply" by value
+ * 
+ * @param {*} container - Container object that holds read-only data
+ * @param {*} changeContext - Write-Only object to hold changes to module and userData state
+ */
+let burn = function(container, changeContext) {
+    //Gather readonly data
+    let value = container.args.value;
+    let balance = container.getSenderData().balance;
+
+    if (balance >= value) {
+        changeContext.subtract(value, { user : container.sender, key : "balance" });
+        changeContext.subtract(value, { key : "totalSupply" });
+    }
+
+    return changeContext;
 }
 
-function changeInnerHTML(elementID, value) {
-    let javascript = "document.getElementById(\"" + elementID + "\").innerHTML = " + value;
-    ipc.send("executeJavaScript", "Seed", javascript);
+let mine = function(container, changeContext) {
+    //Gather readonly data
+    let value = container.args.value;
+    let balance = container.getSenderData().balance;
+
+    if (container.txHashes.length > 0) {
+        changeContext.add(container.txHashes.length, { user : container.sender, key : "balance" });
+        changeContext.add(container.txHashes.length, { key : "totalSupply" });
+    }
+
+    return changeContext;
 }
 
-function changeFunctionFormDisplay(formID, display) {
-    let javascript = "document.getElementById(\"" + formID + "\").style.display = \"" + display + "\"";
-    ipc.send("executeJavaScript", "Seed", javascript);
+/*  
+    #########################
+    ### Read-Only Getters ###
+    #########################
+*/
+
+/**
+ * Gets the current SEED balance of a user
+ * 
+ * args:
+ *      owner - Who's SEED balance we are getting
+ * 
+ * @param {*} container - Container object that holds read-only data
+ */
+let getBalanceOf = function(container) {
+    return container.getUserData(container.args.owner).balance;
 }
 
-onFunctionSelected("transfer");
-seedUpdate();
+/**
+ * Gets the current SEED allowance of a spender for a given owner
+ * 
+ * args:
+ *      owner - Who's SEED the allowance spends from
+ *      spender - Who has the allowance that can spend the owners SEED
+ * 
+ * @param {*} container - Container object that holds read-only data
+ */
+let getAllowance = function(container) {
+    return container.getUserData(container.args.owner).allowance[container.args.spender];
+}
+
+/**
+ * Gets the total amount of SEED in circulation
+ * 
+ * args:
+ *      N/A
+ * 
+ * @param {*} container - Container object that holds read-only data
+ */
+let getTotalSupply = function(container) {
+    return container.getModuleData().totalSupply;
+}
+
+/**
+ * Gets the symbol, "SEED"
+ * 
+ * args: N/A
+ * 
+ * @param {*} container - Container object that holds read-only data
+ */
+let getSymbol = function(container) {
+    return container.getModuleData().symbol;
+}
+
+/**
+ * Gets the amount of decimals used when displaying seed
+ * 
+ * args: N/A
+ * 
+ * @param {*} container - Container object that holds read-only data
+ */
+let getDecimals = function(container) {
+    return container.getModuleData().decimals;
+}
+
