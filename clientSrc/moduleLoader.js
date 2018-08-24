@@ -1,8 +1,19 @@
+/*******************
+ * moduleLoader.js *
+ *******************
+ * 
+ * Helper export that loads modules on the Main processes behalf
+ */
+
 const { readdirSync, statSync } = require('fs')
 const { join } = require('path')
 const seed = require("../seedSrc/index.js");
 
 module.exports = {
+    /**
+     * Loads all possible DApps from the /modules/ folder, validates their module matches the expected checksum,
+     * then adds it to the Seed Virtual machine and returns it in a mapping of modules loaded
+     */
     loadModules : function() {
         let svm = seed.getSVMExporter().getVirtualMachine();
         let dappsToLoad = {};
