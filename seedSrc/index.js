@@ -1,3 +1,12 @@
+/************
+ * index.js *
+ ************
+ * 
+ * The entry point into the npm Seed module OR the Seed Low Level API (LLAPI).
+ * 
+ * Exposes all exports and wraps some logic for use
+ */
+
 const virtualMachineExporter = require("./virtualMachine/virtualMachine.js");
 const scenarioTestExporter = require("./scenarioTest.js");
 const messagingExporter = require("./messaging.js");
@@ -10,30 +19,58 @@ const entanglementExporter = require("./entanglement.js");
 const transactionExporter = require("./transaction.js");
 
 module.exports = {
+    /**
+     * @return - The Seed Virtual Machine exporter to request the SVM
+     */
     getSVMExporter : function() {
         return virtualMachineExporter;
     },
+    /**
+     * @return - The Scenario Test Exporter exporter to request unit tests be executed
+     */
     getScenarioTestExporter : function() {
         return scenarioTestExporter;
     },
+    /**
+     * @return - Returns the Seed modules source file
+     */
     getSeedExporter : function() {
         return seedExporter;
     },
+    /**
+     * @return - Returns the Relay modules source file
+     */
     getRelayExporter : function() {
         return relayExporter;
     },
+    /**
+     * @return - Returns the Account Exporter for creating and fetching accounts
+     */
     getAccountExporter : function() {
         return accountExporter;
     },
+    /**
+     * @return - The Ledger Exporter for reading from the ledger
+     */
     getLedgerExporter : function() {
         return ledgerExporter;
     },
+    /**
+     * @return - The Module Exporter for creating new modules
+     */
     getModuleExporter : function() {
         return moduleExporter;
     },
+    /**
+     * @return - The Entanglement Exporter for adding to the entanglement, checking for cycles,
+     * and reading from the entanglement
+     */
     getEntanglementExporter : function() {
         return entanglementExporter;
     },
+    /**
+     * @return - The transaction exporter for creating new transactions with various constructors
+     */
     getTransactionExporter : function() {
         return transactionExporter;
     },
