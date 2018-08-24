@@ -1,3 +1,14 @@
+/***********
+ * main.js *
+ ***********
+ * 
+ * The Main process' starting point, which is loaded when the Electron app starts.
+ * 
+ * This process creates the launcher window, loads the modules, runs the Seed API,
+ * wraps the Seed API into a High Level API (HLAPI) for DApps to request through IPC,
+ * and has extra functions available through IPC to help the convenience of DApps.
+ */
+
 const electron = require('electron');
 const { app, BrowserWindow, Menu, ipcMain } = electron;
 const path = require('path');
@@ -13,6 +24,9 @@ process.env.NODE_ENV = 'development';
 let windows = {};
 let activeAccountEntropy = undefined;
 
+/**
+ * The menu bar's outline
+ */
 let menuTemplate = [
     {
         label : "Edit",
@@ -64,6 +78,12 @@ let menuTemplate = [
     }
 ];
 
+/**
+ * Invoked when Electron finishes loading the Main process
+ * 
+ * Creates the launcher, loads the menu, dynamically loads all modules found in the /modules/ folder,
+ * and then modifies the Launcher window to add buttons regarding each loaded module.
+ */
 app.on('ready', function() {
     windows["Launcher"] = new BrowserWindow({width: 800, height: 500, title: 'Seed Launcher'});
     windows["Launcher"].loadURL(url.format({
@@ -113,6 +133,10 @@ if (process.env.NODE_ENV !== 'production') {
     });
 }
 
+/**
+ * When a Renderer requests a module be launched, the Renderer passes the name and htmlFile over,
+ * and then the Main process launches the new window
+ */
 ipcMain.on("launchModule", function(event, windowName, htmlFile) {
     windows[windowName] = new BrowserWindow({width: 800, height: 500, title: windowName});
     windows[windowName].loadURL(url.format({
@@ -122,20 +146,26 @@ ipcMain.on("launchModule", function(event, windowName, htmlFile) {
     }));
 });
 
-ipcMain.on("runOnMainThread", function(event, windowName, funcToRun) {
-    if (funcToRun) {
-        funcToRun(windows[windowName]);
-    }
-});
-
+/**
+ * Executes JavaScript on the renderer's behalf on a DApp's window
+ */
 ipcMain.on("executeJavaScript", function(event, windowName, javaScriptString, callback) {
     windows[windowName].webContents.executeJavaScript(javaScriptString, callback);
 });
 
+/**
+ * Runs unit tests. Assumes the state of the Seed cryptocurrency is already prepped for unit tests
+ */
 ipcMain.once("runUnitTests", () => {
     seed.getScenarioTestExporter().seedScenarioSetupTest();
 });
 
+/**
+ * Function which switches accounts (creating one if needed) based on the passed in entropy.
+ * All windows are then notified of an account change, being given the new public key
+ * 
+ * @param {*} accountEntropy - Entropy used for creating an account
+ */
 function switchAccount(accountEntropy) {
     activeAccountEntropy = accountEntropy + "_123456789012345678901234567890";
     let account = seed.getAccountExporter().newAccount( { entropy : activeAccountEntropy, network : "00" });
@@ -143,34 +173,53 @@ function switchAccount(accountEntropy) {
     for(let i = 0; i < keys.length; i++) {
         windows[keys[i]].webContents.send("accountChanged", account.publicKey);
     }
-    // Ideally send to the new account through IPC
 }
 
 // #### High Level API (HLAPI) wrapped in PromiseIPC ####
+/**
+ * Receives a requests through the HLAPI for an account switch to occur based on new entropy
+ */
 promiseIpc.on("switchAccount", function(accountEntropy) {
     switchAccount(accountEntropy);
     return activeAccountEntropy;
 });
 
+/**
+ * Receives a requests through the HLAPI for the currently logged in account
+ */
 promiseIpc.on("getAccount", () => {
     let account = seed.getAccountExporter().newAccount( { entropy : activeAccountEntropy, network : "00" });
     return account;
 });
 
+/**
+ * Receives a requests through the HLAPI to get a transaction out of the ledger/entanglement based on the transaction hash
+ */
 promiseIpc.on("getTransaction", (transactionHash) => {
     return seed.getEntanglementExporter().getEntanglement().transactions[transactionHash];
 });
 
+/**
+ * Receives a requests through the HLAPI to create a new transaction for a given module, function, passing in a set arguments
+ * JSON object and the amount of transactions they with their transaction to validate.
+ */
 promiseIpc.on("createTransaction", (moduleName, functionName, args, numOfValidations) => {
     let account = seed.getAccountExporter().newAccount( { entropy : activeAccountEntropy, network : "00" });
     return seed.getSVMExporter().getVirtualMachine().createTransaction(account, moduleName, functionName, args, numOfValidations);
 });
 
+/**
+ * Receives a requests through the HLAPI to add a transaction to the entanglement
+ */
 promiseIpc.on("addTransaction", (jsonTransaction) => {
     let transaction = seed.getTransactionExporter().createExistingTransaction(jsonTransaction.sender, jsonTransaction.execution, jsonTransaction.validatedTransactions, jsonTransaction.transactionHash, jsonTransaction.signature);
     return seed.getSVMExporter().getVirtualMachine().incomingTransaction(transaction);
 });
 
+/**
+ * Receives a requests through the HLAPI to invoke a "getter" function inside the given module, passing in
+ * a JSON object of arguments
+ */
 promiseIpc.on("getter", (moduleName, getterName, args) => {
     let account = seed.getAccountExporter().newAccount( { entropy : activeAccountEntropy, network : "00" });
     let svm = seed.getSVMExporter().getVirtualMachine();
@@ -183,6 +232,9 @@ promiseIpc.on("getter", (moduleName, getterName, args) => {
     });
 });
 
+/**
+ * Receives a requests through the HLAPI to read data from the ledger regarding a given module
+ */
 promiseIpc.on("read", (moduleName, dataKey, optionalUser) => {
     let moduleData = this.seed.getLedgerExporter().getLedger().getModuleData(moduleName);
     if (optionalUser) {
@@ -192,6 +244,14 @@ promiseIpc.on("read", (moduleName, dataKey, optionalUser) => {
     }
 });
 
+/**
+ * Receives a requests through the HLAPI to subscribe for a callback to be invoked upon
+ * a certain function being invoked on a given module.
+ * 
+ * If the windows' name is the same as the module, the "optionalWindow" parameter is not needed.
+ * If its different (for example, if a game wants to be notified when a Seed transaction occurs),
+ * then the optionalWindow should refer to the DApp wanting to be called back
+ */
 promiseIpc.on("subscribeToFunctionCallback", (moduleName, functionName, optionalWindow) => {
     if (!optionalWindow) {
         optionalWindow = moduleName;
@@ -201,6 +261,14 @@ promiseIpc.on("subscribeToFunctionCallback", (moduleName, functionName, optional
     });
 });
 
+/**
+ * Receives a requests through the HLAPI to subscribe for a callback to be invoked upon
+ * a certain peice of data being changed in a given module.
+ * 
+ * If the windows' name is the same as the module, the "optionalWindow" parameter is not needed.
+ * If its different (for example, if a game wants to be notified when their user's Seed balance changes),
+ * then the optionalWindow should refer to the DApp wanting to be called back
+ */
 promiseIpc.on("subscribeToDataChange", (moduleName, dataKey, user, optionalWindow) => {
     if (!optionalWindow) {
         optionalWindow = moduleName;
@@ -210,22 +278,37 @@ promiseIpc.on("subscribeToDataChange", (moduleName, dataKey, user, optionalWindo
     }, user);
 });
 
+/**
+ * Receives a requests through the HLAPI to unsubscribe for a previously subscribed callback
+ */
 promiseIpc.on("unsubscribe", (moduleName, funcNameOrDataKey, receipt, optionalUser) => {
     return seed.unsubscribe(moduleName, funcNameOrDataKey, receipt, optionalUser);
 });
 
+/**
+ * Receives a requests through the HLAPI to add a module to the Seed Virtual Machine
+ */
 promiseIpc.on("addModule", (newModule) => {
     let svm = seed.getSVMExporter().getVirtualMachine();
     return svm.addModule(newModule);
 });
 
+/**
+ * Receives a requests through the HLAPI to create a new module based on the modules name,
+ * initial state data and the initial state data of each user
+ */
 promiseIpc.on("createModule", (moduleName, initialStateData, initialUserStateData) => {
     return seed.getModuleExporter().createModule({ module : moduleName, data : initialStateData, initialUserData : initialUserStateData });
 });
 
+/**
+ * Receives a requests through the HLAPI to fetch a module from the SVM based on the modules name
+ */
 promiseIpc.on("getModule", (moduleName) => {
     return seed.getSVMExporter().getModule({ module : moduleName });
 });
 
+// Fetches the entanglement (TODO: Change this. This is needed to cache the first version of the entanglement)
 seed.getEntanglementExporter().getEntanglement();
+// Switch to the first user for testing
 switchAccount("ABC");
