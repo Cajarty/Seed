@@ -324,6 +324,7 @@ const VALIDATION_LEVEL = {
         let from = this.addNode(fromName)
         let to = this.addNode(toName);
         if (to.incoming.hasOwnProperty(fromName)) {
+            console.info("wah");
             return;
         }
         this.checkForCycle(fromName, toName);

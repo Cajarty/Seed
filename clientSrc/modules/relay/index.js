@@ -4,11 +4,6 @@ const { PromiseIpc } = require('electron-promise-ipc');
 const promiseIpc = new PromiseIpc({ maxTimeoutMs: 2000 });
 const seedHLAPI = require("../../seedHLAPI.js").getSeedHLAPI(promiseIpc);
 
-let svm = seed.getSVMExporter().getVirtualMachine();
-let relayModule = seed.getRelayExporter().getRelay();
-
-svm.addModule(relayModule);
-
 let accounts = {};
 let currentUser = undefined;
 

@@ -87,7 +87,6 @@ app.on('ready', function() {
         javascript += moduleButtonName + ".onclick = function() { launch(\"" + loadedModule.name + "\", \"" + loadedModule.dappSource + "\"); };\n";
         javascript += "moduleButtonsDiv.appendChild(" + moduleButtonName + ");\n";
     }
-    console.info(javascript);
     windows["Launcher"].webContents.executeJavaScript(javascript);
 });
 
@@ -193,15 +192,21 @@ promiseIpc.on("read", (moduleName, dataKey, optionalUser) => {
     }
 });
 
-promiseIpc.on("subscribeToFunctionCallback", (moduleName, functionName) => {
+promiseIpc.on("subscribeToFunctionCallback", (moduleName, functionName, optionalWindow) => {
+    if (!optionalWindow) {
+        optionalWindow = moduleName;
+    }
     return seed.subscribeToFunctionCallback(moduleName, functionName, () => {
-        console.info("TODO", "subscribeToFunctionCallback", "When the callback happens, callback " + (moduleName+functionName) + " through IPC renderer, so they ipc.on for it");
+        windows[optionalWindow].webContents.send((moduleName+functionName), message);
     });
 });
 
-promiseIpc.on("subscribeToDataChange", (moduleName, dataKey, user) => {
-    return seed.subscribeToDataChange(moduleName, dataKey, () => {
-        console.info("TODO", "subscribeToDataChange", "When the callback happens, callback " + (moduleName+dataKey+user) + " through IPC renderer, so they ipc.on for it");
+promiseIpc.on("subscribeToDataChange", (moduleName, dataKey, user, optionalWindow) => {
+    if (!optionalWindow) {
+        optionalWindow = moduleName;
+    }
+    return seed.subscribeToDataChange(moduleName, dataKey, (message) => {
+        windows[optionalWindow].webContents.send((moduleName+dataKey+user), message);
     }, user);
 });
 

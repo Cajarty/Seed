@@ -115,7 +115,6 @@ class VirtualMachine {
         let moduleToInvoke = this.getModule(info);
         let moduleDataToInvoke = ledgerExporter.getLedger().getModuleData(info.module);
         //If the user simulating this does not exist, add them to our ledger
-        console.info("SIMULATE", moduleToInvoke, this);
         if (!moduleToInvoke.doesUserExist(info.user)) {
             this.addUser(info, info.user);
         }
@@ -198,7 +197,6 @@ class VirtualMachine {
      */
     createTransaction(account, mod, func, args, transactionsToValidate) {
         let tips = entanglement.getTipsToValidate(account.publicKey, transactionsToValidate);
-        console.info("createTransaction", account.publicKey, mod, func, args, transactionsToValidate);
         let localSimulation = this.simulate({ module : mod, function : func, args : args, user : account.publicKey, txHashes : tips });
         if (localSimulation.didChange()) {
             let work = this.doWork(account, tips);

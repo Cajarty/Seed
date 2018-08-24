@@ -12,6 +12,9 @@ let subscriptionReceipts = {};
 
 // ## Input Form Default Data
 let inputData = {
+    constructor : {
+        value : 1000
+    },
     transfer : {
         value : 0,
         address : ""
@@ -106,14 +109,9 @@ function burnValueChange(newValue) {
 // ## Seed Functions
 function construct() {
     let value = inputData["constructor"].value;
-    let seedModule = seed.getSeedExporter().getSeed();
-    console.info("constructor");
-    seedHLAPI.addModule(seedModule)
+    seedHLAPI.createTransaction("Seed", "constructor", { initialSeed : value })
         .then(() => {
-            seedHLAPI.createTransaction("Seed", "constructor", { initialSeed : 1000 })
-                .then(() => {
-                    seedUpdate();
-                });
+            seedUpdate();
         });
 }
 
@@ -183,8 +181,9 @@ ipc.on("accountChanged", (main, publicKey) => {
     seedHLAPI.subscribeToDataChange("Seed", "balance", publicKey)
         .then((receipt) => {
             subscriptionReceipts["balance"] = receipt;
-            ipc.on("Seed" + "balance" + publicKey, (main, a, b, c, d) => {
-                console.info("CALLBACK YES!", a, b, c, d);
+            console.info("Subscribed for ", "Seed" + "balance" + publicKey);
+            ipc.on("Seed" + "balance" + publicKey, (main, message) => {
+                seedUpdate(); // Balance changed so reload
             });
         })
         .catch((e) => {
