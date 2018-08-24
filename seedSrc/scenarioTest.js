@@ -84,9 +84,9 @@ module.exports = {
 
         //Prep seed module
         let vm = virtualMachineExporter.getVirtualMachine();
-        let seedModule = seedExporter.getSeed();
+        let seedModule = seedExporter.getModule();
         vm.addModule(seedModule);
-        vm.addModule(relayExporter.getRelay());
+        vm.addModule(relayExporter.getModule());
 
         let tester = moduleTester.beginTest("Seed", "ABC", true);
         messagingExporter.subscribeToDataChange("Seed", "balance", userChangeReply, tester.currentUser.publicKey);
@@ -135,7 +135,7 @@ module.exports = {
 
         //Prep seed module
         let vm = virtualMachineExporter.getVirtualMachine();
-        let seedModule = seedExporter.getSeed();
+        let seedModule = seedExporter.getModule();
         vm.addModule(seedModule);
 
         let tester = moduleTester.beginTest("Seed", "ABC");
@@ -184,7 +184,7 @@ module.exports = {
      */
     seedModuleTest : function() {
         let vm = virtualMachineExporter.getVirtualMachine();
-        let seedModule = seedExporter.getSeed();
+        let seedModule = seedExporter.getModule();
         vm.addModule(seedModule);
         
         let tester = moduleTester.beginTest("Seed", "ABC");

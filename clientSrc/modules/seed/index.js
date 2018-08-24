@@ -196,3 +196,4 @@ ipc.on("accountChanged", (main, publicKey) => {
 });
 
 onFunctionSelected("constructor");
+seedUpdate();
