@@ -1,8 +1,8 @@
 {
   "name": "seed",
-  "version": "0.0.1",
-  "description": "",
-  "main": "seed.js",
+  "version": "0.0.3",
+  "description": "JavaScript implementation of the Seed protocol",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,6 +10,10 @@
   "license": "ISC",
   "dependencies": {
     "bs58": "^4.0.1",
+    "crypto": "^1.0.1",
     "elliptic": "^6.4.0"
+  },
+  "devDependencies": {
+    "merkle": "^0.6.0"
   }
 }

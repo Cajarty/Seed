@@ -1,7 +1,7 @@
 {
-  "name": "seed",
+  "name": "client",
   "version": "0.0.1",
-  "description": "",
+  "description": "An Electorn interface for the seed protocol.",
   "main": "main.js",
   "scripts": {
     "start": "Electron ."

@@ -118,5 +118,13 @@ module.exports = {
                 object[keys[i]] = defaultValues[keys[i]];
             }
         }
+    },
+    arrayToArgs(values, func) {
+        let args = this.getFunctionArgs(func);
+        let result = {};
+        for(let i = 0; i < args; i++) {
+            result[args[i]] = values[i];
+        }
+        return result;
     }
  }
