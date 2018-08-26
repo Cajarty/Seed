@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet">
+        <script type="text/javascript" src="index.js"></script>
+    </head>
+    <body>
+        <h3 style="text-align: center;">
+                Your Address</h3>
+            <p style="text-align: center;" id="seedAddress">
+                N/A
+            </p>
+            <hr />
+            <h3 style="text-align: center;">
+                Seed
+            </h3>
+            <p style="text-align: center;" id="seedBalance">
+                N/A
+            </p>
+            <p style="text-align: center;">
+                <select onchange="onFunctionSelected(this.value)">
+                    <option value="constructor">Constructor</option>
+                    <option value="transfer">Transfer</option>
+                    <option value="transferFrom">Transfer From</option>
+                    <option value="approve">Approve</option>
+                    <option value="burn">Burn</option>
+                </select>
+            </p>
+            <br />
+            <center>
+                <!-- Seed.transfer Form -->
+                <div id="trConstructor">
+                    <b>Amount</b>
+                    <input type="number" id="transferValue" value="1000" onchange="constructorValueChange(this.value)" />
+                    <br />
+                    <input type="button" id="btnConstructor" value="Construct" onclick="construct()" />
+                </div>
+                <!-- Seed.transfer Form -->
+                <div id="trTransfer">
+                    <b>Amount</b>
+                    <input type="number" id="transferValue" value="0" onchange="transferValueChange(this.value)" />
+                    <b>To</b>
+                    <input type="text" id="transferAddress" value="" onchange="transferAddressChange(this.value)" />
+                    <br />
+                    <input type="button" id="btnSend" value="Send" onclick="transfer()" />
+                </div>
+                <!-- Seed.transferFrom Form -->
+                <div id="trTransferFrom">
+                    <b>Amount</b>
+                    <input type="number" id="transferFromValue" value="0" onchange="transferFromValueChange(this.value)" />
+                    <b>From</b>
+                    <input type="text" id="transferFromAddressFrom" value="" onchange="transferFromAddressFromChange(this.value)" />
+                    <b>To</b>
+                    <input type="text" id="transferFromAddressTo" value="" onchange="transferFromAddressToChange(this.value)" />
+                    <br />
+                    <input type="button" id="btnSendFrom" value="Send" onclick="transferFrom()" />
+                </div>
+                <!-- Seed.approve Form -->
+                <div id="trApprove">
+                    <b>Who</b>
+                    <input type="text" id="approveAddress" value="" onchange="approveAddressChange(this.value)" />
+                    <b>Allowance</b>
+                    <input type="number" id="approveValue" value="0" onchange="approveValueChange(this.value)" />
+                    <br />
+                    <input type="button" id="btnApprove" value="Approve" onclick="approve()" />
+                </div>
+                <!-- Seed.burn Form -->
+                <div id="trBurn">
+                    <b>Amount</b>
+                    <input type="number" id="burnValue" value="0" onchange="burnValueChange(this.value)" />
+                    <br />
+                    <input type="button" id="btnDestroy" value="Destroy" onclick="burn()" />
+                </div>
+            </center>
+            <hr/>
+            <input type="button" id="btnUpdate" value="Reload" onclick="seedUpdate()" />
+            <hr />
+            <h3 style="text-align: center;">History</h3>
+            <table style="height: 131px; margin-left: auto; margin-right: auto;" width="414">
+                <tbody>
+                    <tr>
+                        <td style="width: 199px;">&nbsp;</td>
+                        <td style="width: 199px;">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td style="width: 199px;">&nbsp;</td>
+                        <td style="width: 199px;">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td style="width: 199px;">&nbsp;</td>
+                        <td style="width: 199px;">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td style="width: 199px;">&nbsp;</td>
+                        <td style="width: 199px;">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td style="width: 199px;">&nbsp;</td>
+                        <td style="text-align: center; width: 199px;">&nbsp;</td>
+                    </tr>
+                </tbody>
+            </table>
+    </body>
+</html>
+
+

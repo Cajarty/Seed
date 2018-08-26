@@ -25,6 +25,7 @@ module.exports = {
      */
     getVirtualMachine: function() {
         if (virtualMachine == null) {
+            console.info("New VM");
             virtualMachine = new VirtualMachine();
         }
         return virtualMachine;
@@ -54,9 +55,8 @@ class VirtualMachine {
      * Creates the module data in the ledger
      * 
      * @param {Module} newModule - An externally created Module object
-     * @param {string} creator - The public address of the creator of the module
      */
-    addModule(newModule, creator) {
+    addModule(newModule) {
         this.modules[newModule.module] = newModule;
         ledgerExporter.getLedger().addModuleData(newModule.module, newModule.initialData, newModule.initialUserData);
     }
@@ -167,6 +167,7 @@ class VirtualMachine {
      */
     invoke(info, resultIfSimulate) {
         let result = resultIfSimulate == undefined ? this.simulate(info) : JSON.parse(resultIfSimulate);
+        // TODO: change doesFullyConform to somehow compare it to a module.functionSchema[info.function] to constraint to data types, so functions can ask for certain types
         if (result != undefined && conformHelper.doesFullyConform(result, { moduleData : "object", userData : "object" })) {
             let users = Object.keys(result.userData);
             let moduleDataKeys = Object.keys(result.moduleData);
@@ -196,7 +197,6 @@ class VirtualMachine {
      */
     createTransaction(account, mod, func, args, transactionsToValidate) {
         let tips = entanglement.getTipsToValidate(account.publicKey, transactionsToValidate);
-        console.info("createTransaction", account, mod, func, args, transactionsToValidate, tips);
         let localSimulation = this.simulate({ module : mod, function : func, args : args, user : account.publicKey, txHashes : tips });
         if (localSimulation.didChange()) {
             let work = this.doWork(account, tips);

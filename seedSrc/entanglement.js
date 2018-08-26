@@ -63,7 +63,6 @@ module.exports = {
     doesTransactionCauseCycle : function(transaction) {
         let children = [];
         if (entanglement.contains(transaction.transactionHash)) {
-            console.info(transaction, entanglement);
             throw new Error("Cannot check transaction that's already been added");
         }
         for(let i = 0; i < transaction.validatedTransactions.length; i++) {
@@ -77,12 +76,16 @@ module.exports = {
         let from = entanglement.addNode(transaction.transactionHash)
         try {
             for(let i = 0; i < children.length; i++) {
+                let hasNode = entanglement.vertices[children[i]] != undefined;
                 let to = entanglement.addNode(children[i]);
                 if (to.incoming.hasOwnProperty(transaction.transactionHash)) {
                     result = true;
                     break;
                 }
                 entanglement.checkForCycle(transaction.transactionHash, children[i]);
+                if (!hasNode) {
+                    entanglement.remove(children[i]);
+                }
             }
         } catch (e) {
             console.log(e);
@@ -321,6 +324,7 @@ const VALIDATION_LEVEL = {
         let from = this.addNode(fromName)
         let to = this.addNode(toName);
         if (to.incoming.hasOwnProperty(fromName)) {
+            console.info("wah");
             return;
         }
         this.checkForCycle(fromName, toName);

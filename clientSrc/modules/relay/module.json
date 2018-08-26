@@ -1,0 +1,6 @@
+{
+    "name" : "Relay",
+    "dappSource" : "index.html",
+    "moduleSource" : "relay.js",
+    "moduleChecksum" : "ec72"
+}

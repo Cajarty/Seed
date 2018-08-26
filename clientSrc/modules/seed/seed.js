@@ -1,4 +1,4 @@
-const moduleExporter = require("../module.js");
+const moduleExporter = require("../../../seedSrc/module.js");
 
 /**
  * Name: 
@@ -34,7 +34,7 @@ const moduleExporter = require("../module.js");
  let seedModule = null;
 
 module.exports = {
-    getSeed : function() {
+    getModule : function() {
         if (seedModule == null) {
             seedModule = moduleExporter.createModule({
                 module : "Seed", 

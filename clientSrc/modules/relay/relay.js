@@ -1,4 +1,4 @@
-const moduleExporter = require("../module.js");
+const moduleExporter = require("../../../seedSrc/module.js");
 
 /**
  * Name: 
@@ -27,7 +27,7 @@ const moduleExporter = require("../module.js");
  let relayModule = null;
 
 module.exports = {
-    getRelay : function() {
+    getModule : function() {
         if (relayModule == null) {
             relayModule = moduleExporter.createModule({
                 module : "Relay", 

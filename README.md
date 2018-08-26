@@ -85,8 +85,11 @@ In the near future, a proper UI will be implemented for the client.
 ## Client
 
 - [x] Create Base Electron Client And Pair With Seed Source
-- [ ] Design UI For Seed Module
-- [ ] Create UI For Seed Module
+- [x] Add Dynamic Module Loading
+- [x] Create High Level API For Electron DApps
+- [x] Design UI For Seed Module
+- [x] Create Simple UI For Seed Module
+- [ ] Style UI For Seed Module
 - [ ] Design Client Networking & Routing Portion
 - [ ] Implement Networking
 

@@ -48,7 +48,7 @@ module.exports = {
 
  const crypto = require("crypto")
  const base58Encoder = require('bs58');
- const stringToUInt8ArrayEncoder = new TextEncoder("utf-8");
+ //const stringToUInt8ArrayEncoder = new TextEncoder("utf-8");
 
 //Eliptic PublicKey Encryption, SHA256 Hashing and Base58 Encoding wrapper
 class CryptoHelper {
