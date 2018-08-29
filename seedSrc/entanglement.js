@@ -152,6 +152,8 @@ module.exports = {
 
  const svmExporter = require("./virtualMachine/virtualMachine.js");
  const transactionExporter = require("./transaction.js");
+ const squasherExporter = require("./squasher.js");
+ const blockchainExporter = require("./blockchain.js");
 
  /**
   *  Helper function used recursively by the Entanglement with regards to visiting nodes when traversing the DAG
@@ -204,10 +206,45 @@ let tryTrust = function(transactionHash, entanglement) {
                 txHashes : toTransaction.txHashes
             }, toTransaction.execution.changeSet);
             entanglement.tips[transactionHash] = undefined;
+        if (squasherExporter.doesTriggerSquashing(transactionHash)) {
+            let validatedParents = getAllValidatedParents(toTransaction, entanglement);
+            let block = squasherExporter.transactionsToBlock(validatedParents);
+            blockchainExporter.addTestamentBlock(block);
+            removeAllTransactionsFromEntanglement(validatedParents, block.blockHash, entanglement);
+        }
     } else {
         //console.info("ENTANGLEMENT failed to TRUST ", transactionHash, entanglement.vertices[transactionHash].trust);
     }
-    
+}
+
+let getAllValidatedParents = function(transaction, entanglement) {
+    let validated = [];
+    if (transaction.validatedTransactions.length > 0) {
+        for(let i = 0; i < transaction.validatedTransactions.length; i++) {
+            let validatedTransaction = entanglement.getTransaction(transaction.validatedTransactions[i].transactionHash);
+            if (validatedTransaction) {
+                if (typeof validatedTransaction == "string") {
+                    // Its a block hash, we've hit the end
+                } else {
+                    let validatedParents = getAllValidatedParents(validatedTransaction, entanglement);
+                    validated = validatedParents;
+                }
+            } else {
+                // Parent was removed from a previous block creation already
+                console.info("Parent was removed from previous block creation");
+            }
+        }
+    } else {
+        // Genesis transaction case
+    }
+    validated.push(transaction);
+    return validated;
+}
+
+let removeAllTransactionsFromEntanglement = function(transactions, blockHash, entanglement) {
+    for(let i = 0; i < transactions.length; i++) {
+        entanglement.remove(transactions[i].transactionHash);
+    }
 }
 
 /**

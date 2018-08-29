@@ -446,7 +446,7 @@ class Transaction {
      * @param {*} transactionHash - The hash of this transaction information
      * @param {*} signature - A cryptographic signature between the sender and the transactionHash
      */
-    constructor(sender, execution, trustedTransactions, transactionHash, signature) {
+    constructor(sender, execution, trustedTransactions, transactionHash, signature, timestamp) {
         this.transactionHash = transactionHash;
         this.sender = sender;
         this.execution = {
@@ -459,6 +459,10 @@ class Transaction {
         };
         this.validatedTransactions = trustedTransactions;
         this.signature = signature;
+        if (!timestamp) {
+            timestamp = new Date().getTime();
+        }
+        this.timestamp = timestamp;
     }
 
     /**

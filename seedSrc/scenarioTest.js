@@ -23,6 +23,7 @@ const transactionExporter = require("./transaction.js");
 const entanglementExporter = require("./entanglement.js");
 const ledgerExporter = require("./ledger.js");
 const messagingExporter = require("./messaging.js");
+const squasherExporter = require("./squasher.js");
 
 let messageReply = function(payload) {
     //console.info("FunctionInvoke: " , payload);
@@ -73,6 +74,8 @@ module.exports = {
         tester.relay();
         tester.assertEqual("getBalanceOf", { owner : tester.getAccount("DEF") }, 75, "DEF should have 75 after burning 25, removing it from circulation");
         tester.assertEqual("getTotalSupply", {}, 975, "25 coins were burned, removed from circulation, since initial 1000 creation");
+
+        squasherExporter.transactionsToBlock(Object.values(entanglementExporter.getEntanglement().transactions));
 
         tester.endTest();
     },
