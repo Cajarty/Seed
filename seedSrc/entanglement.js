@@ -217,6 +217,20 @@ let tryTrust = function(transactionHash, entanglement) {
     }
 }
 
+/**
+ * Takes a transaction from the DAG and recursively finds all validated transactions it indirectly help validate.
+ * 
+ * e.g. if 
+ *      A validates B/C
+ *      B validates D/E
+ *      D validates E/F
+ *      F validates G/H
+ * 
+ * and "B" was the transaction being passed in initially, it would return [B,D,E,F,G,H]
+ * 
+ * @param {*} transaction - The transaction who's parents we are finding
+ * @param {*} entanglement - The entanglement to find transactions from
+ */
 let getAllValidatedParents = function(transaction, entanglement) {
     let validated = [];
     if (transaction.validatedTransactions.length > 0) {
@@ -224,7 +238,7 @@ let getAllValidatedParents = function(transaction, entanglement) {
             let validatedTransaction = entanglement.getTransaction(transaction.validatedTransactions[i].transactionHash);
             if (validatedTransaction) {
                 if (typeof validatedTransaction == "string") {
-                    // Its a block hash, we've hit the end
+                    // Its a block hash, we've hit the end. No parents to add
                 } else {
                     let validatedParents = getAllValidatedParents(validatedTransaction, entanglement);
                     validated = validatedParents;
@@ -235,12 +249,19 @@ let getAllValidatedParents = function(transaction, entanglement) {
             }
         }
     } else {
-        // Genesis transaction case
+        // Genesis transaction case. No parents to add
     }
     validated.push(transaction);
     return validated;
 }
 
+/**
+ * Removes each transaction from the array of transactions from the entanglement.
+ * 
+ * @param {*} transactions - Transactions to remove from entanglement
+ * @param {*} blockHash - Blockhash to replace them with if searched for (unused for now. May remain unused, being debated)
+ * @param {*} entanglement - Entanglement to remove the transactions from
+ */
 let removeAllTransactionsFromEntanglement = function(transactions, blockHash, entanglement) {
     for(let i = 0; i < transactions.length; i++) {
         entanglement.remove(transactions[i].transactionHash);
