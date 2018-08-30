@@ -1,6 +1,7 @@
 
 const conformHelper = require("./helpers/conformHelper.js");
 const virtualMachineExporter = require("./virtualMachine/virtualMachine.js");
+const squasherExporter = require("./squasher.js");
 let ledger = null;
 
 module.exports = {
@@ -51,7 +52,24 @@ module.exports = {
             return;
         }
 
+        // Add initial user data if a new one is being used
         let moduleDataToUpdate = this.getModuleData(moduleName);
+        for(let i = 0; i < users.length; i++) {
+            if (moduleDataToUpdate.userData[users[i]] == undefined) {
+                this.addUserData(moduleName, users[i]);
+            }
+        }
+
+        let oldData = Object.assign(this.moduleData);
+
+        let newData = {}
+        newData[moduleName] = changeContext.moduleData;
+        newData[moduleName]["userData"] = changeContext.userData;
+
+        //Squash and save
+        this.moduleData = squasherExporter.squash(oldData, newData);
+
+        /*let moduleDataToUpdate = this.getModuleData(moduleName);
         for(let i = 0; i < moduleDataKeys.length; i++) {
             let key = moduleDataKeys[i];
             moduleDataToUpdate[key] += changeContext.moduleData[key]; //Only works cause number. Should check if number
@@ -92,7 +110,7 @@ module.exports = {
                         break;
                 }
             }
-        }
+        }*/
     }
 
     revertChanges(changeSet) {

@@ -60,6 +60,19 @@ module.exports = {
         if (hash.length > 0 && (hash[0] == '0' || hash[0] == '1' )) {
             return true;
         }
+    },
+    /**
+     * Squashes two objects into one, where B is squashed into A, overpowering it for absolutes
+     * 
+     * { a : 10, b : -10, c : "Hello" } and { a : -5, c : "World", d : 10  }
+     * becomes
+     * { a : 5, b : -10, c : "World", d : 10 }
+     * 
+     * @param {*} objectA - Object to squash (who will have absolute values overwritten)
+     * @param {*} objectB - Object to squash (who will have absolute power overwrite)
+     */
+    squash(objectA, objectB) {
+        return squashObjects(objectA, objectB);
     }
 }
 
