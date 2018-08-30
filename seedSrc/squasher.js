@@ -20,7 +20,6 @@ module.exports = {
      * @param {*} transactionsToSquash - Array of transactions to squash
      */
     transactionsToBlock(transactionsToSquash) {
-        // Confirm all childrens in the DAG have their timestamps in a viable order
         sortTimestamped(transactionsToSquash);
         let generation = 1;
         let mapping = createMappingOfLeanDataFromTransactions(transactionsToSquash);
@@ -45,8 +44,6 @@ module.exports = {
             let timestamp = blocksToSquash[blocksToSquash.length - 1].timestamp;
 
             let block = blockExporter.newBlock(generation, JSON.stringify(mapping), JSON.stringify(changeSet), timestamp);
-
-           // console.info(generation + " GENERATION BLOCK", block);
 
             return block;
         }
