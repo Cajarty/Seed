@@ -23,12 +23,19 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
         return "./" = this.dataFolder + "/entanglement/" + transactionName + ".json";
     }
 
-    writeBlock(storageName, storageObject) {
-        // returns bool
+    writeBlock(storageName, storageObject, generation) {
+        let path = this.blockPath(storageName, generation);
+        fs.writeFile(path, storageObject);
+        return true;
     }
 
-    writeBlockchain(generation, blocks) {
-        // returns bool
+    writeBlockchain(generation, storageNames, storageObjects) {
+        if (storageNames.length == storageObjects.length) {
+            for(let i = 0; i < storageNames.length; i++) {
+                this.writeBlock(storageNames[i], storageObjects[i], generation);
+            }
+        }
+        return true;
     }
      
     writeBlockchains(generation, blockchains) {
@@ -36,7 +43,9 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
     }
 
     writeTransaction(storageName, storageObject) {
-        // returns bool
+        let path = this.transactionPath(storageName);
+        fs.writeFile(path, storageObject);
+        return true;
     }
 
     writeEntanglement(entanglement) {

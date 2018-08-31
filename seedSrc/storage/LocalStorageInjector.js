@@ -7,11 +7,11 @@ module.exports = {
 }
 
 class LocalStorageInjector /* implements IDatabaseInjector.interface */ {
-    writeBlock(storageName, storageObject) {
+    writeBlock(storageName, storageObject, generation) {
         // returns bool
     }
 
-    writeBlockchain(generation, blocks) {
+    writeBlockchain(generation, storageNames, storageObjects) {
         // returns bool
     }
      

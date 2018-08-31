@@ -44,7 +44,7 @@ class Storage {
     }
 
     saveBlock(newBlock) {
-        if (this.databaseInjector.writeBlock(newBlock.blockHash, this.tryCompress(newBlock))) {
+        if (this.databaseInjector.writeBlock(newBlock.blockHash, this.tryCompress(newBlock), newBlock.generation)) {
             let transactions = newBlock.transactions;
             for(let i = 0; i < transactions.length; i++) {
                 let transaction = this.tryDecompress(transaction[i]);
