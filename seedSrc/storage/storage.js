@@ -66,14 +66,14 @@ class Storage {
     tryCompress(toCompress) {
         let result = JSON.strinify(toCompress);
         if (this.useCompression) {
-            // compress and return compressed version
+            console.info("TODO", "Compress result");
         }
         return result;
     }
 
     tryDecompress(compressed) {
         if (this.useCompression) {
-            // decompress and return decompressed version
+            console.info("TODO", "Decompress compressed");
         }
         let result = JSON.parse(compressed);
         return result;
