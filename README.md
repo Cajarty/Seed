@@ -56,15 +56,16 @@ In the near future, a proper UI will be implemented for the client.
 - [x] Research Relevant Problems
     - [x] Blockchain vs DAG's [(Part 1)](https://steemit.com/bitcoin/@carsonroscoe/seed-dev-discussion-tangle-vs-blockchain-part-1)/[(Part 2)](https://steemit.com/bitcoin/@carsonroscoe/seed-dev-discussion-tangle-vs-blockchain-part-2)
     - [x] Transaction Squashing [(Part 1)](https://steemit.com/blockchain/@carsonroscoe/seed-dev-discussion-transaction-squashing-proposition-part-1)/[(Part 2)](https://steemit.com/blockchain/@carsonroscoe/seed-dev-discussion-transaction-squashing-considerations-for-jitter-part-2)
-- [ ] Design Blockchain & Entanglement Portion
+- [x] Design Blockchain & Entanglement Portion
     - [x] [High-Level Design](https://steemit.com/blockchain/@carsonroscoe/seed-development-design-entanglement-and-blockchain-hybrid)
     - [x] [Design Transaction Structure](https://steemit.com/crypto/@carsonroscoe/seed-development-design-transactions-and-entanglement)
     - [x] [Design Entanglement Portion](https://steemit.com/crypto/@carsonroscoe/seed-development-design-transactions-and-entanglement)
-    - [ ] Design Blockchain Portion
-- [ ] Implement
+    - [x] [Design Blockchain Portion](https://steemit.com/crypto/@carsonroscoe/seed-development-design-transaction-squashing)
+- [x] Implement
     - [x] Entanglement Portion
-    - [ ] Transaction Squashing
-    - [ ] Blockchain Portion
+    - [x] Transaction Squashing
+    - [x] Blockchain Portion
+    - [ ] State Saving and Loading
 - [ ] Implement Unit Tests Unit Test
     - [x] For Entanglement
     - [ ] For Transaction Squashing

@@ -205,7 +205,7 @@ class VirtualMachine {
             this.incomingTransaction(transaction);
             return transaction;
         } else {
-            console.info("FAILED", localSimulation);
+            //console.info("FAILED", localSimulation);
             return null;
         }
     }
