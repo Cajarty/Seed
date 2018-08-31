@@ -13,7 +13,7 @@
  */
 
 const squasherExporter = require("./squasher.js");
-
+const storageExporter = require("./storage/storage.js");
 
 module.exports = {
     /**
@@ -25,14 +25,18 @@ module.exports = {
         ensureCreated(block.generation);
         blockchain[block.generation].push(block);
 
+        let replacedBlocks = undefined;
+
         if (squasherExporter.doesTriggerSquashing(block.blockHash)) {
             let nextGenerationBlock = squasherExporter.blocksToGenerationBlock(blockchain[block.generation]);
 
-            deleteGenerationOfBlocks(block.generation);
+            replacedBlocks = deleteGenerationOfBlocks(block.generation);
 
             this.addTestamentBlock(nextGenerationBlock);
         }
 
+
+        storageExporter.getStorage().saveBlock(block, replacedBlocks);
         debugBlockchain();
     },
     /**
@@ -52,8 +56,10 @@ module.exports = {
   * @param {*} generation - The generation to delete
   */
  let deleteGenerationOfBlocks = function(generation) {
+    let oldBlocks = blockchain[generation];
     blockchain[generation] = [];
     delete blockchain[generation];
+    return oldBlocks;
  }
 
  /**

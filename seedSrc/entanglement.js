@@ -53,6 +53,7 @@ module.exports = {
             for(let i = 0; i < children.length; i++) {
                 entanglement.addEdge(transaction.transactionHash, children[i]);
             }
+            storageExporter.getStorage().saveTransaction(transaction);
         }
     },
     /**
@@ -154,6 +155,7 @@ module.exports = {
  const transactionExporter = require("./transaction.js");
  const squasherExporter = require("./squasher.js");
  const blockchainExporter = require("./blockchain.js");
+ const storageExporter = require("./storage/storage.js");
 
  /**
   *  Helper function used recursively by the Entanglement with regards to visiting nodes when traversing the DAG

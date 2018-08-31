@@ -145,6 +145,8 @@ ipcMain.on("launchModule", function(event, windowName, htmlFile) {
         protocol: 'file:',
         slashes: true
     }));
+
+    seed.getStorageExporter().newStorage(fileSystemInjectorExporter.newFileSystemInjector("data"), false);
 });
 
 /**
@@ -159,17 +161,7 @@ ipcMain.on("executeJavaScript", function(event, windowName, javaScriptString, ca
  */
 ipcMain.once("runUnitTests", () => {
     seed.getScenarioTestExporter().seedScenarioSetupTest();
-    let storage = seed.getStorageExporter().newStorage(fileSystemInjectorExporter.newFileSystemInjector("data"), false);
-    let blockchains = seed.getBlockchainExporter().getBlockchains();
-    for(let i = 0; i < Object.keys(blockchains).length; i++) {
-        let blockchain = blockchains[Object.keys(blockchains)[i]];
-        for(let j = 0; j < blockchain.length; j++) {
-            let block = blockchain[j];
-            console.info("Saving Block");
-            storage.saveBlock(block);
-        }
-    }
-    
+    seed.getStorageExporter().getStorage().loadInitialState()
 });
 
 /**

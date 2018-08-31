@@ -2,6 +2,8 @@
 
 
 const fs = require('fs')
+const readdirSync = fs.readdirSync;
+const statSync = fs.statSync;
 const { join } = require('path')
 
 module.exports = {
@@ -15,6 +17,9 @@ let ensureCreated = function(directory) {
         fs.mkdirSync(directory);
     }
 }
+
+let getDirectories = path => readdirSync(path).filter(fileOrFolder => statSync(join(path, fileOrFolder)).isDirectory());
+let getFiles = path => readdirSync(path).filter(fileOrFolder => statSync(join(path, fileOrFolder)).isFile());
 
 class FileSystemInjector /* implements IDatabaseInjector.interface */ {
     constructor(dataFolderName) {
@@ -45,24 +50,19 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
         }
     }
 
+    removeTransaction(transactionName) {
+        fs.unlink(this.transactionPath(transactionName));
+    }
+
+    removeBlock(generation, blockName) {
+        fs.unlink(this.blockPath(generation, blockName));
+    }
+
     writeBlock(storageName, storageObject, generation) {
         ensureCreated(this.blockPath(generation));
         let path = this.blockPath(generation, storageName);
         fs.writeFile(path, storageObject);
         return true;
-    }
-
-    writeBlockchain(generation, storageNames, storageObjects) {
-        if (storageNames.length == storageObjects.length) {
-            for(let i = 0; i < storageNames.length; i++) {
-                this.writeBlock(storageNames[i], storageObjects[i], generation);
-            }
-        }
-        return true;
-    }
-     
-    writeBlockchains(generation, blockchains) {
-        // returns bool
     }
 
     writeTransaction(storageName, storageObject) {
@@ -71,27 +71,49 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
         return true;
     }
 
-    writeEntanglement(entanglement) {
-        // returns bool
+    readBlock(generation, storageName, callback) {
+        fs.readFile(this.blockPath(generation, storageName), callback);
     }
 
-    readBlock(storageName) {
-
+    readBlockSync(generation, storageName) {
+        return fs.readFileSync(this.blockPath(generation, storageName));
     }
 
     readBlockchain(generation) {
-
+        let blocks = [];
+        let files = getFiles(this.blockPath(generation));
+        for(let i = 0; i < files.length; i++) {
+            let blockHash = files[i].split(".")[0];
+            blocks.push(this.readBlockSync(generation, blockHash));
+        }
+        return blocks;
     }
 
     readBlockchains() {
-
+        let blocks = [];
+        let generations = getDirectories(this.blockPath());
+        for(let i = 0; i < generations.length; i++) {
+            let generation = parseInt(generations[i]);
+            blocks = blocks.concat(this.readBlockchain(generation));
+        }
+        return blocks;
     }
 
     readTransaction(storageName) {
+        fs.readFile(this.transactionPath(storageName), callback);
+    }
 
+    readTransactionSync(storageName) {
+        return fs.readFileSync(this.transactionPath(storageName));
     }
 
     readEntanglement() {
-
+        let transactions = [];
+        let files = getFiles(this.transactionPath());
+        for(let i = 0; i < files.length; i++) {
+            let transactionHash = files[i].split(".")[0];
+            transactions.push(this.readTransactionSync(transactionHash));
+        }
+        return transactions;
     }
 }

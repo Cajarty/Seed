@@ -8,14 +8,17 @@ module.exports = {
         }
         return storage;
     },
+    getStorage() {
+        return storage;
+    },
     loadInitialState : function() {
         if (storage) {
             storage.loadInitialState();
         }
     },
-    saveBlock : function(newBlock) {
+    saveBlock : function(newBlock, replacedBlocks) {
         if (storage) {
-            storage.saveBlock(newBlock);
+            storage.saveBlock(newBlock, replacedBlocks);
         }
     },
     saveTransaction : function(newTransaction) {
@@ -32,24 +35,33 @@ class Storage {
     }
 
     loadInitialState() {
+        let sortByTimestamp = function(a, b){return a.timestamp - b.timestamp};
+        console.info("LoadInitialState");
         let blocks = this.databaseInjector.readBlockchains();
+        blocks.sort(sortByTimestamp);
         for(let i = 0; i < blocks.length; i++) {
             let block = this.tryDecompress(blocks[i]);
             console.info("TODO", "Add to blockchains", block);
         }
         let transactions = this.databaseInjector.readEntanglement();
+        transactions.sort(sortByTimestamp);
         for(let i = 0; i < transactions.length; i++) {
             let transaction = this.tryDecompress(transactions[i]);
             console.info("TODO", "Add to entanglement", transaction);
         }
     }
 
-    saveBlock(newBlock) {
+    saveBlock(newBlock, replacedBlocks) {
         if (this.databaseInjector.writeBlock(newBlock.blockHash, this.tryCompress(newBlock), newBlock.generation)) {
-            let transactions = newBlock.transactions;
+            let transactions = JSON.parse(newBlock.transactions);
             let transactionHashes = Object.keys(transactions);
             for(let i = 0; i < transactionHashes.length; i++) {
-                console.info("TODO", "Remove", transactionHashes[i]);
+                this.databaseInjector.removeTransaction(transactionHashes[i]);
+            }
+            if (replacedBlocks) {
+                for(let i = 0; i < replacedBlocks.length; i++) {
+                    this.databaseInjector.removeBlock(replacedBlocks[i].generation, replacedBlocks[i].blockHash);
+                }
             }
         } else {
             throw new Error("Failed to save block " + newBlock.blockHash);
@@ -57,7 +69,7 @@ class Storage {
     }
 
     saveTransaction(newTransaction) {
-        if (this.databaseInjector.writeTransaction(newTransaction.transactionHash, newTransaction)) {
+        if (this.databaseInjector.writeTransaction(newTransaction.transactionHash, this.tryCompress(newTransaction))) {
             // Success
         } else {
             throw new Error("Failed to save transaction " + newTransaction.transactionHash);

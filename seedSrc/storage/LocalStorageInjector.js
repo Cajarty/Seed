@@ -11,19 +11,7 @@ class LocalStorageInjector /* implements IDatabaseInjector.interface */ {
         // returns bool
     }
 
-    writeBlockchain(generation, storageNames, storageObjects) {
-        // returns bool
-    }
-     
-    writeBlockchains(generation, blockchains) {
-        // returns bool
-    }
-
     writeTransaction(storageName, storageObject) {
-        // returns bool
-    }
-
-    writeEntanglement(entanglement) {
         // returns bool
     }
 
