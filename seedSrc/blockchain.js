@@ -34,6 +34,12 @@ module.exports = {
         }
 
         debugBlockchain();
+    },
+    /**
+     * @return - Gets the blockchain mapping
+     */
+    getBlockchains : function() {
+        return blockchain;
     }
  }
 

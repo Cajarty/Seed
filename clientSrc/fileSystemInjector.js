@@ -1,7 +1,7 @@
 
 
 
-const { readdirSync, statSync } = require('fs')
+const fs = require('fs')
 const { join } = require('path')
 
 module.exports = {
@@ -10,21 +10,44 @@ module.exports = {
     }
 }
 
+let ensureCreated = function(directory) {
+    if (!fs.existsSync(directory)){
+        fs.mkdirSync(directory);
+    }
+}
+
 class FileSystemInjector /* implements IDatabaseInjector.interface */ {
     constructor(dataFolderName) {
         this.dataFolder = dataFolderName;
+        let dataFolderPath = __dirname + "/" + dataFolderName;
+        ensureCreated(dataFolderPath);
+        ensureCreated(this.blockPath());
+        ensureCreated(this.transactionPath());
     }
 
-    blockPath(blockName, generation) {
-        return "./" + this.dataFolder + "/blockchain/" + generation + "/" + blockName + ".json";
+    blockPath(generation, blockName) {
+        if (generation) {
+            if (blockName) {
+                return __dirname + "/" + this.dataFolder + "/blockchain/" + generation + "/" + blockName + ".json";
+            } else {
+                return __dirname + "/" + this.dataFolder + "/blockchain/" + generation;
+            }
+        } else {
+            return __dirname + "/" + this.dataFolder + "/blockchain";
+        }
     }
 
     transactionPath(transactionName) {
-        return "./" = this.dataFolder + "/entanglement/" + transactionName + ".json";
+        if (transactionName) {
+            return __dirname + "/" + this.dataFolder + "/entanglement/" + transactionName + ".json";
+        } else {
+            return __dirname + "/" + this.dataFolder + "/entanglement";
+        }
     }
 
     writeBlock(storageName, storageObject, generation) {
-        let path = this.blockPath(storageName, generation);
+        ensureCreated(this.blockPath(generation));
+        let path = this.blockPath(generation, storageName);
         fs.writeFile(path, storageObject);
         return true;
     }

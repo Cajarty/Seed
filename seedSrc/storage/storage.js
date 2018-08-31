@@ -6,6 +6,7 @@ module.exports = {
         if (iDatabaseInjector) {
             storage = new Storage(iDatabaseInjector, useCompression);
         }
+        return storage;
     },
     loadInitialState : function() {
         if (storage) {
@@ -46,9 +47,9 @@ class Storage {
     saveBlock(newBlock) {
         if (this.databaseInjector.writeBlock(newBlock.blockHash, this.tryCompress(newBlock), newBlock.generation)) {
             let transactions = newBlock.transactions;
-            for(let i = 0; i < transactions.length; i++) {
-                let transaction = this.tryDecompress(transaction[i]);
-                console.info("TODO", "Remove", transaction.transactionHash);
+            let transactionHashes = Object.keys(transactions);
+            for(let i = 0; i < transactionHashes.length; i++) {
+                console.info("TODO", "Remove", transactionHashes[i]);
             }
         } else {
             throw new Error("Failed to save block " + newBlock.blockHash);
@@ -64,7 +65,7 @@ class Storage {
     }
 
     tryCompress(toCompress) {
-        let result = JSON.strinify(toCompress);
+        let result = JSON.stringify(toCompress);
         if (this.useCompression) {
             console.info("TODO", "Compress result");
         }

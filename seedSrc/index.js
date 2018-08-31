@@ -18,6 +18,7 @@ const moduleExporter = require("./module.js");
 const entanglementExporter = require("./entanglement.js");
 const transactionExporter = require("./transaction.js");
 const storageExporter = require("./storage/storage.js");
+const blockchainExporter = require("./blockchain.js");
 
 module.exports = {
     /**
@@ -61,6 +62,9 @@ module.exports = {
      */
     getModuleExporter : function() {
         return moduleExporter;
+    },
+    getBlockchainExporter : function() {
+        return blockchainExporter;
     },
     /**
      * @return - The Entanglement Exporter for adding to the entanglement, checking for cycles,

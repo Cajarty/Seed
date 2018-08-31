@@ -16,6 +16,7 @@ const url = require('url');
 const promiseIpc = require('electron-promise-ipc');
 const seed = require("../seedSrc/index.js");
 const moduleLoader = require("./moduleLoader");
+const fileSystemInjectorExporter = require("./fileSystemInjector.js");
 
 //'production': Release for public
 //'development': Development tools enabled
@@ -158,6 +159,17 @@ ipcMain.on("executeJavaScript", function(event, windowName, javaScriptString, ca
  */
 ipcMain.once("runUnitTests", () => {
     seed.getScenarioTestExporter().seedScenarioSetupTest();
+    let storage = seed.getStorageExporter().newStorage(fileSystemInjectorExporter.newFileSystemInjector("data"), false);
+    let blockchains = seed.getBlockchainExporter().getBlockchains();
+    for(let i = 0; i < Object.keys(blockchains).length; i++) {
+        let blockchain = blockchains[Object.keys(blockchains)[i]];
+        for(let j = 0; j < blockchain.length; j++) {
+            let block = blockchain[j];
+            console.info("Saving Block");
+            storage.saveBlock(block);
+        }
+    }
+    
 });
 
 /**
