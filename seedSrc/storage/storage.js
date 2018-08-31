@@ -44,17 +44,23 @@ class Storage {
     }
 
     saveBlock(newBlock) {
-        this.databaseInjector.writeBlock(newBlock.blockHash, this.tryCompress(newBlock));
-        let transactions = newBlock.transactions;
-        for(let i = 0; i < transactions.length; i++) {
-            let transaction = this.tryDecompress(transaction[i]);
-            console.info("TODO", "Remove", transaction.transactionHash);
+        if (this.databaseInjector.writeBlock(newBlock.blockHash, this.tryCompress(newBlock))) {
+            let transactions = newBlock.transactions;
+            for(let i = 0; i < transactions.length; i++) {
+                let transaction = this.tryDecompress(transaction[i]);
+                console.info("TODO", "Remove", transaction.transactionHash);
+            }
+        } else {
+            throw new Error("Failed to save block " + newBlock.blockHash);
         }
     }
 
     saveTransaction(newTransaction) {
-        
-        // Saves the new transaction to storage
+        if (this.databaseInjector.writeTransaction(newTransaction.transactionHash, newTransaction)) {
+            // Success
+        } else {
+            throw new Error("Failed to save transaction " + newTransaction.transactionHash);
+        }
     }
 
     tryCompress(toCompress) {
