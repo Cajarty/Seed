@@ -17,6 +17,7 @@ const ledgerExporter = require("./ledger.js");
 const moduleExporter = require("./module.js");
 const entanglementExporter = require("./entanglement.js");
 const transactionExporter = require("./transaction.js");
+const storageExporter = require("./storage/storage.js");
 
 module.exports = {
     /**
@@ -73,6 +74,12 @@ module.exports = {
      */
     getTransactionExporter : function() {
         return transactionExporter;
+    },
+    /**
+     * @return - The Storage exporter for writing/reading blocks/transactions from storage
+     */
+    getStorageExporter : function() {
+        return storageExporter;
     },
     /**
      * Subscribes for callback to be invoked whenever the given module has the given function validated
