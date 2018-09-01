@@ -1,4 +1,3 @@
-
 let storage = undefined;
 
 module.exports = {
@@ -28,6 +27,11 @@ module.exports = {
     }
 }
 
+const ledgerExporter = require("../ledger.js");
+const blockchainExporter = require("../blockchain.js");
+const svmExporter = require("../virtualMachine/virtualMachine.js");
+const transactionExporter = require("../transaction.js");
+
 class Storage {
     constructor(iDatabaseInjector, useCompression) {
         this.databaseInjector = iDatabaseInjector;
@@ -35,19 +39,29 @@ class Storage {
     }
 
     loadInitialState() {
-        let sortByTimestamp = function(a, b){return a.timestamp - b.timestamp};
-        console.info("LoadInitialState");
-        let blocks = this.databaseInjector.readBlockchains();
+        let sortByTimestamp = function(a, b){
+            return a.timestamp - b.timestamp
+        };
+        let blocksJSON = this.databaseInjector.readBlockchains();
+        let blocks = [];
+        for(let i = 0; i < blocksJSON.length; i++) {
+            blocks.push(this.tryDecompress(blocksJSON[i]));
+        }
         blocks.sort(sortByTimestamp);
         for(let i = 0; i < blocks.length; i++) {
-            let block = this.tryDecompress(blocks[i]);
-            console.info("TODO", "Add to blockchains", block);
+            blockchainExporter.addTestamentBlock(blocks[i], false);
+            ledgerExporter.getLedger().applyBlock(blocks[i]);
         }
-        let transactions = this.databaseInjector.readEntanglement();
+        let transactionsJSON = this.databaseInjector.readEntanglement();
+        let transactions = [];
+        for(let i = 0; i < transactionsJSON.length; i++) {
+            transactions.push(this.tryDecompress(transactionsJSON[i]));
+        }
         transactions.sort(sortByTimestamp);
         for(let i = 0; i < transactions.length; i++) {
-            let transaction = this.tryDecompress(transactions[i]);
-            console.info("TODO", "Add to entanglement", transaction);
+            let txData = transactions[i];
+            let transaction = transactionExporter.createExistingTransaction(txData.sender, txData.execution, txData.validatedTransactions, txData.transactionHash, txData.signature, txData.timestamp);
+            svmExporter.getVirtualMachine().incomingTransaction(transaction, false);
         }
     }
 
@@ -88,7 +102,12 @@ class Storage {
         if (this.useCompression) {
             console.info("TODO", "Decompress compressed");
         }
-        let result = JSON.parse(compressed);
+        let result = undefined;
+        try {
+            result = JSON.parse(compressed);
+        } catch (e) {
+            console.info("ERROR: Failed to parse", compressed, e);
+        }
         return result;
     }
 }

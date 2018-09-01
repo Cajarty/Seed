@@ -69,7 +69,7 @@ module.exports = {
      * 
      * @return - Returns a new transaction created from existing data
      */
-    createExistingTransaction : function(sender, execution, trustedTransactions, transactionHash, transactionSignature ) {
+    createExistingTransaction : function(sender, execution, trustedTransactions, transactionHash, transactionSignature, timestamp ) {
         let cryptoHelper = cryptoExporter.newCryptoHelper();
         let svm = svmExporter.getVirtualMachine();
 
@@ -81,7 +81,7 @@ module.exports = {
                 execution.moduleChecksum = cryptoHelper.hashToChecksum(moduleUsed.fullHash());
                 execution.functionChecksum = cryptoHelper.hashToChecksum(functionHash);
 
-                return new Transaction(sender, execution, trustedTransactions, transactionHash, transactionSignature);
+                return new Transaction(sender, execution, trustedTransactions, transactionHash, transactionSignature, timestamp);
             } else {
                 throw new Error("Error creating new transaction. Function used not found");
             }
@@ -161,6 +161,7 @@ module.exports = {
  const accountExporter = require("./account.js");
  const conformHelper = require("./helpers/conformHelper.js");
  const entanglementExporter = require("./entanglement.js");
+ const blockchainExporter = require("./blockchain.js");
 
  /**
   * Helper function used by exporter and Validator object. Determines whether the passed in transaction is proper or not.
@@ -203,7 +204,7 @@ module.exports = {
     let result = rule1 && rule2 && rule3 && rule4 && rule5 && rules6And7 && rule8 && rule9 && rule11;
 
     if (!result) {
-        console.info("isTransactionValid Failed", rule1, rule2, rule3, rule4, rule5, rules6And7, rule8, rule9, rule10, rule11);
+        console.info("isTransactionValid Failed", rule1, rule2, rule3, rule4, rule5, rules6And7, rule8, rule9, rule11);
     }
 
     return result;
@@ -279,7 +280,7 @@ class TransactionValidator {
      */
     doesFollowRule4(transaction) {
         for(let i = 0;  i < transaction.validatedTransactions.length; i++) {
-            if (!entanglementExporter.hasTransaction(transaction.validatedTransactions[i].transactionHash)) {
+            if (!entanglementExporter.hasTransaction(transaction.validatedTransactions[i].transactionHash) && !blockchainExporter.doesContainTransactions(transaction.validatedTransactions[i].transactionHash)) {
                 return false;
             }
         }
@@ -370,7 +371,7 @@ class TransactionValidator {
                 if (transaction.validatedTransactions[i].changeSet != transactionInDAG.execution.changeSet) {
                     return false;
                 }
-            } else {
+            } else if (!blockchainExporter.doesContainTransactions(transaction.validatedTransactions[i].transactionHash)) {
                 throw new Error("All transactions being validated must exist");
                 return false;
             }
@@ -408,9 +409,14 @@ class TransactionValidator {
     doesFollowRule11(transaction) {
         for(let i = 0; i < transaction.validatedTransactions.length; i++) {
             let transactionValidated = entanglementExporter.getEntanglement().transactions[transaction.validatedTransactions[i].transactionHash];
-            if (transactionValidated.sender == transaction.sender) {
+            if (transactionValidated) {
+                if (transactionValidated.sender == transaction.sender) {
+                    return false;
+                }
+            } else if (blockchainExporter.getTransactionSender(transaction.validatedTransactions[i].transactionHash) == transaction.sender) {
                 return false;
             }
+            
         }
         return true;
     }

@@ -161,7 +161,14 @@ ipcMain.on("executeJavaScript", function(event, windowName, javaScriptString, ca
  */
 ipcMain.once("runUnitTests", () => {
     seed.getScenarioTestExporter().seedScenarioSetupTest();
+});
+
+/**
+ * Runs unit tests. Assumes the state of the Seed cryptocurrency is already prepped for unit tests
+ */
+ipcMain.once("loadFromDisk", () => {
     seed.getStorageExporter().getStorage().loadInitialState()
+    console.info("Loaded Data", seed.getLedgerExporter().getLedger());
 });
 
 /**

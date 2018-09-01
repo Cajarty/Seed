@@ -129,4 +129,19 @@ module.exports = {
         //Squash and save
         this.moduleData = squasherExporter.squash(oldData, newData);
     }
+
+    applyBlock(block) {
+        let changeSet = JSON.parse(block.changeSet);
+        let keys = Object.keys(changeSet);
+        console.info("Applying block?", block.blockHash);
+        for(let i = 0; i < keys.length; i++) {
+            let moduleName = keys[i];
+            let changeContext = { 
+                moduleData : changeSet[moduleName], 
+                userData : changeSet[moduleName]["userData"]
+            }
+            console.info("APPLYING BLOCK", block.blockHash, changeSet);
+            this.applyChanges(moduleName, changeContext);
+        }
+    }
  }

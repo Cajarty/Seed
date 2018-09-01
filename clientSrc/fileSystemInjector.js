@@ -51,32 +51,55 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
     }
 
     removeTransaction(transactionName) {
-        fs.unlink(this.transactionPath(transactionName));
+        fs.unlink(this.transactionPath(transactionName), (err, data) => {
+            if (err) {
+                throw err;
+            }
+        });
     }
 
     removeBlock(generation, blockName) {
-        fs.unlink(this.blockPath(generation, blockName));
+        fs.unlink(this.blockPath(generation, blockName), (err, data) => {
+            if (err) {
+                throw err;
+            }
+        });
     }
 
     writeBlock(storageName, storageObject, generation) {
         ensureCreated(this.blockPath(generation));
         let path = this.blockPath(generation, storageName);
-        fs.writeFile(path, storageObject);
+        fs.writeFile(path, storageObject, (err, data) => {
+            if (err) {
+                throw err;
+            }
+        });
         return true;
     }
 
     writeTransaction(storageName, storageObject) {
         let path = this.transactionPath(storageName);
-        fs.writeFile(path, storageObject);
+        fs.writeFile(path, storageObject, (err, data) => {
+            if (err) {
+                throw err;
+            }
+        });
         return true;
     }
 
     readBlock(generation, storageName, callback) {
+        if (!callback) {
+            callback = (err, data) => {
+                if (err) {
+                    throw err;
+                }
+            }
+        }
         fs.readFile(this.blockPath(generation, storageName), callback);
     }
 
     readBlockSync(generation, storageName) {
-        return fs.readFileSync(this.blockPath(generation, storageName));
+        return fs.readFileSync(this.blockPath(generation, storageName)).toString();
     }
 
     readBlockchain(generation) {
@@ -84,7 +107,8 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
         let files = getFiles(this.blockPath(generation));
         for(let i = 0; i < files.length; i++) {
             let blockHash = files[i].split(".")[0];
-            blocks.push(this.readBlockSync(generation, blockHash));
+            let result = this.readBlockSync(generation, blockHash);
+            blocks.push(result);
         }
         return blocks;
     }
@@ -100,11 +124,15 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
     }
 
     readTransaction(storageName) {
-        fs.readFile(this.transactionPath(storageName), callback);
+        fs.readFile(this.transactionPath(storageName), (err, data) => {
+            if (err) {
+                throw err;
+            }
+        });
     }
 
     readTransactionSync(storageName) {
-        return fs.readFileSync(this.transactionPath(storageName));
+        return fs.readFileSync(this.transactionPath(storageName)).toString();
     }
 
     readEntanglement() {
