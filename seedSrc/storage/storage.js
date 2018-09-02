@@ -92,7 +92,7 @@ class Storage {
         let sortByTimestamp = function(a, b){
             return a.timestamp - b.timestamp
         };
-        let blocksJSON = this.databaseInjector.readBlockchains();
+        let blocksJSON = this.databaseInjector.readBlockchainsSync();
         let blocks = [];
         for(let i = 0; i < blocksJSON.length; i++) {
             blocks.push(this.tryDecompress(blocksJSON[i]));
@@ -102,7 +102,7 @@ class Storage {
             blockchainExporter.addTestamentBlock(blocks[i], false);
             ledgerExporter.getLedger().applyBlock(blocks[i]);
         }
-        let transactionsJSON = this.databaseInjector.readEntanglement();
+        let transactionsJSON = this.databaseInjector.readEntanglementSync();
         let transactions = [];
         for(let i = 0; i < transactionsJSON.length; i++) {
             transactions.push(this.tryDecompress(transactionsJSON[i]));

@@ -94,6 +94,15 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
         }
     }
 
+    /**
+     * Creates the path name for a transaction
+     * 
+     * e.g. 
+     *  transactionPath() returns "/dataFolderPath/entanglement"
+     *  transactionPath("hash") returns "/dataFolderPath/entanglement/hash.json"
+     * 
+     * @param {*} transactionName - (optional) The hash of the transaction we are getting
+     */
     transactionPath(transactionName) {
         if (transactionName) {
             return __dirname + "/" + this.dataFolder + "/entanglement/" + transactionName + ".json";
@@ -102,6 +111,11 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
         }
     }
 
+    /**
+     * Removes a transaction from storage
+     * 
+     * @param {*} transactionName - The name/hash of a transaction in storage
+     */
     removeTransaction(transactionName) {
         fs.unlink(this.transactionPath(transactionName), (err, data) => {
             if (err) {
@@ -110,6 +124,12 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
         });
     }
 
+    /**
+     * Removes a block from storage
+     * 
+     * @param {*} generation - The generation of a block in storage
+     * @param {*} blockName - The name/hash of a block in storage
+     */
     removeBlock(generation, blockName) {
         fs.unlink(this.blockPath(generation, blockName), (err, data) => {
             if (err) {
@@ -118,6 +138,13 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
         });
     }
 
+    /**
+     * Writes a block to storage
+     * 
+     * @param {*} storageName - The name to use in storage (e.g. block hash)
+     * @param {*} storageObject - The block to store in storage
+     * @param {*} generation - The generation of block it is
+     */
     writeBlock(storageName, storageObject, generation) {
         ensureCreated(this.blockPath(generation));
         let path = this.blockPath(generation, storageName);
@@ -129,6 +156,12 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
         return true;
     }
 
+    /**
+     * Writes a transaction to storage
+     * 
+     * @param {*} storageName - The name of the transaction to store
+     * @param {*} storageObject - The transaction to store
+     */
     writeTransaction(storageName, storageObject) {
         let path = this.transactionPath(storageName);
         fs.writeFile(path, storageObject, (err, data) => {
@@ -139,7 +172,15 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
         return true;
     }
 
-    readBlock(generation, storageName, callback) {
+    /**
+     * Reads a block from storage asynchronously, with a callback to invoke
+     * on once reading has finished
+     * 
+     * @param {*} generation - The generation of block it is
+     * @param {*} storageName - The name of the block in storage
+     * @param {*} callback - The callback to invoke upon finishing reading
+     */
+    readBlockAsync(generation, storageName, callback) {
         if (!callback) {
             callback = (err, data) => {
                 if (err) {
@@ -150,11 +191,22 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
         fs.readFile(this.blockPath(generation, storageName), callback);
     }
 
+    /**
+     * Reads a block from storage synchronously, returning the block upon completion.
+     * 
+     * @param {*} generation - The generation of block it is
+     * @param {*} storageName - The name of the block in storage
+     */
     readBlockSync(generation, storageName) {
         return fs.readFileSync(this.blockPath(generation, storageName)).toString();
     }
 
-    readBlockchain(generation) {
+    /**
+     * Reads all blocks of a certain generation synchronously, returning as an array
+     * 
+     * @param {*} generation - The generation of blocks to be read
+     */
+    readBlockchainSync(generation) {
         let blocks = [];
         let files = getFiles(this.blockPath(generation));
         for(let i = 0; i < files.length; i++) {
@@ -165,29 +217,49 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
         return blocks;
     }
 
-    readBlockchains() {
+    /**
+     * Reads all blockchains of all generations and returns them as a long array of blocks
+     */
+    readBlockchainsSync() {
         let blocks = [];
         let generations = getDirectories(this.blockPath());
         for(let i = 0; i < generations.length; i++) {
             let generation = parseInt(generations[i]);
-            blocks = blocks.concat(this.readBlockchain(generation));
+            blocks = blocks.concat(this.readBlockchainSync(generation));
         }
         return blocks;
     }
 
-    readTransaction(storageName) {
-        fs.readFile(this.transactionPath(storageName), (err, data) => {
-            if (err) {
-                throw err;
+    /**
+     * Reads a transaction from storage asynchronously, invoking a callback upon completion.
+     * 
+     * @param {*} storageName - The name of the transaction in storage
+     * @param {*} callback - The callback to invoke upon finishing reading
+     */
+    readTransactionAsync(storageName, callback) {
+        if (!callback) {
+            callback = (err, data) => {
+                if (err) {
+                    throw err;
+                }
             }
-        });
+        }
+        fs.readFile(this.transactionPath(storageName), callback);
     }
 
+    /**
+     * Reads a transaction synchronously from storage and returns it
+     * 
+     * @param {*} storageName - The name of the transaction in storage
+     */
     readTransactionSync(storageName) {
         return fs.readFileSync(this.transactionPath(storageName)).toString();
     }
 
-    readEntanglement() {
+    /**
+     * Reads the entanglement from storage synchronously, returning all transactions read
+     */
+    readEntanglementSync() {
         let transactions = [];
         let files = getFiles(this.transactionPath());
         for(let i = 0; i < files.length; i++) {
