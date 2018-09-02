@@ -69,6 +69,8 @@ const ledgerExporter = require("../ledger.js");
 const blockchainExporter = require("../blockchain.js");
 const svmExporter = require("../virtualMachine/virtualMachine.js");
 const transactionExporter = require("../transaction.js");
+const zlib = require('zlib');
+
 
 /**
  * The implementation of the Storage object which wraps the logic regarding saving/loading transactions and blocks
@@ -123,19 +125,16 @@ class Storage {
      * @param replacedBlocks - An array of blocks that need to be deleted
      */
     saveBlock(newBlock, replacedBlocks) {
-        if (this.databaseInjector.writeBlock(newBlock.blockHash, this.tryCompress(newBlock), newBlock.generation)) {
-            let transactions = JSON.parse(newBlock.transactions);
-            let transactionHashes = Object.keys(transactions);
-            for(let i = 0; i < transactionHashes.length; i++) {
-                this.databaseInjector.removeTransaction(transactionHashes[i]);
+        this.databaseInjector.writeBlockAsync(newBlock.blockHash, this.tryCompress(newBlock), newBlock.generation);
+        let transactions = JSON.parse(newBlock.transactions);
+        let transactionHashes = Object.keys(transactions);
+        for(let i = 0; i < transactionHashes.length; i++) {
+            this.databaseInjector.removeTransactionAsync(transactionHashes[i]);
+        }
+        if (replacedBlocks) {
+            for(let i = 0; i < replacedBlocks.length; i++) {
+                this.databaseInjector.removeBlockAsync(replacedBlocks[i].generation, replacedBlocks[i].blockHash);
             }
-            if (replacedBlocks) {
-                for(let i = 0; i < replacedBlocks.length; i++) {
-                    this.databaseInjector.removeBlock(replacedBlocks[i].generation, replacedBlocks[i].blockHash);
-                }
-            }
-        } else {
-            throw new Error("Failed to save block " + newBlock.blockHash);
         }
     }
 
@@ -145,11 +144,7 @@ class Storage {
      * @param newTransaction - The transaction to store in storage
      */
     saveTransaction(newTransaction) {
-        if (this.databaseInjector.writeTransaction(newTransaction.transactionHash, this.tryCompress(newTransaction))) {
-            // Success
-        } else {
-            throw new Error("Failed to save transaction " + newTransaction.transactionHash);
-        }
+        this.databaseInjector.writeTransactionAsync(newTransaction.transactionHash, this.tryCompress(newTransaction));
     }
 
     /**
@@ -160,7 +155,7 @@ class Storage {
     tryCompress(toCompress) {
         let result = JSON.stringify(toCompress);
         if (this.useCompression) {
-            console.info("TODO", "Compress result");
+            result = zlib.deflateSync(result).toString('base64');
         }
         return result;
     }
@@ -172,7 +167,7 @@ class Storage {
      */
     tryDecompress(compressed) {
         if (this.useCompression) {
-            console.info("TODO", "Decompress compressed");
+            compressed = zlib.inflateSync(new Buffer(compressed, 'base64')).toString('utf8');
         }
         let result = undefined;
         try {

@@ -37,22 +37,12 @@ let userChangeReply = function(payload) {
     //console.info("UserChange: " , payload);
 }
 
-let sleep = function() {
-    for(let i = 0; i < 500000; i++) {
-        for(let j = i; j + i < 250000; j++) {
-            let k = j * 2 + i - j;
-        }
-    }
-}
-
 module.exports = {
     seedScenarioSetupTest : function() {
         console.log("### Seed Scenario Setup Test ###");
         let tester = moduleTester.beginTest("Seed", "ABC", true);
         tester.relay();
-        sleep();
         tester.relay();
-        sleep();
         tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 1000, "Creator should start with 1000 SEED");
         tester.assertEqual("getSymbol", {}, "SEED", "The symbol of Seed should be \"SEED\"");
         tester.assertEqual("getDecimals", {}, 4, "Seed should have 4 decimal points");
@@ -60,43 +50,28 @@ module.exports = {
         tester.assertEqual("getAllowance", { owner : tester.getAccount("ABC"), spender : tester.getAccount("DEF") }, undefined, "Get allowance is unset for user who has never used Seed before" );
 
         tester.switchUser("ABC");
-        sleep();
         tester.createTransactionWithRelay("approve", { spender : tester.getAccount("DEF"), value : 250 });
-        sleep();
         tester.relay();
-        sleep();
 
         tester.switchUser("DEF");
-        sleep();
         tester.createTransactionWithRelay("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("DEF"), value : 100 });
-        sleep();
         tester.createTransactionWithRelay("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GHI"), value : 100 });
-        sleep();
         tester.relay();
-        sleep();
         tester.relay();
-        sleep();
         tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 800, "Owner should still have 800 SEED");
         tester.assertEqual("getBalanceOf", { owner : tester.getAccount("DEF") }, 100, "DEF sent 100 SEED to himself");
         tester.assertEqual("getBalanceOf", { owner : tester.getAccount("GHI") }, 100, "GHI received 100 SEED from DEF on ABC's behalf");
 
         tester.switchUser("GHI");
-        sleep();
         tester.createTransactionWithRelay("transfer", { to : tester.getAccount("ABC"), value : 50 });
-        sleep();
         tester.relay();
-        sleep();
         tester.relay();
-        sleep();
         tester.assertEqual("getBalanceOf", { owner : tester.getAccount("ABC") }, 850, "ABC should have received 50 from GHI");
 
         tester.switchUser("DEF");
         tester.createTransactionWithRelay("burn", { value : 25 });
-        sleep();
         tester.relay();
-        sleep();
         tester.relay();
-        sleep();
         tester.assertEqual("getBalanceOf", { owner : tester.getAccount("DEF") }, 75, "DEF should have 75 after burning 25, removing it from circulation");
         tester.assertEqual("getTotalSupply", {}, 975, "25 coins were burned, removed from circulation, since initial 1000 creation");
 
