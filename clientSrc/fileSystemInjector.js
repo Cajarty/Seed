@@ -1,27 +1,68 @@
 
+/*************************
+ * fileSystemInjector.js *
+ *************************
+ * 
+ * Exports an implementation of the IDatabaseInjector pattern which implements saving/loading
+ * to the local file system
+ * 
+ */
 
+module.exports = {
+    /**
+     * Creates a new FileSystemInjector implementation
+     * 
+     * @return - A new FileSystemInjector object
+     */
+    newFileSystemInjector : function(dataFolderName) {
+        return new FileSystemInjector(dataFolderName);
+    }
+}
 
 const fs = require('fs')
 const readdirSync = fs.readdirSync;
 const statSync = fs.statSync;
 const { join } = require('path')
 
-module.exports = {
-    newFileSystemInjector : function(dataFolderName) {
-        return new FileSystemInjector(dataFolderName);
-    }
-}
-
+/**
+ * Helper function which ensures a directory exists, and creates it if not
+ * 
+ * @param {*} directory - The directory to check for/create
+ */
 let ensureCreated = function(directory) {
     if (!fs.existsSync(directory)){
         fs.mkdirSync(directory);
     }
 }
 
+/**
+ * Helper function which gets all the sundirectory names of a directory
+ * 
+ * @param {*} path - The path to grab the subdirectories from
+ */
 let getDirectories = path => readdirSync(path).filter(fileOrFolder => statSync(join(path, fileOrFolder)).isDirectory());
+
+/**
+ * Helper function which gets all the file names of a directory
+ * 
+ * @param {*} path - The path to grab the files from
+ */
 let getFiles = path => readdirSync(path).filter(fileOrFolder => statSync(join(path, fileOrFolder)).isFile());
 
+/**
+ * A IDatabaseInjector implementation which reads/writes blocks/transactions from the file system
+ */
 class FileSystemInjector /* implements IDatabaseInjector.interface */ {
+    /**
+     * Constructor for the fileSystemInjector class. Creates the base directories of the project if they do
+     * not already exists.
+     * 
+     * The subdirectories would look like:
+     *  /dataFolderName/entanglement
+     *  /dataFolderName/blockchain
+     * 
+     * @param {*} dataFolderName - The base folder name of the location data is stored in
+     */
     constructor(dataFolderName) {
         this.dataFolder = dataFolderName;
         let dataFolderPath = __dirname + "/" + dataFolderName;
@@ -30,6 +71,17 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
         ensureCreated(this.transactionPath());
     }
 
+    /**
+     * Creates the path name for a block, with optional parameters for a subdirectory and possible file name.
+     * 
+     * e.g. 
+     *  blockPath() returns "/dataFolderPath/blockchain"
+     *  blockPath(1) returns "/dataFolderPath/1"
+     *  blockPath(1, "hash") returns /dataFolderPath/1/hash.json
+     * 
+     * @param {*} generation - (optional) The generation of the block whos path we are getting
+     * @param {*} blockName - (optional) The hash of the block whos path we are getting
+     */
     blockPath(generation, blockName) {
         if (generation) {
             if (blockName) {
