@@ -112,64 +112,82 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
     }
 
     /**
-     * Removes a transaction from storage
+     * Removes a transaction from storage asyncrhonously, invoking an optional
+     * callback upon completion
      * 
      * @param {*} transactionName - The name/hash of a transaction in storage
+     * @param {*} callback - (optional) A function(error, data) to invoke upon completetion
      */
-    removeTransaction(transactionName) {
-        fs.unlink(this.transactionPath(transactionName), (err, data) => {
-            if (err) {
-                throw err;
+    removeTransactionAsync(transactionName, callback) {
+        if (!callback) {
+            callback = (err, data) => {
+                if (err) {
+                    throw err;
+                }
             }
-        });
+        }
+        fs.unlink(this.transactionPath(transactionName), callback);
     }
 
     /**
-     * Removes a block from storage
+     * Removes a block from storage asynchronously, invoking an optional
+     * callback upon completion
      * 
      * @param {*} generation - The generation of a block in storage
      * @param {*} blockName - The name/hash of a block in storage
+     * @param {*} callback - (optional) A function(error, data) to invoke upon completetion
      */
-    removeBlock(generation, blockName) {
-        fs.unlink(this.blockPath(generation, blockName), (err, data) => {
-            if (err) {
-                throw err;
+    removeBlockAsync(generation, blockName, callback) {
+        if (!callback) {
+            callback = (err, data) => {
+                if (err) {
+                    throw err;
+                }
             }
-        });
+        }
+        fs.unlink(this.blockPath(generation, blockName), callback);
     }
 
     /**
-     * Writes a block to storage
+     * Writes a block to storage asynchronously, invoking an optional
+     * callback upon completion
      * 
      * @param {*} storageName - The name to use in storage (e.g. block hash)
      * @param {*} storageObject - The block to store in storage
      * @param {*} generation - The generation of block it is
+     * @param {*} callback - (optional) A function(error, data) to invoke upon completetion
      */
-    writeBlock(storageName, storageObject, generation) {
+    writeBlockAsync(storageName, storageObject, generation, callback) {
+        if (!callback) {
+            callback = (err, data) => {
+                if (err) {
+                    throw err;
+                }
+            }
+        }
         ensureCreated(this.blockPath(generation));
         let path = this.blockPath(generation, storageName);
-        fs.writeFile(path, storageObject, (err, data) => {
-            if (err) {
-                throw err;
-            }
-        });
-        return true;
+        fs.writeFile(path, storageObject, callback);
     }
 
     /**
-     * Writes a transaction to storage
+     * Writes a transaction to storage asynchronously, invoking an optional
+     * callback upon completion
      * 
      * @param {*} storageName - The name of the transaction to store
      * @param {*} storageObject - The transaction to store
+     * @param {*} callback - (optional) A function(error, data) to invoke upon completetion
      */
-    writeTransaction(storageName, storageObject) {
-        let path = this.transactionPath(storageName);
-        fs.writeFile(path, storageObject, (err, data) => {
-            if (err) {
-                throw err;
+    writeTransactionAsync(storageName, storageObject, callback) {
+        if (!callback) {
+            callback = (err, data) => {
+                if (err) {
+                    throw err;
+                }
             }
-        });
-        return true;
+        }
+        let path = this.transactionPath(storageName);
+        fs.writeFile(path, storageObject, callback);
     }
 
     /**
