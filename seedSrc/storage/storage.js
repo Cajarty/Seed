@@ -1,25 +1,63 @@
+/**************
+ * storage.js *
+ **************
+ * 
+ * Exports the storage class which handles saving/loading to storage Blockchain and Transaction data.
+ * 
+ * This class wraps all logic regarding saving/loading, however handled with an abstracted away implementation of
+ * how how to save/load. Whether using LocalStorage, MongoDB or files for storage, an iDatabaseInjector object is
+ * created to handle the implementation.
+ * 
+ * The expected functions can be found in the IDatabaseInjector.interface file.
+ */
+
 let storage = undefined;
 
 module.exports = {
-    newStorage(iDatabaseInjector, useCompression) {
+    /**
+     * Creates and assigns a new storage object, passing in an instantiated iDatabaseInjector compliant object, and a flag
+     * regarding whether the data is to be compressed or not when saving/loading
+     * 
+     * @param {*} iDatabaseInjector - An object which has the same functions as the iDatabaseInjector pattern
+     * @param {*} useCompression - A flag regarding compressing data or not
+     */
+    newStorage : function(iDatabaseInjector, useCompression) {
         if (iDatabaseInjector) {
             storage = new Storage(iDatabaseInjector, useCompression);
         }
         return storage;
     },
-    getStorage() {
+    /**
+     * @return - Returns the instantiated storage object
+     */
+    getStorage : function() {
         return storage;
     },
+    /**
+     * Invokes the storage's loadInitialState function, which tries to load all transactions/blocks from storage
+     */
     loadInitialState : function() {
         if (storage) {
             storage.loadInitialState();
         }
     },
+    /**
+     * Saves the passed in block into storage, listing which blocks must be deleted from storage when squashed
+     * to create the passed in block
+     * 
+     * @param newBlock - The newly created block to store
+     * @param replacedBlocks - An array of blocks that need to be deleted
+     */
     saveBlock : function(newBlock, replacedBlocks) {
         if (storage) {
             storage.saveBlock(newBlock, replacedBlocks);
         }
     },
+    /**
+     * Saves the passed in transaction into storage.
+     * 
+     * @param newTransaction - The transaction to store in storage
+     */
     saveTransaction : function(newTransaction) {
         if (storage) {
             storage.saveTransaction(newTransaction);
@@ -32,12 +70,24 @@ const blockchainExporter = require("../blockchain.js");
 const svmExporter = require("../virtualMachine/virtualMachine.js");
 const transactionExporter = require("../transaction.js");
 
+/**
+ * The implementation of the Storage object which wraps the logic regarding saving/loading transactions and blocks
+ */
 class Storage {
+    /**
+     * The constructor for storage which simply saves the passed in parameters
+     * 
+     * @param {*} iDatabaseInjector - An instantiated object which complies with the iDatabaseInjector pattern
+     * @param {*} useCompression - A flag regarding whether or not to use compression with the data
+     */
     constructor(iDatabaseInjector, useCompression) {
         this.databaseInjector = iDatabaseInjector;
         this.useCompression = useCompression;
     }
 
+    /**
+     * Invokes the storage's loadInitialState function, which tries to load all transactions/blocks from storage
+     */
     loadInitialState() {
         let sortByTimestamp = function(a, b){
             return a.timestamp - b.timestamp
@@ -65,6 +115,13 @@ class Storage {
         }
     }
 
+    /**
+     * Saves the passed in block into storage, listing which blocks must be deleted from storage when squashed
+     * to create the passed in block
+     * 
+     * @param newBlock - The newly created block to store
+     * @param replacedBlocks - An array of blocks that need to be deleted
+     */
     saveBlock(newBlock, replacedBlocks) {
         if (this.databaseInjector.writeBlock(newBlock.blockHash, this.tryCompress(newBlock), newBlock.generation)) {
             let transactions = JSON.parse(newBlock.transactions);
@@ -82,6 +139,11 @@ class Storage {
         }
     }
 
+    /**
+     * Saves the passed in transaction into storage.
+     * 
+     * @param newTransaction - The transaction to store in storage
+     */
     saveTransaction(newTransaction) {
         if (this.databaseInjector.writeTransaction(newTransaction.transactionHash, this.tryCompress(newTransaction))) {
             // Success
@@ -90,6 +152,11 @@ class Storage {
         }
     }
 
+    /**
+     * Takes in an object and turns it into a (possibly compressed) JSON string
+     * 
+     * @param {*} toCompress - JavaScript object to compress
+     */
     tryCompress(toCompress) {
         let result = JSON.stringify(toCompress);
         if (this.useCompression) {
@@ -98,6 +165,11 @@ class Storage {
         return result;
     }
 
+    /**
+     * Takes in a (possibly compressed) JSON string and turns it into a JavaScript object
+     * 
+     * @param {*} compressed 
+     */
     tryDecompress(compressed) {
         if (this.useCompression) {
             console.info("TODO", "Decompress compressed");
