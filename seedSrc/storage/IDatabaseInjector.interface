@@ -1,10 +1,20 @@
+/*******************************
+ * IDatabaseInjector.interface *
+ *******************************
+ * 
+ * The design of the interface that storage.js depends on, which any object used upon its creation for data storing
+ * must comply with
+ */
+
 IDatabaseInjector:
-    writeBlock(storageName, storageObject, generation) returns(bool)
-    writeTransaction(storageName, storageObject) returns(bool)
-    removeBlock(generation, blockName)
-    removeTransaction(transactionName)
-    readBlock(storageName)
-    readBlockchain(generation)
-    readBlockchains()
-    readTransaction(storageName)
-    readEntanglement()
+    readBlockAsync(generation, storageName, callback)
+    readBlockSync(generation, storageName)
+    readBlockchainSync(generation)
+    readBlockchainsSync()
+    readTransactionAsync(storageName, callback)
+    readTransactionSync(storageName)
+    readEntanglementSync()
+    writeBlockAsync(storageName, storageObject, generation, callback)
+    writeTransactionAsync(storageName, storageObject, callback)
+    removeTransactionAsync(transactionName, callback)
+    removeBlockAsync(generation, blockName, callback)
