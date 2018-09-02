@@ -5,6 +5,7 @@
  * Exports an implementation of the IDatabaseInjector pattern which implements saving/loading
  * to a browsers localstorage
  * 
+ * This implementation should work for any key/storage object passed in
  */
 
 module.exports = {
@@ -20,6 +21,14 @@ module.exports = {
     }
 }
 
+/**
+ * Helper function for taking a LocalStorage object and determining all the keys
+ * which belong to blocks and which generation of blockchain they belong too.
+ * 
+ * This returns just the keys in a mapped object, NOT the data from storage
+ * 
+ * @param {*} localStorage - The local storage to extract information from
+ */
 let parseLocalStorageToBlockKeys = function(localStorage) {
     let result = {};
     let keys = Object.keys(this.localStorage);
@@ -39,6 +48,14 @@ let parseLocalStorageToBlockKeys = function(localStorage) {
     return result;
 }
 
+/**
+ * Helper function for taking a LocalStorage object and determining all the keys
+ * which belong to transactions.
+ * 
+ * This returns just the keys in a mapped object, NOT the data from storage
+ * 
+ * @param {*} localStorage - The local storage to extract information from
+ */
 let parseLocalStorageToTransactionKeys = function(localStorage) {
     let result = [];
     let keys = Object.keys(this.localStorage);
@@ -52,6 +69,11 @@ let parseLocalStorageToTransactionKeys = function(localStorage) {
     return result;
 }
 
+/**
+ * A IDatabaseInjector implementation which reads/writes blocks/transactions from local storage.
+ * 
+ * This implementation should work for any key/storage object passed in
+ */
 class LocalStorageInjector /* implements IDatabaseInjector.interface */ {
     /**
      * Constructor for the local storage implementation
