@@ -70,6 +70,7 @@ const blockchainExporter = require("../blockchain.js");
 const svmExporter = require("../virtualMachine/virtualMachine.js");
 const transactionExporter = require("../transaction.js");
 const zlib = require('zlib');
+const blockExporter = require("../block.js");
 
 
 /**
@@ -101,8 +102,12 @@ class Storage {
         }
         blocks.sort(sortByTimestamp);
         for(let i = 0; i < blocks.length; i++) {
-            blockchainExporter.addTestamentBlock(blocks[i], false);
-            ledgerExporter.getLedger().applyBlock(blocks[i]);
+            if (blockExporter.isValid(blocks[i])) {
+                blockchainExporter.addTestamentBlock(blocks[i], false);
+                ledgerExporter.getLedger().applyBlock(blocks[i]);
+            } else {
+                throw "FAILED TO CHECK VALIDITY OF BLOCK";
+            }
         }
         let transactionsJSON = this.databaseInjector.readEntanglementSync();
         let transactions = [];
