@@ -143,8 +143,11 @@ module.exports = {
     newStorage : function(iDatabaseInjector, useCompression) {
         return storageExporter.newStorage(iDatabaseInjector, useCompression);
     },
+    getStorage : function() {
+        return storageExporter.getStorage();
+    },
     newFileSystemInjector : function(dataFolderName) {
-        if (!dataFolderName && typeof dataFolderName == "string") {
+        if (!dataFolderName || typeof dataFolderName != "string") {
             dataFolderName = "data";
         }
         return fileSystemInjectorExporter.newFileSystemInjector(dataFolderName)

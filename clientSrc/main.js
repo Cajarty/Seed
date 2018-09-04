@@ -16,7 +16,6 @@ const url = require('url');
 const promiseIpc = require('electron-promise-ipc');
 const seed = require("../seedSrc/index.js");
 const moduleLoader = require("./moduleLoader");
-const fileSystemInjectorExporter = require("./fileSystemInjector.js");
 
 //'production': Release for public
 //'development': Development tools enabled
@@ -146,7 +145,7 @@ ipcMain.on("launchModule", function(event, windowName, htmlFile) {
         slashes: true
     }));
 
-    seed.getStorageExporter().newStorage(fileSystemInjectorExporter.newFileSystemInjector("data"), true);
+    seed.newStorage(seed.newFileSystemInjector(), true);
 });
 
 /**
@@ -167,7 +166,7 @@ ipcMain.once("runUnitTests", () => {
  * Runs unit tests. Assumes the state of the Seed cryptocurrency is already prepped for unit tests
  */
 ipcMain.once("loadFromDisk", () => {
-    seed.getStorageExporter().getStorage().loadInitialState()
+    seed.getStorage().loadInitialState()
     console.info("Loaded Data", seed.getLedgerExporter().getLedger());
 });
 
