@@ -19,6 +19,8 @@ const entanglementExporter = require("./entanglement.js");
 const transactionExporter = require("./transaction.js");
 const storageExporter = require("./storage/storage.js");
 const blockchainExporter = require("./blockchain.js");
+const fileSystemInjectorExporter = require("./storage/fileSystemInjector.js");
+const localStorageInjectorExporter = require("./storage/localStorageInjector.js");
 
 module.exports = {
     /**
@@ -137,5 +139,20 @@ module.exports = {
      */
     invoke : function(moduleName, functionName, transactionHash, changeSet) {
         messagingExporter.invoke(moduleName, functionName, transactionHash, changeSet);
+    },
+    newStorage : function(iDatabaseInjector, useCompression) {
+        return storageExporter.newStorage(iDatabaseInjector, useCompression);
+    },
+    newFileSystemInjector : function(dataFolderName) {
+        if (!dataFolderName && typeof dataFolderName == "string") {
+            dataFolderName = "data";
+        }
+        return fileSystemInjectorExporter.newFileSystemInjector(dataFolderName)
+    },
+    newLocalStorageInjector : function(localStorage) {
+        if (!localStorage) {
+            throw "LocalStorage must be passed into newLocalStorageInjector";
+        }
+        return localStorageInjectorExporter.localStorage;
     }
  }
