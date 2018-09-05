@@ -12,30 +12,68 @@
  *          - Adds a block to the blockchain, potentially triggering the squashing of blocks as well
  */
 
-const squasherExporter = require("./squasher.js");
-
-
 module.exports = {
     /**
      * Adds a block to the blockchain, potentially triggering the squashing of blocks as well
      * 
      * @param {*} block - The block to add to the blockchains
      */
-    addTestamentBlock: function(block) {
+    addTestamentBlock: function(block, saveToStorage) {
+        if (saveToStorage == undefined) {
+            saveToStorage = true;
+        }
         ensureCreated(block.generation);
         blockchain[block.generation].push(block);
+
+        let replacedBlocks = undefined;
 
         if (squasherExporter.doesTriggerSquashing(block.blockHash)) {
             let nextGenerationBlock = squasherExporter.blocksToGenerationBlock(blockchain[block.generation]);
 
-            deleteGenerationOfBlocks(block.generation);
+            replacedBlocks = deleteGenerationOfBlocks(block.generation);
 
-            this.addTestamentBlock(nextGenerationBlock);
+            this.addTestamentBlock(nextGenerationBlock, saveToStorage);
         }
-
+        if (saveToStorage) {
+            storageExporter.getStorage().saveBlock(block, replacedBlocks);
+        }
         debugBlockchain();
+    },
+    /**
+     * @return - Gets the blockchain mapping
+     */
+    getBlockchains : function() {
+        return blockchain;
+    },
+    getTransaction : function(transactionHash, generation) {
+        if (!generation) {
+            generation = 1;
+        }
+        let chain = blockchain[generation];
+        if (chain) {
+            for(let i = 0; i < chain.length; i++) {
+                let block = chain[i];
+                let transactions = JSON.parse(block.transactions);
+                let transactionHashes = Object.keys(transactions);
+                for(let j = 0; j < transactionHashes.length; j++) {
+                    if (transactionHashes[j] == transactionHash) {
+                        return transactions[transactionHash];
+                    }
+                }
+            }
+        }
+        return undefined;
+    },
+    doesContainTransactions : function(transactionHash, generation) {
+        return this.getTransaction(transactionHash, generation) != undefined;
+    },
+    getTransactionSender : function(transactionHash, generation) {
+        return this.getTransaction(transactionHash, generation)[0];
     }
  }
+ 
+ const squasherExporter = require("./squasher.js");
+ const storageExporter = require("./storage/storage.js");
 
  // The mapping of blocks in the blockchain 
  let blockchain = {}
@@ -46,8 +84,10 @@ module.exports = {
   * @param {*} generation - The generation to delete
   */
  let deleteGenerationOfBlocks = function(generation) {
+    let oldBlocks = blockchain[generation];
     blockchain[generation] = [];
     delete blockchain[generation];
+    return oldBlocks;
  }
 
  /**

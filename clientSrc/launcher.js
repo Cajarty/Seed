@@ -26,3 +26,10 @@ function launch(moduleName, htmlFile) {
 function runUnitTests() {
     ipc.send("runUnitTests");
 }
+
+/**
+ * Notifies the main process through IPC to load data from the disk
+ */
+function loadFromDisk() {
+    ipc.send("loadFromDisk");
+}

@@ -39,19 +39,31 @@ module.exports = {
      * 
      * @param transaction - The transaction to add
      */
-    tryAddTransaction : function(transaction) {
+    tryAddTransaction : function(transaction, saveToStorage) {
+        if (saveToStorage == undefined) {
+            saveToStorage = true;
+        }
         if (!entanglement.contains(transaction.transactionHash)) {
             let children = [];
             for(let i = 0; i < transaction.validatedTransactions.length; i++) {
                 let child = transaction.validatedTransactions[i].transactionHash;
                 children.push(child);
+                
                 if (!entanglement.contains(child)) {
-                    throw new Error("Trying to add transaction who's childs do not exist");
+                    if (blockchainExporter.doesContainTransactions(child)) {
+                        // It must exist in a previous block. If it does not exist in any 1st generaion block, consider it malformed
+                    } else {
+                        console.info(transaction.transactionHash, "Failed To Find (2)", child);
+                        throw new Error("Trying to add transaction who's childs do not exist");
+                    }
                 }
             }
             entanglement.addTransaction(transaction);
             for(let i = 0; i < children.length; i++) {
                 entanglement.addEdge(transaction.transactionHash, children[i]);
+            }
+            if (saveToStorage) {
+                storageExporter.getStorage().saveTransaction(transaction);
             }
         }
     },
@@ -69,7 +81,12 @@ module.exports = {
             let child = transaction.validatedTransactions[i].transactionHash;
             children.push(child);
             if (!entanglement.contains(child)) {
-                throw new Error("Trying to check transaction who's childs do not exist");
+                if (blockchainExporter.doesContainTransactions(child)) {
+                    // It must exist in a previous block. If it does not exist in any 1st generaion block, consider it malformed
+                } else {
+                    console.info(transaction.transactionHash, "Failed To Find (1)", child);
+                    throw new Error("Trying to check transaction who's childs do not exist");
+                }
             }
         }
         let result = false;
@@ -129,7 +146,6 @@ module.exports = {
         if (entanglement.transactions[transactionHash]) {
             return true;
         } else {
-            console.info("hasTransaction", entanglement.transactions, transactionHash);
             return false;
         }
     },
@@ -154,6 +170,7 @@ module.exports = {
  const transactionExporter = require("./transaction.js");
  const squasherExporter = require("./squasher.js");
  const blockchainExporter = require("./blockchain.js");
+ const storageExporter = require("./storage/storage.js");
 
  /**
   *  Helper function used recursively by the Entanglement with regards to visiting nodes when traversing the DAG

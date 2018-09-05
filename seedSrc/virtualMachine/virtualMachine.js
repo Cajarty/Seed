@@ -215,11 +215,11 @@ class VirtualMachine {
      * 
      * @param {*} transaction - The transaction to attempt to receive
      */
-    incomingTransaction(transaction) {
+    incomingTransaction(transaction, saveToStorage) {
         // If its a proper, formed transaction
         if (transactionExporter.isTransactionProper(transaction)) {
             // We add it to the entanglement
-            entanglement.tryAddTransaction(transaction);
+            entanglement.tryAddTransaction(transaction, saveToStorage);
         } else {
             console.info("IncomingTransaction::Malformed", transaction);
         }
