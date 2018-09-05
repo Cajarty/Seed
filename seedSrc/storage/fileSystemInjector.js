@@ -14,8 +14,8 @@ module.exports = {
      * 
      * @return - A new FileSystemInjector object
      */
-    newFileSystemInjector : function(dataFolderName) {
-        return new FileSystemInjector(dataFolderName);
+    newFileSystemInjector : function(baseDirectory, dataFolderName) {
+        return new FileSystemInjector(baseDirectory, dataFolderName);
     }
 }
 
@@ -61,12 +61,12 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
      *  /dataFolderName/entanglement
      *  /dataFolderName/blockchain
      * 
+     * @param {*} baseDirectory - The root directory of where dataFolder will reside
      * @param {*} dataFolderName - The base folder name of the location data is stored in
      */
-    constructor(dataFolderName) {
-        this.dataFolder = dataFolderName;
-        let dataFolderPath = __dirname + "/" + dataFolderName;
-        ensureCreated(dataFolderPath);
+    constructor(baseDirectory, dataFolderName) {
+        this.dataFolderPath = baseDirectory + "/" + dataFolderName;
+        ensureCreated(this.dataFolderPath);
         ensureCreated(this.blockPath());
         ensureCreated(this.transactionPath());
     }
@@ -85,12 +85,12 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
     blockPath(generation, blockName) {
         if (generation) {
             if (blockName) {
-                return __dirname + "/" + this.dataFolder + "/blockchain/" + generation + "/" + blockName + ".json";
+                return this.dataFolderPath + "/blockchain/" + generation + "/" + blockName + ".json";
             } else {
-                return __dirname + "/" + this.dataFolder + "/blockchain/" + generation;
+                return this.dataFolderPath + "/blockchain/" + generation;
             }
         } else {
-            return __dirname + "/" + this.dataFolder + "/blockchain";
+            return this.dataFolderPath + "/blockchain";
         }
     }
 
@@ -105,9 +105,9 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
      */
     transactionPath(transactionName) {
         if (transactionName) {
-            return __dirname + "/" + this.dataFolder + "/entanglement/" + transactionName + ".json";
+            return this.dataFolderPath + "/entanglement/" + transactionName + ".json";
         } else {
-            return __dirname + "/" + this.dataFolder + "/entanglement";
+            return this.dataFolderPath + "/entanglement";
         }
     }
 

@@ -145,7 +145,7 @@ ipcMain.on("launchModule", function(event, windowName, htmlFile) {
         slashes: true
     }));
 
-    seed.newStorage(seed.newFileSystemInjector(), true);
+    seed.newStorage(seed.newFileSystemInjector(__dirname), false);
 });
 
 /**

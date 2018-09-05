@@ -167,11 +167,14 @@ module.exports = {
      * 
      * @return - A new FileSystemInjector object
      */
-    newFileSystemInjector : function(dataFolderName) {
+    newFileSystemInjector : function(baseDirectory, dataFolderName) {
+        if (!baseDirectory) {
+            throw "baseDirectory must be passed into newFileSystemInjector";
+        }
         if (!dataFolderName || typeof dataFolderName != "string") {
             dataFolderName = "data";
         }
-        return fileSystemInjectorExporter.newFileSystemInjector(dataFolderName)
+        return fileSystemInjectorExporter.newFileSystemInjector(baseDirectory, dataFolderName)
     },
     /**
      * Creates an implementation of the Database Injector (iDatabaseInjector) interface which reads/writes
