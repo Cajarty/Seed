@@ -1,0 +1,95 @@
+The following modules will need to be unit tested
+
+Crypto
+    Account
+    Random
+    Block
+    Transaction
+        Entanglement
+        Blockchain
+        Squasher
+            Ledger
+FileStorage
+LocalStorage
+    Storage
+Message
+
+Once completed, scenario tests will be created:
+:: Creating Seed, Launching it. Relaying it.
+:: Scenario revolving users sending Seed
+:: Scenario revolving users approving/transfering Seed between eachother
+:: Scenario revolving user burning currency, removing from circulation
+:: Scenario(s) revolving users trying to "cheat" and being rejected
+:: LARGE scenario revolving around hundreds of users/transactions being sent & stored
+
+-----
+
+# Cryptography Tests
+
+// Done but update
+
+# Account Tests
+
+// Done but update
+
+# Random Tests
+
+// Show we can seed and get different or consistent results
+// Show a distribution over a million randoms, confirming a fairly good distribution
+
+# Block
+
+// Show the creation of blocks and that we get proper blocks
+// Show the isValid check working, detecting fraudulant blocks
+
+# Transaction
+
+// Show the creation of transactions and that we get proper transactions
+// Show the creation of transactions with old data (and validate it)
+// Shows the validation system works for transactions
+
+# Squashing
+
+// Squashes transactions into a valid block
+// Squashes data into valid data
+// Order matters
+
+# Entanglement
+
+// Can add modules and its stored
+// Can add transactions and its stored
+// Can add transactions which trigger squashing
+// Can simulate "getters" and invoke setters. 
+
+# Blockchain
+
+// Can add blocks
+// Can trigger block squashing
+
+# Ledger
+
+// Can apply changes
+// Can take 10 transactions, apply changes and get the right state
+// Can take those same transations as a block, apply changes and get the right state
+
+# FileStorage
+
+// Can read/write async/sync blocks/transactions
+
+# LocalStorage
+
+// Can read/write sync (fake async) blocks/transactions
+
+# Storage
+
+// Can read/write blocks/transactions
+// Can load initial state and match expected results
+// Can handle FileStorage or LocalStorage and pass the same tests
+
+# Message
+
+// Can subscribe for messages
+// Can unsubscribe
+// Receives messages during changes
+// Receives messages during transaction receiving
+// Can receive message then unsubscribe and stop receiving them
