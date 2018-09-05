@@ -17,6 +17,10 @@ const ledgerExporter = require("./ledger.js");
 const moduleExporter = require("./module.js");
 const entanglementExporter = require("./entanglement.js");
 const transactionExporter = require("./transaction.js");
+const storageExporter = require("./storage/storage.js");
+const blockchainExporter = require("./blockchain.js");
+const fileSystemInjectorExporter = require("./storage/fileSystemInjector.js");
+const localStorageInjectorExporter = require("./storage/localStorageInjector.js");
 
 module.exports = {
     /**
@@ -61,6 +65,9 @@ module.exports = {
     getModuleExporter : function() {
         return moduleExporter;
     },
+    getBlockchainExporter : function() {
+        return blockchainExporter;
+    },
     /**
      * @return - The Entanglement Exporter for adding to the entanglement, checking for cycles,
      * and reading from the entanglement
@@ -73,6 +80,12 @@ module.exports = {
      */
     getTransactionExporter : function() {
         return transactionExporter;
+    },
+    /**
+     * @return - The Storage exporter for writing/reading blocks/transactions from storage
+     */
+    getStorageExporter : function() {
+        return storageExporter;
     },
     /**
      * Subscribes for callback to be invoked whenever the given module has the given function validated
@@ -126,5 +139,55 @@ module.exports = {
      */
     invoke : function(moduleName, functionName, transactionHash, changeSet) {
         messagingExporter.invoke(moduleName, functionName, transactionHash, changeSet);
+    },
+    /**
+     * Creates and assigns a new storage object, passing in an instantiated iDatabaseInjector compliant object, and a flag
+     * regarding whether the data is to be compressed or not when saving/loading
+     * 
+     * @param {*} iDatabaseInjector - An object which has the same functions as the iDatabaseInjector pattern
+     * @param {*} useCompression - A flag regarding compressing data or not
+     */
+    newStorage : function(iDatabaseInjector, useCompression) {
+        return storageExporter.newStorage(iDatabaseInjector, useCompression);
+    },
+    /**
+     * @return - Returns the instantiated storage object
+     */
+    getStorage : function() {
+        return storageExporter.getStorage();
+    },
+    /**
+     * Creates an implementation of the Database Injector (iDatabaseInjector) interface which reads/writes
+     * transactions and blocks through the local file system.
+     * 
+     * NOTE: Not all environments have file system access. This is intended for "Electron" DApps, however
+     * other NodeJS environments with file storage access should work.
+     * 
+     * @param dataFolderName - The name of the folder to store data in. Defaults to "data"
+     * 
+     * @return - A new FileSystemInjector object
+     */
+    newFileSystemInjector : function(dataFolderName) {
+        if (!dataFolderName || typeof dataFolderName != "string") {
+            dataFolderName = "data";
+        }
+        return fileSystemInjectorExporter.newFileSystemInjector(dataFolderName)
+    },
+    /**
+     * Creates an implementation of the Database Injector (iDatabaseInjector) interface which reads/writes
+     * transactions and blocks through the LocalStorage used in web browsers
+     * 
+     * NOTE: Not all environments have LocalStorage access. This is intended for "Webapp" DApps, however
+     * other JavaScript environments with LocalStorage access can access this
+     * 
+     * @param localStorage - The LocalStorage object belonging to your environment
+     * 
+     * @return - A new LocalStorageInjector object
+     */
+    newLocalStorageInjector : function(localStorage) {
+        if (!localStorage) {
+            throw "LocalStorage must be passed into newLocalStorageInjector";
+        }
+        return localStorageInjectorExporter.localStorage;
     }
  }
