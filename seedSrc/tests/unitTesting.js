@@ -15,33 +15,48 @@ module.exports = {
      * @param verbose - Whether to write extra debug lines or not
      */
     runAllUnitTests : function(verbose) {
-
         console.info("#### Running All Unit Tests");
 
-        let result = {
-            fails : [],
-            passes : 0
-        }
-        let toTest = [
-            require("../helpers/cryptoHelper.js")
+        let subsystemUnitTests = [
+            require("../helpers/cryptoHelper.js").getUnitTests()
         ];
 
-        for(let i = 0; i < toTest.length; i++) {
-            let test = toTest[i];
-            let testResult = test.runUnitTests(verbose);
-            result.fails = result.fails.concat(testResult.fails);
-            result.passes += testResult.passes;
+        let log = function(param1, param2, param3) {
+            if (verbose) {
+                if (!param3) {
+                    if (!param2) {
+                        if (param1) {
+                            console.log(param1);
+                        }
+                    } else {
+                        console.info(param1, param2);
+                    }
+                } else {
+                    console.info(param1, param2, param3);
+                }
+            }
         }
 
-        console.info("#### Tests Complete", result);
-    },
-    /**
-     * Creates and returns a new Test object used for handling testing implementation logic.
-     * 
-     * @return - A new Test object
-     */
-    newTest : function(verbose) {
-        return new Test(verbose);
+        let test = new Test(verbose);
+
+        for(let i = 0; i < subsystemUnitTests.length; i++) {
+            let unitTests = subsystemUnitTests[i];
+            runBundledTests(test, unitTests, verbose, log);
+        }
+
+        console.info("#### Tests Complete");
+        test.logState();
+    }
+}
+
+
+
+let runBundledTests = function(test, unitTests, verbose, log) {
+    let keys = Object.keys(unitTests);
+    for(let i = 0; i < keys.length; i++) {
+        let unitTestName = keys[i];
+        log("## Running Unit Test " + unitTestName);
+        unitTests[unitTestName](test, verbose, log);
     }
 }
 
@@ -108,5 +123,28 @@ class Test {
             return;
         }
         this.fails.push(failMessage);
+    }
+
+    /**
+     * Logs the unit tests based on the current state
+     */
+    logState() {
+        let failed = this.fails.length > 0;
+        let passed = this.fails.length == 0 && this.passes > 1;
+        let totalUnitTests = this.fails.length + this.passes;
+
+        if (passed) {
+            console.log("## Passed All " + totalUnitTests + " Unit Tests");
+        } else if (failed) {
+            console.log("## Unit Tests failed");
+            console.log("## Passed " + this.passes + " / " + totalUnitTests + " Unit Tests");
+            console.log("## Failed Tests...");
+            for(let i = 0; i < this.fails.length; i++) {
+                console.info("# " + (i+1) + ":", this.fails[i]);
+            }
+
+        } else {
+            console.info("## No Tests Were Ran");
+        }
     }
 }
