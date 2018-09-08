@@ -129,7 +129,6 @@ class [className] /* implements IDatabaseInjector.interface */ {
      * @param {*} storageName - The name of the block in storage
      */
     readBlockSync(generation, storageName) {
-        return fs.readFileSync(this.blockPath(generation, storageName)).toString();
         // Read a block synchronously
     }
 
@@ -139,27 +138,14 @@ class [className] /* implements IDatabaseInjector.interface */ {
      * @param {*} generation - The generation of blocks to be read
      */
     readBlockchainSync(generation) {
-        let blocks = [];
-        let files = getFiles(this.blockPath(generation));
-        for(let i = 0; i < files.length; i++) {
-            let blockHash = files[i].split(".")[0];
-            let result = this.readBlockSync(generation, blockHash);
-            blocks.push(result);
-        }
-        return blocks;
+        // Reads a blockchain synchronously
     }
 
     /**
      * Reads all blockchains of all generations and returns them as a long array of blocks
      */
     readBlockchainsSync() {
-        let blocks = [];
-        let generations = getDirectories(this.blockPath());
-        for(let i = 0; i < generations.length; i++) {
-            let generation = parseInt(generations[i]);
-            blocks = blocks.concat(this.readBlockchainSync(generation));
-        }
-        return blocks;
+        // Reads all blockchains synchronously
     }
 
     /**
@@ -186,7 +172,6 @@ class [className] /* implements IDatabaseInjector.interface */ {
      * @param {*} storageName - The name of the transaction in storage
      */
     readTransactionSync(storageName) {
-        return fs.readFileSync(this.transactionPath(storageName)).toString();
         // Read transaction synchronously
     }
 
@@ -194,12 +179,6 @@ class [className] /* implements IDatabaseInjector.interface */ {
      * Reads the entanglement from storage synchronously, returning all transactions read
      */
     readEntanglementSync() {
-        let transactions = [];
-        let files = getFiles(this.transactionPath());
-        for(let i = 0; i < files.length; i++) {
-            let transactionHash = files[i].split(".")[0];
-            transactions.push(this.readTransactionSync(transactionHash));
-        }
-        return transactions;
+        // Reads the entanglement from storage synchronously
     }
 }
