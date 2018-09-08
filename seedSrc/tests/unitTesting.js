@@ -15,7 +15,8 @@ module.exports = {
      * @param verbose - Whether to write extra debug lines or not
      */
     runAllUnitTests : function(verbose) {
-        console.info("Running tests");
+
+        console.info("#### Running All Unit Tests");
 
         let result = {
             fails : [],
@@ -32,15 +33,15 @@ module.exports = {
             result.passes += testResult.passes;
         }
 
-        console.info("Tests Complete", result);
+        console.info("#### Tests Complete", result);
     },
     /**
      * Creates and returns a new Test object used for handling testing implementation logic.
      * 
      * @return - A new Test object
      */
-    newTest : function() {
-        return new Test();
+    newTest : function(verbose) {
+        return new Test(verbose);
     }
 }
 
@@ -51,10 +52,12 @@ module.exports = {
 class Test {
     /**
      * Creates the Test to be of type { passes : number, fails : array }
+     * @param verbose - A flag to be set for whether to debug all lines
      */
-    constructor() {
+    constructor(verbose) {
         this.passes = 0;
         this.fails = [];
+        this.verbose = verbose;
     }
 
     /**
@@ -63,7 +66,7 @@ class Test {
      * @param {*} expression - Expression we check for true or false
      * @param {*} failMessage - Error emssage to display on fail
      */
-    assertIsTrue(expression, failMessage) {
+    assert(expression, failMessage) {
         if (expression) {
             this.passes++;
         } else {
@@ -78,7 +81,7 @@ class Test {
      * @param {*} failMessage - Error emssage to display on fail
      */
     assertAreEqual(obj1, obj2, failMessage) {
-        this.assertIsTrue(obj1 == obj2, failMessage);
+        this.assert(obj1 == obj2, failMessage);
     }
 
     /**
@@ -88,7 +91,7 @@ class Test {
      * @param {*} failMessage - Error emssage to display on fail
      */
     assertAreEqualStrict(obj1, obj2, failMessage) {
-        this.assertIsTrue(obj1 === obj2, failMessage);
+        this.assert(obj1 === obj2, failMessage);
     }
 
     /**
