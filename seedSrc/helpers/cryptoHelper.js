@@ -43,11 +43,18 @@ module.exports = {
         tester.VerifySignature_failsOnInvalidSignature();
         tester.VerifySignature_cantVerifyOtherAccountsSignature();
         console.log("UnitTests :: cryptoHelper.js :: Complete");
+
+        let test = unitTestingExporter.newTest();
+        test.assertIsTrue(5 == 5, "Five does equal Five");
+        console.info("Test", test);
+        return test;
+
     }
  }
 
  const crypto = require("crypto")
  const base58Encoder = require('bs58');
+ const unitTestingExporter = require("../tests/unitTesting.js");
  //const stringToUInt8ArrayEncoder = new TextEncoder("utf-8");
 
 //Eliptic PublicKey Encryption, SHA256 Hashing and Base58 Encoding wrapper

@@ -146,6 +146,7 @@ ipcMain.on("launchModule", function(event, windowName, htmlFile) {
     }));
 
     seed.newStorage(seed.newFileSystemInjector(__dirname), false);
+    seed.getUnitTestingExporter().runAllUnitTests(true);
 });
 
 /**
