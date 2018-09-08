@@ -134,6 +134,7 @@ CryptoHelperUnitTests:
     SHA256_hashesValidData:
     SHA256_hashesSmallData:
     SHA256_hashesLargeData:
+    SHA256_throwsOnUndefinedData:
     SHA256_throwsOnEmptyData:
     GeneratePrivateKey_generatesProperPrivateKey:
     GeneratePrivateKey_entropyCanBeAdded:
@@ -149,26 +150,37 @@ CryptoHelperUnitTests:
     VerifySignature_failsOnInvalidSignature:
     VerifySignature_cantVerifyOtherAccountsSignature:
 ##############################################################*/
-//Eliptic PublicKey Encryption, SHA256 Hashing and Base58 Encoding wrapper
 const cryptoUnitTests = {
+    /**
+     * Correctly hash with SHA256.
+     */
     SHA256_hashesValidData : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let hash = cryptoHelper.sha256("TestData");
         let realHash = "814d78962b0f8ac2bd63daf9f013ed0c07fe67fbfbfbc152b30a476304a0535d";
         test.assertAreEqual(hash, realHash, "Failed to generate correct SHA256 hash");
     },
+    /**
+     * Correctly hashes small data with SHA256.
+     */
     SHA256_hashesSmallData : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let hash = cryptoHelper.sha256("l");
         let realHash = "acac86c0e609ca906f632b0e2dacccb2b77d22b0621f20ebece1a4835b93f6f0";
         test.assertAreEqual(hash, realHash, "Failed to generate correct SHA256 hash");
     },
+    /**
+     * Correctly hashes large data with SHA256.
+     */
     SHA256_hashesLargeData : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let hash = cryptoHelper.sha256("This is a lot of data to hash. Wow, look at thow many bits this is. This is some proper, high quality unit testing going on. Sooooooo many bits. Thanks for staying with us tonight folks, just wanna make sure that this thing doesent actually care about the length of the string being passed in... or array. Damnit, I guess I need to do this for a regular array sometime. I think it'll be fine for now though");
         let realHash = "a0793d2b62d37b62a906423749713e44b3dec4fd87a2862671f808ed83de09d2";
         test.assertAreEqual(hash, realHash, "Failed to generate correct SHA256 hash");
     },
+    /**
+     * Throws a error message when attempting to hash undefined data.
+     */
     SHA256_throwsOnUndefinedData : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let success = false;
@@ -179,6 +191,9 @@ const cryptoUnitTests = {
         }
         test.assert(success, "Failed to throw on undefined data");
     },
+    /**
+     * Throws a error message when attempting to hash empty data.
+     */
     SHA256_throwsOnEmptyData : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let success = false;
@@ -189,6 +204,9 @@ const cryptoUnitTests = {
         }
         test.assert(success, "Failed to throw on empty data");
     },
+    /**
+     * Correctly generates a private key
+     */
     GeneratePrivateKey_generatesProperPrivateKey : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let privateKey = cryptoHelper.generatePrivateKey();
@@ -199,6 +217,9 @@ const cryptoUnitTests = {
 
         test.assert(cryptoHelper.verifySignature(publicKey, signature, "Data"), "Private key generated failed to perform");
     },
+    /**
+     * Correctly generates a private key with user defined entropy.
+     */
     GeneratePrivateKey_entropyCanBeAdded : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let privateKey = cryptoHelper.generatePrivateKey({ entropy: "dfh3hfiu34hf3784h3784fh374gf73g4f783h47fg34fg348f837yrh384f7834f3y84hf834f" });
@@ -208,6 +229,9 @@ const cryptoUnitTests = {
         let signature = cryptoHelper.sign(privateKey, "Data");
         test.assert(cryptoHelper.verifySignature(publicKey, signature, "Data"), "Private key generated failed to perform");
     },
+    /**
+     * Correctly fetches the public key that belongs to a proposed private key.
+     */
     GenerateKeyPair_generatesProperKeyPair : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let keyPair = cryptoHelper.generateKeyPair();
@@ -216,6 +240,9 @@ const cryptoUnitTests = {
         let signature = cryptoHelper.sign(keyPair.privateKey, "Data");
         test.assert(cryptoHelper.verifySignature(keyPair.publicKey, signature, "Data"), "Private key generated failed to perform");
     },
+    /**
+    * Correctly generates a key pair with entropy
+    */
     GenerateKeyPair_entropyCanBeAdded : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let keyPair = cryptoHelper.generateKeyPair({ entropy : "saddfh3hfiu34hf3784h3784fh374gf73g4f783h47fg34fg348f837yrh384f7834f3y84hf834f" });
@@ -224,6 +251,9 @@ const cryptoUnitTests = {
         let signature = cryptoHelper.sign(keyPair.privateKey, "Data");
         test.assert(cryptoHelper.verifySignature(keyPair.publicKey, signature, "Data"), "Private key generated failed to perform");
     },
+    /**
+     * Correctly fetches the public key that belongs to a proposed private key.
+     */
     GetPublicKey_getsProperPublicKey : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let privateKey = cryptoHelper.generatePrivateKey({ entropy : "saddfh3hfiu34hf3784h3784fh374gf73g4f783h47fg34fg348f837yrh384f7834f3y84hf834f" });
@@ -233,6 +263,9 @@ const cryptoUnitTests = {
         let signature = cryptoHelper.sign(privateKey, "Data");
         test.assert(cryptoHelper.verifySignature(publicKey, signature, "Data"), "Private key generated failed to perform");
     },
+    /**
+     * Throws a error message when attempting to fetch the public key for a undefined private key.
+     */
     GetPublicKey_throwsOnNullPrivate : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let success = false;
@@ -243,6 +276,9 @@ const cryptoUnitTests = {
         }
         test.assert(success, "Failed to throw on invalid private key");
     },
+    /**
+     * Correctly takes a public key and correctly converts it to a public address.
+     */
     PublicKeyToPublicAddress_getsProperAddress : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let publicKey = "04caae0f0c1c3b06081759b3a5f4c3ed1792594be080b4caef10395280e63f2613397715c67cd8047b43909c4d990908997fef303419c7d9e756de9335cd8e55c6";
@@ -250,6 +286,9 @@ const cryptoUnitTests = {
         let actualPublicAddress = cryptoHelper.publicKeyToPublicAddress(publicKey);
         test.assertAreEqual(desiredPublicAddress, actualPublicAddress, "Failed to generate the proper base58 encoded address");
     },
+    /**
+     * Throws a error message when a empty parameter is passed in instead of a valid public key.
+     */
     PublicKeyToPublicAddress_throwsOnEmptyData : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let success = false;
@@ -260,6 +299,9 @@ const cryptoUnitTests = {
         }
         test.assert(success, "Failed to throw on empty data");
     },
+    /**
+     * Correctly signs data on behalf of a private key.
+     */
     Sign_createsProperSignature : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let privateKey = "4eaad9d904d152a6ec92378720a8554fde49061ffd1ec8a0806af56c38eabb29";
@@ -269,6 +311,9 @@ const cryptoUnitTests = {
         let newSig = cryptoHelper.sign(publicKeyMade, data);
         test.assertAreEqual(newSig, signature, "Failed to create proper signature");
     },
+    /**
+     * Throws a error message when a undefined parameter is passed in instead of a valid private key.
+     */
     Sign_throwsOnEmptyData : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let pair = cryptoHelper.generateKeyPair();
@@ -280,6 +325,9 @@ const cryptoUnitTests = {
         }
         test.assert(success, "Failed to throw on null data being signed");
     },
+    /**
+     * Correctly verifies the validity of a signature. 
+     */
     VerifySignature_verifiesValidSignatures : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let privateKey = "4eaad9d904d152a6ec92378720a8554fde49061ffd1ec8a0806af56c38eabb29";
@@ -288,6 +336,9 @@ const cryptoUnitTests = {
         let publicKey = cryptoHelper.getPublicKey(privateKey);
         test.assert(cryptoHelper.verifySignature(publicKey, signature, data), "Failed to verify proper signature");
     },
+    /**
+     * Catches invalid signatures when failing to validate them.
+     */
     VerifySignature_failsOnInvalidSignature : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let privateKey = "4eaad9d904d152a6ec92378720a8554fde49061ffd1ec8a0806af56c38eabb29";
@@ -296,6 +347,9 @@ const cryptoUnitTests = {
         let publicKey = cryptoHelper.getPublicKey(privateKey);
         test.assertAreEqual(cryptoHelper.verifySignature(publicKey, signature, data), false, "Failed to fail on bad signature");
     },
+    /**
+     * Throws a error message when a undefined parameter is passed in instead of a valid hash key.
+     */
     VerifySignature_cantVerifyOtherAccountsSignature : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let privateKey1 = "4eaad9d904d152a6ec92378720a8554fde49061ffd1ec8a0806af56c38eabb29";
@@ -306,5 +360,16 @@ const cryptoUnitTests = {
         let publicKey2 = cryptoHelper.getPublicKey(privateKey2);
         test.assertAreEqual(cryptoHelper.verifySignature(publicKey2, signature, data), false, "Should fail on validating the wrong signature");
         test.assert(cryptoHelper.verifySignature(publicKey1, signature, data), "Should validate the right signature");
+    },
+    /**
+     * Correctly generates the proper checksum when given a valid hash.
+     */
+    HashToChecksum_generatesProperChecksum : function(test, verbose, log) {
+        let cryptoHelper = new CryptoHelper();
+        let hash = "4eaad9d904d152a6ec92378720a8554fde49061ffd1ec8a0806af56c38eabb29";
+        let actualChecksum = "4eaa";
+        let returnedChecksum = cryptoHelper.hashToChecksum(hash);
+        test.assertAreEqual(actualChecksum, returnedChecksum, "The checksum was supposed to be " + actualChecksum + " However was " + returnedChecksum);
+
     }
 }
