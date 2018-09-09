@@ -23,12 +23,15 @@ module.exports = {
     /**
      * Creates a new VirtualMachine object
      */
-    getVirtualMachine: function() {
+    getVirtualMachine : function() {
         if (virtualMachine == null) {
             console.info("New VM");
             virtualMachine = new VirtualMachine();
         }
         return virtualMachine;
+    },
+    getUnitTests : function() {
+        return virtualMachineUnitTests;
     }
 }
 
@@ -339,3 +342,47 @@ class VirtualMachine {
     }
 }
 
+const virtualMachineUnitTests = {
+    /**
+     * Confirm the virtual machine can have modules added to it and be stored in the ledger.
+     */
+    svm_modulesCanBeAdded : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm the virtual machine can read a modules data from the ledger.
+     */
+    svm_canReadModuleDataFromLedger : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm “getter” functions can be invoked to fetch Module data.
+     */
+    svm_canInvokeModuleGetterFunctions: function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm “setters” can be simulated
+     */
+    svm_canSimulateModuleSetterFunctions : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm “setters” can be invoked and the ledger updates accordingly.
+     */
+    svm_canInvokeModuleSetterFunctionsWhichAndStateChanged : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm transactions can be added to the virtual machine, executing them and storing their changes to the ledger.
+     */
+    svm_addingTransactionsExecutesAndStoresInledger : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm transactions can trigger the squashing mechanism.
+     */
+    svm_addingTransactionsCanTriggerSquashingMechanism : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    }
+}
