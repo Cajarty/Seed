@@ -28,7 +28,8 @@ module.exports = {
             Blockchain : require("../blockchain.js").getUnitTests(),
             Ledger : require("../ledger.js").getUnitTests(),
             SVM : require("../virtualMachine/virtualMachine.js").getUnitTests(),
-            FileStorage : require("../storage/fileSystemInjector.js").getUnitTests()
+            FileStorage : require("../storage/fileSystemInjector.js").getUnitTests(),
+            LocalStorage : require("../storage/localStorageInjector.js").getUnitTests()
         };
 
         let log = function(param1, param2, param3) {

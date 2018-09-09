@@ -18,6 +18,9 @@ module.exports = {
      */
     newLocalStorageInjector : function(localStorage) {
         return new LocalStorageInjector(localStorage);
+    },
+    getUnitTests : function() {
+        return localStorageInjectorUnitTests;
     }
 }
 
@@ -286,5 +289,86 @@ class LocalStorageInjector /* implements IDatabaseInjector.interface */ {
             transactions.push(this.readTransactionSync(transactionHash));
         }
         return transactions;
+    }
+}
+
+const localStorageInjectorUnitTests = {
+    /**
+     * Confirm that transactions can be written to storage asynchronously.
+     */
+    localStorage_storesTransactionsAsynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that transactions can be written to storage synchronously.
+     */
+    localStorage_storesTransactionsSynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that blocks can be written to storage asynchronously.
+     */
+    localStorage_storesBlocksAsynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that blocks can be written to storage synchronously.
+     */
+    localStorage_storesBlocksSynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that LocalStorage can read transactions synchronously.
+     */
+    flocalStorage_readsTransactionsSynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that LocalStorage can read transactions asynchronously.
+     */
+    localStorage_readsTransactionsAsynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that LocalStorage can read blocks synchronously. 
+     */
+    localStorage_readsBlocksSynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that LocalStorage can read blocks asynchronously.
+     */
+    localStorage_readsBlocksAsynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that transactions can be removed from storage.
+     */
+    localStorage_removesTransactionFromStorage : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that blocks can be removed from storage.
+     */
+    localStorage_removesBlocksFromStorage : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that LocalStorage can read all transactions in the entanglement synchronously.
+     */
+    localStorage_readsFullEntanglementFromStorage : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that LocalStorage can read all blocks for a generation from the blockchain synchronously.
+     */
+    localStorage_readsABlockchainFromStorage : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that LocalStorage can read all blocks for all generations of blockchains synchronously.
+     */
+    localStorage_readsAllBlockchainsFromStorage : function(test, log) {
+        test.assert(false, "Test Not Implemented");
     }
 }
