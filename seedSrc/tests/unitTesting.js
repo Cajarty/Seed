@@ -18,7 +18,8 @@ module.exports = {
         console.info("#### Running All Unit Tests");
 
         let subsystemUnitTests = [
-            require("../helpers/cryptoHelper.js").getUnitTests()
+            require("../helpers/cryptoHelper.js").getUnitTests(),
+            require("../account.js").getUnitTests()
         ];
 
         let log = function(param1, param2, param3) {
@@ -57,7 +58,7 @@ let runBundledTests = function(test, unitTests, verbose, log) {
         let unitTestName = keys[i];
         log("## Running Unit Test " + unitTestName);
         test.newSegment(unitTestName);
-        unitTests[unitTestName](test, verbose, log);
+        unitTests[unitTestName](test, log);
     }
 }
 

@@ -23,7 +23,6 @@ Account:
         //Verifys that they did sign a transaction
 ##############################################################*/
 
-const cryptographyExporter = require("./helpers/cryptoHelper.js");
 
 //Dictionary of { publicKey : Account }'s for logged in accounts
 let loggedInAccounts = {};
@@ -57,29 +56,12 @@ module.exports = {
             throw new Error("Trying to log into an account that is not valid");
         }
     },
-    runUnitTests: function() {
-        console.log("UnitTests :: account.js :: Begin");
-        let unitTests = new AccountUnitTests();
-        unitTests.constructor_privateKeyGeneratesValidData();
-        unitTests.constructor_nullPrivateKeyThrows();
-        unitTests.constructor_publicKeyGeneratesValidData();
-        unitTests.constructor_nullPublicKeyThrows();
-        unitTests.canSign_returnsTrueForPrivateKeyAccounts();
-        unitTests.canSign_returnsFalseForPublicKeyAccounts();
-        unitTests.sign_privateKeyAccountCanSignAndVerify();
-        unitTests.sign_publicKeyAccountThrows();
-        unitTests.sign_twoAccountsOneTransactionGenerateDifferentSignatures();
-        unitTests.sign_oneAccountTwoTransactionsGenerateDifferentSignatures();
-        unitTests.verify_publicKeyAccountsCanVerify();
-        unitTests.verify_returnsFalseOnBadSignatures();
-        unitTests.verify_cantVerifySignaturesAAccountDidntSign();
-        //unitTests.accountExporter_newAccountHasNoPrivateKey();
-        //unitTests.accountExporter_newAccountCanStillSignWithoutPrivateKey();
-        //unitTests.accountExporter_logInLogsInValidAccounts();
-
-        console.log("UnitTests :: account.js :: Complete");
+    getUnitTests: function() {
+        return accountUnitTests;
     }
  }
+
+const cryptographyExporter = require("./helpers/cryptoHelper.js");
 
 class Account {
     // info { privateKey : key, publicKey : key, entropy : entropy }
@@ -184,151 +166,164 @@ AccountUnitTests:
     verify_returnsFalseOnBadSignatures():
     verify_cantVerifySignaturesAAccountDidntSign():
 ##############################################################*/
-
-
-class AccountUnitTests {
-    assert(expression, elseError) {
-        if (!expression) {
-            throw new Error(elseError);
-        }
-    }
-
-    constructor_privateKeyGeneratesValidData() {
+const accountUnitTests = {
+    /**
+     * Creating an account out of a private key generates proper data (e.g. public key and public address).
+     */
+    constructor_privateKeyGeneratesValidData : function(test, log) {
         let cryptoHelper = cryptographyExporter.newCryptoHelper();
         let validPrivateKey = cryptoHelper.generatePrivateKey();
-
         let user = new Account({ privateKey : validPrivateKey, network : "00" });
-
-        this.assert(user.privateKey != null, "Failed to store private key");
-        this.assert(user.publicKey != null, "Failed to generate public key");
-        this.assert(user.publicAddress != null, "Failed to generate public address");
-    }
-    constructor_nullPrivateKeyThrows() {
-        let success = false;
-        try {
-            let user = new Account({ privateKey : null, network : "00" });
-        } catch (e) {
-            success = true;
-        }
-        this.assert(success, "Failed to throw on creating account with null private key");
-    }
-    constructor_publicKeyGeneratesValidData() {
+        test.assert(user.privateKey, "Failed to store private key");
+        test.assert(user.publicKey, "Failed to generate public key");
+        test.assert(user.publicAddress, "Failed to generate public address");
+    },
+    /**
+     * Throws a error message when a undefined parameter is passed in instead of a valid private key.
+     */
+    constructor_undefinedPrivateKeyThrows : function(test, log)  {
+        test.assertFail(() => {
+            new Account({ privateKey : undefined, network : "00" });
+        }, "Failed to throw on creating account with null private key");
+    },
+    /**
+     * Creating an account out of a public key generates a proper data (e.g. public address).
+     */
+    constructor_publicKeyGeneratesValidData : function(test, log)  {
         let cryptoHelper = cryptographyExporter.newCryptoHelper();
         let validKeyPair = cryptoHelper.generateKeyPair();
-
         let user = new Account({ publicKey : validKeyPair.publicKey, network : "00" });
-
-        this.assert(user.privateKey == null, "Public key generated user should not have a private key");
-        this.assert(user.publicKey != null, "Failed to store public key");
-        this.assert(user.publicAddress != null, "Failed to generate public address");
-    }
-    constructor_nullPublicKeyThrows() {
-        let success = false;
-        try {
-            let user = new Account({ publicKey : null, network : "00" });
-        } catch (e) {
-            success = true;
-        }
-        this.assert(success, "Failed to throw on creating account with null private key and public key");
-    }
-    constructor_entropyGeneratesKeys() {
+        test.assert(user.privateKey == null, "Public key generated user should not have a private key");
+        test.assert(user.publicKey, "Failed to store public key");
+        test.assert(user.publicAddress, "Failed to generate public address");
+    },
+    /**
+     * Throws a error message when a undefined parameter is passed in instead of a valid public key.
+     */
+    constructor_nullPublicKeyThrows : function(test, log)  {
+        test.assertFail(() => {
+            new Account({ publicKey : undefined, network : "00" });
+        }, "Failed to throw on creating account with null private key and public key");
+    },
+    /**
+     * Creating an account out of raw entropy generates a proper data (e.g. private key, public key and public address).
+     */
+    constructor_entropyGeneratesKeys : function(test, log) {
         let user = new Account({ entropy : "123", network : "00" });
-        this.assert(user.privateKey != null, "Failed to generate private key");
-        this.assert(user.publicKey != null, "Failed to generate public key");
-        this.assert(user.publicAddress != null, "Failed to generate public address");
-    }
-    canSign_returnsTrueForPrivateKeyAccounts() {
+        test.assert(user.privateKey, "Failed to generate private key");
+        test.assert(user.publicKey, "Failed to generate public key");
+        test.assert(user.publicAddress, "Failed to generate public address");
+    },
+    /**
+     * Correctly identifies when a account has the capability to create signatures.
+     */
+    canSign_returnsTrueForPrivateKeyAccounts : function(test, log) {
         let cryptoHelper = cryptographyExporter.newCryptoHelper();
         let validPrivateKey = cryptoHelper.generatePrivateKey();
-
         let user = new Account({ privateKey : validPrivateKey, network : "00" });
-
-        this.assert(user.canSign() == true, "Should be able to sign since valid private key");
-    }
-    canSign_returnsFalseForPublicKeyAccounts() {
+        test.assertAreEqual(user.canSign(),true, "Should be able to sign since valid private key");
+    },
+    /**
+     * Correctly identifies when a account does not have the capability to create signatures
+     */
+    canSign_returnsFalseForPublicKeyAccounts : function(test, log) {
         let cryptoHelper = cryptographyExporter.newCryptoHelper();
         let validPrivateKey = cryptoHelper.generatePrivateKey();
-
         let user = new Account({ publicKey : cryptoHelper.getPublicKey(validPrivateKey), network : "00" });
-
-        this.assert(user.canSign() == false, "Should not be able to sign since valid private key");
-    }
-    sign_privateKeyAccountCanSignAndVerify() {
+        test.assertAreEqual(user.canSign(), false, "Should not be able to sign since valid private key");
+    },
+    /**
+     * Accounts with signing capability sign signatures correctly.
+     */
+    sign_privateKeyAccountCanSignAndVerify : function(test, log){
         let cryptoHelper = cryptographyExporter.newCryptoHelper();
         let validPrivateKey = cryptoHelper.generatePrivateKey();
         let user = new Account({ privateKey : validPrivateKey, network : "00" });
-
         let signature = user.sign("DataToSign");
-
-        this.assert(signature != null, "Signature created was null");
-        this.assert(user.verifySignature(signature, "DataToSign") == true);
-    }
-    sign_publicKeyAccountThrows() {
+        test.assert(signature != null, "Signature created was null");
+    },
+    /**
+     * Accounts without signing capability cannot sign signatures.
+     */
+    sign_publicKeyAccountThrows : function(test, log) {
         let cryptoHelper = cryptographyExporter.newCryptoHelper();
         let validKeyPair = cryptoHelper.generateKeyPair();
         let user = new Account({ publicKey : validKeyPair.publicKey, network : "00" });
-        let success = false;
-        try {
-            let signature = user.sign("DataToSign");
-        } catch (e) {
-            success = true;
-        }
-        this.assert(success, "User generated with public key should not able to sign");
-    }
-    sign_twoAccountsOneTransactionGenerateDifferentSignatures() {
+        test.assertFail(() => {
+            user.sign("DataToSign");
+        }, "User generated with public key should not able to sign");
+    },
+    /**
+     * Differing accounts signing the same message will produce differing signatures.
+     */
+    sign_twoAccountsOneTransactionGenerateDifferentSignatures : function(test, log) {
         let cryptoHelper = cryptographyExporter.newCryptoHelper();
         let data = "SharedData";
         let user1 = new Account( { privateKey : cryptoHelper.generateKeyPair().privateKey, network : "00" });
         let user2 = new Account( { privateKey : cryptoHelper.generateKeyPair().privateKey, network : "00" });
         let signature1 = user1.sign(data);
         let signature2 = user2.sign(data);
-        
-        this.assert(signature1 != signature2, "Signature created was null");
-        this.assert(user1.verifySignature(signature1, data) == true, "Signature couldnt be verified");
-        this.assert(user2.verifySignature(signature2, data) == true, "Signature couldnt be verified");
-    }
-    sign_oneAccountTwoTransactionsGenerateDifferentSignatures() {
+        test.assert(signature1 != signature2, "Signature created was null");
+        test.assertAreEqual(user1.verifySignature(signature1, data), true, "Signature couldnt be verified");
+        test.assertAreEqual(user2.verifySignature(signature2, data), true, "Signature couldnt be verified");
+    },
+    /**
+     * Accounts signing separate messages will produce differing signatures.
+     */
+    sign_oneAccountTwoTransactionsGenerateDifferentSignatures : function(test, log) {
         let cryptoHelper = cryptographyExporter.newCryptoHelper();
         let data1 = "Data1";
         let data2 = "Data2";
         let user = new Account( { privateKey : cryptoHelper.generateKeyPair().privateKey, network : "00" });
         let signature1 = user.sign(data1);
         let signature2 = user.sign(data2);
-        
-        this.assert(signature1 != signature2, "Signature created was null");
-        this.assert(user.verifySignature(signature1, data1) == true, "Signature couldnt be verified");
-        this.assert(user.verifySignature(signature2, data2) == true, "Signature couldnt be verified");
-    }
-    verify_publicKeyAccountsCanVerify() {
+        test.assert(signature1 != signature2, "Signature created was null");
+        test.assertAreEqual(user.verifySignature(signature1, data1), true, "Signature couldnt be verified");
+        test.assertAreEqual(user.verifySignature(signature2, data2), true, "Signature couldnt be verified");
+    },
+    /**
+     * Accounts with signing capabilities can verify their signatures.
+     */
+    verify_privateKeyAccountsCanVerify : function(test, log) {
+        let cryptoHelper = cryptographyExporter.newCryptoHelper();
+        let validPrivateKey = cryptoHelper.generatePrivateKey();
+        let user = new Account({ privateKey : validPrivateKey, network : "00" });
+        let signature = user.sign("DataToSign");
+        test.assert(signature != null, "Signature created was null");
+        test.assertAreEqual(user.verifySignature(signature, "DataToSign"), true, "Failed to verify signature that was just created");
+    },
+    /**
+     * Accounts without signing capabilities can still verify their signatures.
+     */
+    verify_publicKeyAccountsCanVerify : function(test, log) {
         let cryptoHelper = cryptographyExporter.newCryptoHelper();
         let validPrivateKey = cryptoHelper.generatePrivateKey();
         let user = new Account({ privateKey : validPrivateKey, network : "00"  });
         let publicKeyAccount = new Account({ publicKey : user.publicKey, network : "00"  });
-
         let signature = user.sign("DataToSign");
-
-        this.assert(signature != null, "Signature created was null");
-        this.assert(publicKeyAccount.verifySignature(signature, "DataToSign") == true);
-    }
-    verify_returnsFalseOnBadSignatures() {
+        test.assert(signature != null, "Signature created was null");
+        test.assertAreEqual(publicKeyAccount.verifySignature(signature, "DataToSign"), true, "Failed to verify signature that was just created");
+    },
+    /**
+     * Accounts cannot verify signatures which are invalid.
+     */
+    verify_returnsFalseOnBadSignatures : function(test, log) {
         let cryptoHelper = cryptographyExporter.newCryptoHelper();
         let validPrivateKey = cryptoHelper.generatePrivateKey();
         let user = new Account({ privateKey : validPrivateKey, network : "00"  });
-
-        let signature = user.sign("DataToSign");
-
-        this.assert(signature != null, "Signature created was null");
-        this.assert(user.verifySignature("wrongSignature", "DataToSign") == false);
-    }
-    verify_cantVerifySignaturesAAccountDidntSign() {
+        test.assertAreEqual(user.verifySignature("wrongSignature", "DataToSign"), false, "Should have failed verifying signature");
+    },
+    /**
+     * Accounts cannot verify signatures they did not sign.
+     */
+    verify_cantVerifySignaturesAAccountDidntSign : function(test, log) {
         let cryptoHelper = cryptographyExporter.newCryptoHelper();
         let data = "SharedData";
         let user1 = new Account( { privateKey : cryptoHelper.generateKeyPair().privateKey, network : "00" });
         let user2 = new Account( { privateKey : cryptoHelper.generateKeyPair().privateKey, network : "00" });
         let signature1 = user1.sign(data);
         let signature2 = user2.sign(data);
-        
-        this.assert(user2.verifySignature(signature1, data) == false, "Different users validated eachothers signatures");
-        this.assert(user1.verifySignature(signature2, data) == false, "Different users validated eachothers signatures");
+        test.assertAreEqual(user2.verifySignature(signature1, data), false, "Different users validated eachothers signatures");
+        test.assertAreEqual(user1.verifySignature(signature2, data), false, "Different users validated eachothers signatures");
     }
 }
