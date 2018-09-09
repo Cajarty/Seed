@@ -21,7 +21,8 @@ module.exports = {
             Cryptography : require("../helpers/cryptoHelper.js").getUnitTests(),
             Account : require("../account.js").getUnitTests(),
             Random : require("../helpers/random.js").getUnitTests(),
-            Block : require("../block.js").getUnitTests()
+            Block : require("../block.js").getUnitTests(),
+            Transaction : require("../transaction.js").getUnitTests(),
         };
 
         let log = function(param1, param2, param3) {

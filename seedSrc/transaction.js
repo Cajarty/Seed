@@ -153,6 +153,9 @@ module.exports = {
      */
     createTransactionValidator: function() {
         return  new TransactionValidator();
+    },
+    getUnitTests : function() {
+        return transactionUnitTests;
     }
  }
 
@@ -509,5 +512,92 @@ class Transaction {
             result.push(this.validatedTransactions[i].transactionHash);
         }
         return result;
+    }
+}
+
+const transactionUnitTests = {
+    /**
+     * Transaction creation creates transactions with valid and accurate data, as well have as a correctly generated hash.
+     */
+    transactionCreation_createsAValidTransactionWithValidHash : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Validates that the transaction validation system is correct in positive cases.
+     */
+    transactionValidation_createAndValidateATransaction : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #1.
+     */
+    transactionValidation_failsTransactionsBreakingValidationRule1 : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #2.
+     */
+    transactionValidation_failsTransactionsBreakingValidationRule2 : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #3.
+     */
+    transactionValidation_failsTransactionsBreakingValidationRule3 : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #4.
+     */
+    transactionValidation_failsTransactionsBreakingValidationRule4 : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #5.
+     */
+    transactionValidation_failsTransactionsBreakingValidationRule5 : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #6.
+     */
+    transactionValidation_failsTransactionsBreakingValidationRule6 : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #7.
+     */
+    transactionValidation_failsTransactionsBreakingValidationRule7 : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #8.
+     */
+    transactionValidation_failsTransactionsBreakingValidationRule8 : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #9.
+     */
+    transactionValidation_failsTransactionsBreakingValidationRule9 : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #10.
+     */
+    transactionValidation_failsTransactionsBreakingValidationRule10 : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #11.
+     */
+    transactionValidation_failsTransactionsBreakingValidationRule11 : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * An exception is thrown when an invalid block is checked for validation.
+     */
+    transactionValidation_throwsMalFormedTransaction : function(test, log) {
+        test.assert(false, "Test Not Implemented");
     }
 }
