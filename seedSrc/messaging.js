@@ -156,5 +156,35 @@ module.exports = {
             }
             
         }
+    },
+    getUnitTests : function() {
+        return messagingUnitTests;
+    }
+}
+
+const messagingUnitTests = {
+    /**
+     * Confirm the ability to subscribe for messages relating to module function callbacks being executed in the ledger machine.
+     */
+    messaging_subscribingForModuleFunctions : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm the ability to subscribe for messages relating to module data changes callbacks being executed in the ledger machine.
+     */
+    messaging_subscribingForModuleDataChanges : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm the ability to unsubscribe from messaging.
+     */
+    storage_unsubscribingFromMessaging : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm, once unsubscribed, previously invokable callbacks stop being invoked.
+     */
+    storage_unsubscribingCleansUpCallbacksWithoutLeaks : function(test, log) {
+        test.assert(false, "Test Not Implemented");
     }
 }

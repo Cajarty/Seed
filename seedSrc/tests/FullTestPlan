@@ -79,13 +79,10 @@
 # Entanglement
 
     // To Do
-    Can add modules and have them be stored
-    Can read directly from ledger
-    Can simulate "getters" to fetch Modula data
-    Can simulate "setters" to see what would change
-    Can invoke "setters" and have the ledger change
-    Can add transactions execute and be stored
-    Can add transactions which trigger squashing
+    Can add transactions to the entanglement
+    Adding transactions fails if the transaction is invalid
+    Adding transactions fails if the transaction would add a cycle
+    Adding transactions validates older transactions
 
 # Blockchain
 
@@ -102,6 +99,17 @@
     Can get a deep copy of module data from ledger
     Can "apply changes" of numerous transactions and be modified the expected way
     Can "apply changes" of a block (which is the same transactions as above) and be modified the same way
+
+# Virtual machines
+
+    // To Do
+    Can add modules and have them be stored
+    Can read directly from ledger
+    Can simulate "getters" to fetch Modula data
+    Can simulate "setters" to see what would change
+    Can invoke "setters" and have the ledger change
+    Can add transactions execute and be stored
+    Can add transactions which trigger squashing
 
 # FileStorage
 

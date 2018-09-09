@@ -25,6 +25,9 @@ module.exports = {
      * Generates a "seed" to feed into our randomness from an array of hashes in the form of strings.
      */
     generateSeedFromHashes : function(hashes) {
+        if (!hashes || hashes.length == 0) {
+            throw "Generating a seed from hashes must have an array of string hashes as input. At least 1 hash";
+        }
         let bigString = "";
         for(let i = 0; i < hashes.length; i++) {
             bigString = bigString.concat(hashes[i]);
@@ -72,19 +75,25 @@ const randomUnitTests = {
      * Generates the proper Seed out of passed in hashes.
      */
     seedFromHashes_generatesProperSeedFromHashes : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let initialSeed = 123;
+        let random = module.exports.createRandom(initialSeed);
+        test.assertAreEqual(random.seed, initialSeed, "The Random's seed value was not what was passed in");
     },
     /**
      * Throws an error message upon passing in undefined input into seeding generation.
      */
     seedFromHashes_throwsForUndefinedInput : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        test.assertFail(() => {
+            module.exports.generateSeedFromHashes(undefined);
+        }, "Expected undefined into into Random creation to throw error");
     },
     /**
      * Throws an error message upon passing in a empty array as input into seeding generation.
      */
     seedFromHashes_throwsForUEmptyInput : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        test.assertFail(() => {
+            module.exports.generateSeedFromHashes([]);
+        }, "Expected undefined into into Random creation to throw error");
     },
     /**
      * Generates expected pseudo random values based on passed in seed.

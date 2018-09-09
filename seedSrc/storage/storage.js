@@ -62,6 +62,9 @@ module.exports = {
         if (storage) {
             storage.saveTransaction(newTransaction);
         }
+    },
+    getUnitTests : function() {
+        return storageUnitTests;
     }
 }
 
@@ -181,5 +184,46 @@ class Storage {
             console.info("ERROR: Failed to parse", compressed, e);
         }
         return result;
+    }
+}
+
+const storageUnitTests = {
+    /**
+     * Confirm that Storage can save a transaction to the file system using FileStorageInjector.
+     */
+    storage_canSaveTransactionToFileSystem : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that Storage can save a block to the file system using FileStorageInjector.
+     */
+    storage_canSaveBlockToFileSystem : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that Storage, using FileStorageInjector, can load all the initial ledger state, reading all blockchains/entanglement and 
+     * applying all blocks/transactions to the virtual machine.
+     */
+    storage_canLoadInitialStateFromFileSystem : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that Storage can save a transaction to local storage using LocalStorageInjector.
+     */
+    storage_canSaveTransactionToLocalStorage : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that Storage can save a block to local storage using LocalStorageInjector.
+     */
+    storage_canSaveBlockToLocalStorage : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that Storage, using LocalStorageInjector, can load all the initial ledger state, reading all blockchains/entanglement and applying 
+     * all blocks/transactions to the virtual machine.
+     */
+    storage_canLoadInitialStateFromLocalStorage : function(test, log) {
+        test.assert(false, "Test Not Implemented");
     }
 }
