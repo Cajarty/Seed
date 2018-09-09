@@ -25,7 +25,8 @@ module.exports = {
             Transaction : require("../transaction.js").getUnitTests(),
             Squasher : require("../squasher.js").getUnitTests(),
             Entanglement : require("../entanglement.js").getUnitTests(),
-            Blockchain : require("../blockchain.js").getUnitTests()
+            Blockchain : require("../blockchain.js").getUnitTests(),
+            Ledger : require("../ledger.js").getUnitTests()
         };
 
         let log = function(param1, param2, param3) {

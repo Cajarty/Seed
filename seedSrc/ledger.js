@@ -23,6 +23,9 @@ module.exports = {
             ledger = new Ledger();
         }
         return ledger;
+    },
+    getUnitTests : function() {
+        return ledgerUnitTests;
     }
  }
 
@@ -143,3 +146,36 @@ module.exports = {
         }
     }
  }
+
+ const ledgerUnitTests = {
+    /**
+     * Confirm that the ledger can be read from.
+     */
+    ledger_readFromLedger : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm the ledger can have changes applied to it which change the state of the ledger.
+     */
+    ledger_appliedChangesModifyState : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm the ledger can create a deep copy of module data
+     */
+    ledger_canCreateDeepCopiesOfModuleData : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm numerous transactions can have their changes applied and get the correct result.
+     */
+    ledger_multipleTransactionsChangingInSequenceGivesCorrectResult : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm a block can have its changes applied to the ledger and get the correct result.
+     */
+    ledger_appliedChangesFromBlockGiveSameResult : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    }
+}
