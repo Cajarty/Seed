@@ -16,6 +16,9 @@ module.exports = {
      */
     newFileSystemInjector : function(baseDirectory, dataFolderName) {
         return new FileSystemInjector(baseDirectory, dataFolderName);
+    },
+    getUnitTests : function() {
+        return fileStorageInjectorUnitTests;
     }
 }
 
@@ -285,5 +288,86 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
             transactions.push(this.readTransactionSync(transactionHash));
         }
         return transactions;
+    }
+}
+
+const fileStorageInjectorUnitTests = {
+    /**
+     * Confirm that transactions can be written to storage asynchronously.
+     */
+    fileStorage_storesTransactionsAsynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that transactions can be written to storage synchronously.
+     */
+    fileStorage_storesTransactionsSynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that blocks can be written to storage asynchronously.
+     */
+    fileStorage_storesBlocksAsynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that blocks can be written to storage synchronously.
+     */
+    fileStorage_storesBlocksSynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that FileStorage can read transactions synchronously.
+     */
+    fileStorage_readsTransactionsSynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that FileStorage can read transactions asynchronously.
+     */
+    fileStorage_readsTransactionsAsynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that FileStorage can read blocks synchronously. 
+     */
+    fileStorage_readsBlocksSynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that FileStorage can read blocks asynchronously.
+     */
+    fileStorage_readsBlocksAsynchronously : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that transactions can be removed from storage.
+     */
+    fileStorage_removesTransactionFromStorage : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that blocks can be removed from storage.
+     */
+    fileStorage_removesBlocksFromStorage : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that FileStorage can read all transactions in the entanglement synchronously.
+     */
+    fileStorage_readsFullEntanglementFromStorage : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that FileStorage can read all blocks for a generation from the blockchain synchronously.
+     */
+    fileStorage_readsABlockchainFromStorage : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm that FileStorage can read all blocks for all generations of blockchains synchronously.
+     */
+    fileStorage_readsAllBlockchainsFromStorage : function(test, log) {
+        test.assert(false, "Test Not Implemented");
     }
 }

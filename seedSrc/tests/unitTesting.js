@@ -27,7 +27,8 @@ module.exports = {
             Entanglement : require("../entanglement.js").getUnitTests(),
             Blockchain : require("../blockchain.js").getUnitTests(),
             Ledger : require("../ledger.js").getUnitTests(),
-            SVM : require("../virtualMachine/virtualMachine.js").getUnitTests()
+            SVM : require("../virtualMachine/virtualMachine.js").getUnitTests(),
+            FileStorage : require("../storage/fileSystemInjector.js").getUnitTests()
         };
 
         let log = function(param1, param2, param3) {
