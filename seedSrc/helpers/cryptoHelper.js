@@ -186,26 +186,18 @@ const cryptoUnitTests = {
      */
     SHA256_throwsOnUndefinedData : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
-        let success = false;
-        try {
-            let hash = cryptoHelper.sha256(undefined);
-        } catch (e) {
-            success = true;
-        }
-        test.assert(success, "Failed to throw on undefined data");
+        test.assertFail(() => {
+            cryptoHelper.sha256(undefined);
+        }, "Failed to throw on undefined data");
     },
     /**
      * Throws a error message when attempting to hash empty data.
      */
     SHA256_throwsOnEmptyData : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
-        let success = false;
-        try {
-            let hash = cryptoHelper.sha256("");
-        } catch (e) {
-            success = true;
-        }
-        test.assert(success, "Failed to throw on empty data being passed into cryptoHelper.sha256");
+        test.assertFail(() => {
+            cryptoHelper.sha256("");
+        }, "Failed to throw on empty data being passed into cryptoHelper.sha256");
     },
     /**
      * Correctly generates a private key
@@ -270,13 +262,9 @@ const cryptoUnitTests = {
      */
     GetPublicKey_throwsOnUndefinedPrivateKey : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
-        let success = false;
-        try {
+        test.assertFail(() => {
             cryptoHelper.getPublicKey(undefined);
-        } catch (e) {
-            success = true;
-        }
-        test.assert(success, "Failed to throw on invalid private key");
+        }, "Failed to throw on invalid private key");
     },
     /**
      * Correctly takes a public key and correctly converts it to a public address.
@@ -293,13 +281,9 @@ const cryptoUnitTests = {
      */
     PublicKeyToPublicAddress_throwsOnEmptyData : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
-        let success = false;
-        try {
+        test.assertFail(() => {
             cryptoHelper.publicKeyToPublicAddress("");
-        } catch (e) {
-            success = true;
-        }
-        test.assert(success, "Failed to throw on empty data being passed into cryptoHelper.publicKeyToPublicAddress");
+        }, "Failed to throw on empty data being passed into cryptoHelper.publicKeyToPublicAddress");
     },
     /**
      * Correctly signs data on behalf of a private key.
@@ -319,13 +303,9 @@ const cryptoUnitTests = {
     Sign_throwsOnUndefinedData : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
         let pair = cryptoHelper.generateKeyPair();
-        let success = false;
-        try {
-            let newSig = cryptoHelper.sign(pair.privateKey, undefined);
-        } catch (e) {
-            success = true;
-        }
-        test.assert(success, "Failed to throw on undefined data being signed");
+        test.assertFail(() => {
+            cryptoHelper.sign(pair.privateKey, undefined);
+        }, "Failed to throw on undefined data being signed");
     },
     /**
      * Correctly verifies the validity of a signature. 
@@ -378,13 +358,8 @@ const cryptoUnitTests = {
      */
     HashToChecksum_throwsOnUndefinedHash : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
-        let hash = undefined;
-        let success = false;
-        try {
-            cryptoHelper.hashToChecksum(hash);
-        } catch (e) {
-            success = true;
-        }
-        test.assert(success, "Cannot pass in undefined input into CryptoHelper's HashToChecksum");
+        test.assertFail(() => {
+            cryptoHelper.hashToChecksum(undefined);
+        }, "Cannot pass in undefined input into CryptoHelper's HashToChecksum");
     }
 }
