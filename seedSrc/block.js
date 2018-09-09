@@ -55,6 +55,9 @@ module.exports = {
         }
 
         return result;
+    },
+    getUnitTests : function() {
+        return blockUnitTests;
     }
  }
 
@@ -99,5 +102,38 @@ class Block {
         hashable += this.changeSet;
         hashable += this.timestamp;
         return hashable;
+    }
+}
+
+const blockUnitTests = {
+    /**
+     * Block creation creates blocks with valid and accurate data, as well have as a correctly generated hash.
+     */
+    blockCreation_createsAValidBlockWithValidHash : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Validates that the block validation system is correct in positive cases.
+     */
+    blockValidation_createAndValidateABlock : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Validates that the block validation system is correct in failing blocks which don’t meet block validation rule #1.
+     */
+    blockValidation_failsBlocksBreakingRule1 : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Validates that the block validation system is correct in failing blocks which don’t meet block validation rule #2.
+     */
+    blockValidation_failsBlocksBreakingRule2 : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * An exception is thrown when an invalid block is checked for validation.
+     */
+    blockValidation_throwsMalFormedBlock : function(test, log) {
+        test.assert(false, "Test Not Implemented");
     }
 }

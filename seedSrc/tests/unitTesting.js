@@ -20,7 +20,8 @@ module.exports = {
         let subsystemUnitTests = {
             Cryptography : require("../helpers/cryptoHelper.js").getUnitTests(),
             Account : require("../account.js").getUnitTests(),
-            Random : require("../helpers/random.js").getUnitTests()
+            Random : require("../helpers/random.js").getUnitTests(),
+            Block : require("../block.js").getUnitTests()
         };
 
         let log = function(param1, param2, param3) {
