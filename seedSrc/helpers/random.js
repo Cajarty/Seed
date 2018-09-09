@@ -30,6 +30,9 @@ module.exports = {
             bigString = bigString.concat(hashes[i]);
         }
         return cryptoExporter.newCryptoHelper().fastStringHashCode(bigString);
+    },
+    getUnitTests : function() {
+        return randomUnitTests;
     }
  }
 
@@ -61,5 +64,38 @@ class Random {
     nextFloat() {
         // We know that result of next() will be 1 to 2147483646 (inclusive).
         return (this.next() - 1) / 2147483646;
+    }
+}
+
+const randomUnitTests = {
+    /**
+     * Generates the proper Seed out of passed in hashes.
+     */
+    seedFromHashes_generatesProperSeedFromHashes : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Throws an error message upon passing in undefined input into seeding generation.
+     */
+    seedFromHashes_throwsForUndefinedInput : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Throws an error message upon passing in a empty array as input into seeding generation.
+     */
+    seedFromHashes_throwsForUEmptyInput : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Generates expected pseudo random values based on passed in seed.
+     */
+    random_generatesRandomValueBasedOnSeed : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Randomness falls under a valid distribution.
+     */
+    random_randomnessFallsUnderValidDistributions : function(test, log) {
+        test.assert(false, "Test Not Implemented");
     }
 }
