@@ -32,34 +32,32 @@ module.exports = {
      * @param block - Block to check for validity
      */
     isValid: function(block) {
-        let result = true;
-
-        // Rule 1
-        if (block.generation >= 1 && block.transactions && block.changeSet && block.timestamp) {
-
-            // Rule 2
-            let transactions = JSON.parse(block.transactions);
-            let keys = Object.keys(transactions);
-            for(let i = 0; i < keys.length; i++) {
-                let transactionHash = keys[i];
-                let transactionData = transactions[transactionHash];
-                let sender = transactionData[0];
-                let signature = transactionData[4]
-                console.info("Confirming::", sender, signature, transactionHash);
-                if (!cryptoExporter.newCryptoHelper().verifySignature(sender, signature, transactionHash)) {
-                    result = false;
-                }
-            }
-        } else {
-            result = false;
-        }
-
-        return result;
+        return (rule1TestForWellformed(block) && rule2TestForTransactionValidation(block));
     },
     getUnitTests : function() {
         return blockUnitTests;
     }
  }
+
+ let rule1TestForWellformed = function(block) {
+    return block.generation >= 1 && block.transactions && block.changeSet && block.timestamp;
+ }
+
+let rule2TestForTransactionValidation = function(block) {
+    let transactions = JSON.parse(block.transactions);
+    let keys = Object.keys(transactions);
+    for(let i = 0; i < keys.length; i++) {
+        let transactionHash = keys[i];
+        let transactionData = transactions[transactionHash];
+        let sender = transactionData[0];
+        let signature = transactionData[4]
+        console.info("Confirming::", sender, signature, transactionHash);
+        if (!cryptoExporter.newCryptoHelper().verifySignature(sender, signature, transactionHash)) {
+            return false;
+        }
+    }
+    return true;
+}
 
 class Block {
     /**
