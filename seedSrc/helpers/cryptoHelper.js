@@ -53,7 +53,7 @@ class CryptoHelper {
 
     //SHA256 hash 
     sha256(toHash) {
-        if (toHash == null) {
+        if (!toHash || toHash == null || toHash == "") {
             throw new Error("Cannot hash empty data");
         }
         return crypto.createHash("sha256").update(toHash).digest("hex");
@@ -92,6 +92,9 @@ class CryptoHelper {
     }
 
     publicKeyToPublicAddress(publicKey) {
+        if (!publicKey || publicKey == null || publicKey == "") {
+            throw new Error("Public key cannot be null, empty or undefined");
+        }
         const bytes = Buffer.from(publicKey, 'hex')
         return base58Encoder.encode(bytes);
     }
@@ -122,7 +125,7 @@ class CryptoHelper {
     }
 
     hashToChecksum(hashToChecksum) {
-        if (hashToChecksum == undefined || hashToChecksum == null || hashToChecksum.length < 4) {
+        if (!hashToChecksum || hashToChecksum == null || hashToChecksum.length < 4) {
             throw new Error("Not valid data to checksum");
         }
         return hashToChecksum.substring(0, 4);
@@ -375,7 +378,7 @@ const cryptoUnitTests = {
      */
     HashToChecksum_throwsOnUndefinedHash : function(test, verbose, log) {
         let cryptoHelper = new CryptoHelper();
-        let hash = "4eaad9d904d152a6ec92378720a8554fde49061ffd1ec8a0806af56c38eabb29";
+        let hash = undefined;
         let success = false;
         try {
             cryptoHelper.hashToChecksum(hash);
