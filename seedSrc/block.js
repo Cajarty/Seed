@@ -105,18 +105,34 @@ class Block {
     }
 }
 
+const testBlock = {
+    "generation" : 1,
+    "transactions" : "{ \"4e494998049f709438c80ccc8d351573683937341c83ae9db869259651f3c9a7\" : [\"04da3bca100a26200fd19eb848f783ae5a760f68b81d306397a6e6d2ef6cd8c2cd761efc39b51129ce73d2be79e2948a0930598f382508d4e0a917191606ca1591\", \"ec72\", \"4b75\", \"{}\", \"3044022025f60da583561d50a52127d35fb035af6c3eabe702ec2cf2b6e2b7f6d303e27b02206396d3c60ee7bce68cef706690295a30c2944e4d2a6e9531efdcc98e7d3bf38f\"] }",
+    "changeSet" : "{ \"Relay\" : \"totalRelays\":1, \"userData\":{\"044eaf2b043334a659b9e3d4123c4c33cfbdbc1a3610d3b0734ea80a72215474ad6fb2837824f8270f91dd3fe8905e6ee68291bca7d2c6ac1fe67edb28450b4368\":{\"relays\":3}},\"user\":\"044eaf2b043334a659b9e3d4123c4c33cfbdbc1a3610d3b0734ea80a72215474ad6fb2837824f8270f91dd3fe8905e6ee68291bca7d2c6ac1fe67edb28450b4368\"}",
+    "timestamp" : 1536513258201,
+    "blockHash" : "bbcb78dc89c4e184fccc79bbbf5afe7e58915b58b1b604ff2a55a32420e0d86c"
+}
+
 const blockUnitTests = {
     /**
      * Block creation creates blocks with valid and accurate data, as well have as a correctly generated hash.
      */
     blockCreation_createsAValidBlockWithValidHash : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let newBlock = module.exports.newBlock(testBlock.generation, testBlock.transactions, testBlock.changeSet, testBlock.timestamp);
+
+        test.assertAreEqual(testBlock.generation, newBlock.generation, "Generation should be passed into the new block");
+        test.assertAreEqual(testBlock.transactions, newBlock.transactions, "Transactions should be passed into the new block");
+        test.assertAreEqual(testBlock.changeSet, newBlock.changeSet, "ChangeSets should be passed into the new block");
+        test.assertAreEqual(testBlock.timestamp, newBlock.timestamp, "Timestamps should be passed into the new block");
+        console.info(newBlock.blockHash);
+        test.assertAreEqual(testBlock.blockHash, newBlock.blockHash, "New block should have generated the same hash as the old block");
     },
     /**
      * Validates that the block validation system is correct in positive cases.
      */
     blockValidation_createAndValidateABlock : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let newBlock = module.exports.newBlock(testBlock.generation, testBlock.transactions, testBlock.changeSet, testBlock.timestamp);
+        test.assert(module.exports.isValid(newBlock), "The newly created block should be valid");
     },
     /**
      * Validates that the block validation system is correct in failing blocks which don’t meet block validation rule #1.
