@@ -69,6 +69,9 @@ module.exports = {
     },
     getTransactionSender : function(transactionHash, generation) {
         return this.getTransaction(transactionHash, generation)[0];
+    },
+    getUnitTests : function() {
+        return blockchainUnitTests;
     }
  }
  
@@ -122,3 +125,24 @@ module.exports = {
          }
      }
  }
+
+ const blockchainUnitTests = {
+    /**
+     * Confirms blocks can be added to the blockchains
+     */
+    blockchain_addsValidBlockToBlockchain : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirms adding blocks fails if the block is invalid
+     */
+    blockchain_doesNotAddInvalidBlockToBlockchain : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm blocks can invoke the block squashing mechanism if they have the right hash.
+     */
+    blockchain_blocksCanInvokeSquashingMechanism : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    }
+}
