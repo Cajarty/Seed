@@ -10,6 +10,7 @@
  */
 
 const cryptoExporter = require("./helpers/cryptoHelper.js");
+const conformHelper = require("./helpers/conformHelper.js");
 
 module.exports = {
     /**
@@ -32,7 +33,10 @@ module.exports = {
      * @param block - Block to check for validity
      */
     isValid: function(block) {
-        return (rule1TestForWellformed(block) && rule2TestForTransactionValidation(block));
+        if (!rule1TestForWellformed(block)) {
+            throw "The block must be well-formed with all data present";
+        }
+        return (rule2TestForTransactionValidation(block));
     },
     getUnitTests : function() {
         return blockUnitTests;
@@ -40,7 +44,7 @@ module.exports = {
  }
 
  let rule1TestForWellformed = function(block) {
-    return block.generation >= 1 && block.transactions && block.changeSet && block.timestamp;
+    return block.generation != undefined && block.generation >= 1 && block.transactions != undefined && block.changeSet != undefined && block.timestamp != undefined;
  }
 
 let rule2TestForTransactionValidation = function(block) {
@@ -117,12 +121,10 @@ const blockUnitTests = {
      */
     blockCreation_createsAValidBlockWithValidHash : function(test, log) {
         let newBlock = module.exports.newBlock(testBlock.generation, testBlock.transactions, testBlock.changeSet, testBlock.timestamp);
-
         test.assertAreEqual(testBlock.generation, newBlock.generation, "Generation should be passed into the new block");
         test.assertAreEqual(testBlock.transactions, newBlock.transactions, "Transactions should be passed into the new block");
         test.assertAreEqual(testBlock.changeSet, newBlock.changeSet, "ChangeSets should be passed into the new block");
         test.assertAreEqual(testBlock.timestamp, newBlock.timestamp, "Timestamps should be passed into the new block");
-        console.info(newBlock.blockHash);
         test.assertAreEqual(testBlock.blockHash, newBlock.blockHash, "New block should have generated the same hash as the old block");
     },
     /**
@@ -136,18 +138,41 @@ const blockUnitTests = {
      * Validates that the block validation system is correct in failing blocks which don’t meet block validation rule #1.
      */
     blockValidation_failsBlocksBreakingRule1 : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let badBlockZeroGeneration = conformHelper.deepCopy(testBlock);
+        badBlockZeroGeneration.generation = 0;
+        test.assertAreEqual(rule1TestForWellformed(badBlockZeroGeneration), false, "Should have failed with a generation of zero");
+        delete badBlockZeroGeneration.generation;
+        test.assertAreEqual(rule1TestForWellformed(badBlockZeroGeneration), false, "Should have failed with a undefined generation");
+
+        let badBlockNoTransactions = conformHelper.deepCopy(testBlock);
+        delete badBlockNoTransactions.transactions;
+        test.assertAreEqual(rule1TestForWellformed(badBlockNoTransactions), false, "Should have failed with undefined transactions");
+
+        let badBlockNoChangeSet = conformHelper.deepCopy(testBlock);
+        delete badBlockNoChangeSet.changeSet;
+        test.assertAreEqual(rule1TestForWellformed(badBlockNoChangeSet), false, "Should have failed with undefined changeSet");
+
+        let badBlockNoTimestamp = conformHelper.deepCopy(testBlock);
+        delete badBlockNoTimestamp.timestamp;
+        test.assertAreEqual(rule1TestForWellformed(badBlockNoTimestamp), false, "Should have failed with undefined timestamp");
     },
     /**
      * Validates that the block validation system is correct in failing blocks which don’t meet block validation rule #2.
      */
     blockValidation_failsBlocksBreakingRule2 : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        test.assert(rule2TestForTransactionValidation(testBlock), "Test block should pass test as it has valid transactions data");
+        let badBlockInvalidTransactions = conformHelper.deepCopy(testBlock);
+        badBlockInvalidTransactions.transactions = "{ \"4e494998049f709438c80ccc8d351573683937341c83ae9db869259651f3c9a7\" : [\"04da3bca100a26200fd19eb848f783ae5a760f68b81d306397a6e6d2ef6cd8c2cd761efc39b51129ce73d2be79e2948a0930598f382508d4e0a917191606ca1591\", \"ec72\", \"4b75\", \"{}\", \"3044022025f60da583561d50a52127d35fb035af6c3eabe702ec2cf2b6e2b7f6d303e27b02206396d3c60ee7bce68cef706690295a30c2944e4d2a6e9531efdcc98e7d3bf38g\"] }";
+        test.assertAreEqual(rule2TestForTransactionValidation(badBlockInvalidTransactions), false, "Should have failed to validate the signature, as the transaction data was tampered with");
     },
     /**
      * An exception is thrown when an invalid block is checked for validation.
      */
     blockValidation_throwsMalFormedBlock : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        test.assertFail(() => {
+            let badBlockZeroGeneration = conformHelper.deepCopy(testBlock);
+            badBlockZeroGeneration.generation = 0;
+            module.exports.isValid(badBlockZeroGeneration);
+        }, "The malformed block should have thrown an error when checked through the module.exports for validity");
     }
 }
