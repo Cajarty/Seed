@@ -73,6 +73,9 @@ module.exports = {
      */
     squash(objectA, objectB) {
         return squashObjects(objectA, objectB);
+    },
+    getUnitTests : function() {
+        return squasherUnitTests;
     }
 }
 
@@ -247,4 +250,49 @@ let createChangeSetFromBlocks = function(blocks) {
         changeSets.push(JSON.parse(block.changeSet));
     }
     return squash(changeSets);
+}
+
+const squasherUnitTests = {
+    /**
+     * Confirms squasher would trigger on proper hashes for valid cases.
+     */
+    squashingTrigger_wouldTriggerSquasherForProperHashes : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirms squasher would not trigger on a invalid hash.
+     */
+    squashingTrigger_wouldNotTriggerSquasherForInvalidHashes : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirms squashing two objects works properly while following the “relative data” squashing rules.
+     */
+    squash_squashesRelativeData : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirms squashing two objects works properly while following the “absolute data” squashing rules.
+     */
+    squash_squashesAbsoluteData : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirms order matters with “absolute data” rules, with rearranging order changing the squashed result.
+     */
+    squash_orderMattersForAbsoluteData : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm squashing transactions into a block produced a valid block
+     */
+    squash_transactionsIntoBlock : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirm squashing blocks into a block produced a valid block
+     */
+    squash_blocksIntoBlock : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    }
 }
