@@ -209,7 +209,7 @@ const accountUnitTests = {
      * Creating an account out of raw entropy generates a proper data (e.g. private key, public key and public address).
      */
     constructor_entropyGeneratesKeys : function(test, log) {
-        let user = new Account({ entropy : "123", network : "00" });
+        let user = new Account({ entropy : "1234567890123456789012345678901234567890123456789012345678901234567890", network : "00" });
         test.assert(user.privateKey, "Failed to generate private key");
         test.assert(user.publicKey, "Failed to generate public key");
         test.assert(user.publicAddress, "Failed to generate public address");

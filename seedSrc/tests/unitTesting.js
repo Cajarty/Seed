@@ -17,10 +17,10 @@ module.exports = {
     runAllUnitTests : function(verbose) {
         console.info("#### Running All Unit Tests");
 
-        let subsystemUnitTests = [
-            require("../helpers/cryptoHelper.js").getUnitTests(),
-            require("../account.js").getUnitTests()
-        ];
+        let subsystemUnitTests = {
+            Cryptography : require("../helpers/cryptoHelper.js").getUnitTests(),
+            Account : require("../account.js").getUnitTests()
+        };
 
         let log = function(param1, param2, param3) {
             if (verbose) {
@@ -40,8 +40,10 @@ module.exports = {
 
         let test = new Test(verbose);
 
-        for(let i = 0; i < subsystemUnitTests.length; i++) {
-            let unitTests = subsystemUnitTests[i];
+        for(let i = 0; i < Object.keys(subsystemUnitTests).length; i++) {
+            let unitTestsName = Object.keys(subsystemUnitTests)[i];
+            let unitTests = subsystemUnitTests[unitTestsName];
+            log("### Running " + unitTestsName + " Tests");
             runBundledTests(test, unitTests, verbose, log);
         }
 
