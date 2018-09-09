@@ -56,6 +56,7 @@ let runBundledTests = function(test, unitTests, verbose, log) {
     for(let i = 0; i < keys.length; i++) {
         let unitTestName = keys[i];
         log("## Running Unit Test " + unitTestName);
+        test.newSegment(unitTestName);
         unitTests[unitTestName](test, verbose, log);
     }
 }
@@ -70,9 +71,11 @@ class Test {
      * @param verbose - A flag to be set for whether to debug all lines
      */
     constructor(verbose) {
-        this.passes = 0;
-        this.fails = [];
+        this.passes = {};
+        this.fails = {};
+        this.segments = [];
         this.verbose = verbose;
+        this.segmentName = "N/A";
     }
 
     /**
@@ -83,9 +86,15 @@ class Test {
      */
     assert(expression, failMessage) {
         if (expression) {
-            this.passes++;
+            if (!this.passes[this.segmentName]) {
+                this.passes[this.segmentName] = 0;
+            }
+            this.passes[this.segmentName]++;
         } else {
-            this.fails.push(failMessage);
+            if (!this.fails[this.segmentName]) {
+                this.fails[this.segmentName] = [];
+            }
+            this.fails[this.segmentName].push(this.segmentName + ":: " + failMessage);
         }
     }
 
@@ -119,28 +128,45 @@ class Test {
         try {
             failFunction();
         } catch(e) {
-            this.passes++;
+            if (!this.passes[this.segmentName]) {
+                this.passes[this.segmentName] = 0;
+            }
+            this.passes[this.segmentName]++;
             return;
         }
-        this.fails.push(failMessage);
+        if (!this.fails[this.segmentName]) {
+            this.fails[this.segmentName] = [];
+        }
+        this.fails[this.segmentName].push(this.segmentName + ":: " + failMessage);
+    }
+    
+    /**
+     * Switches segments as a new grouping of tests is being run
+     */
+    newSegment(segmentName) {
+        this.segments.push(segmentName);
+        this.segmentName = segmentName;
     }
 
     /**
      * Logs the unit tests based on the current state
      */
     logState() {
-        let failed = this.fails.length > 0;
-        let passed = this.fails.length == 0 && this.passes > 1;
-        let totalUnitTests = this.fails.length + this.passes;
+        let failedSegments = Object.keys(this.fails);
+        let passedSegments = Object.keys(this.passes);
+
+        let failed = failedSegments.length > 0;
+        let passed = failedSegments.length == 0 && passedSegments.length > 1;
+        let totalUnitTests = failedSegments.length + passedSegments.length;
 
         if (passed) {
             console.log("## Passed All " + totalUnitTests + " Unit Tests");
         } else if (failed) {
             console.log("## Unit Tests failed");
-            console.log("## Passed " + this.passes + " / " + totalUnitTests + " Unit Tests");
+            console.log("## Passed " + passedSegments.length + " / " + totalUnitTests + " Unit Tests");
             console.log("## Failed Tests...");
-            for(let i = 0; i < this.fails.length; i++) {
-                console.info("# " + (i+1) + ":", this.fails[i]);
+            for(let i = 0; i < failedSegments.length; i++) {
+                console.info("# " + (i+1) + ":", this.fails[failedSegments[i]][0]);
             }
 
         } else {
