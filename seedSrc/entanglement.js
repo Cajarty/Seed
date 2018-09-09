@@ -163,6 +163,9 @@ module.exports = {
             return true;
         }
         return false;
+    },
+    getUnitTests : function() {
+        return entanglementUnitTests;
     }
  }
 
@@ -457,3 +460,30 @@ const VALIDATION_LEVEL = {
         }
     }
  }
+
+ const entanglementUnitTests = {
+    /**
+     * Confirms transactions can be added to the entanglement
+     */
+    entanglement_addsValidTransactionsToEntanglement : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirms adding transactions fails if the transaction is invalid
+     */
+    entanglement_doesNotAddInvalidTransactions : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirms adding transactions fails if the transaction would cause a cycle in the directed acyclic graph
+     */
+    entanglement_doesNotAddTransactionsIfCausesCycle : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    },
+    /**
+     * Confirms adding transactions validates older ones
+     */
+    entanglement_addingTransactionsValidatesOthers : function(test, log) {
+        test.assert(false, "Test Not Implemented");
+    }
+}

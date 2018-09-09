@@ -23,7 +23,8 @@ module.exports = {
             Random : require("../helpers/random.js").getUnitTests(),
             Block : require("../block.js").getUnitTests(),
             Transaction : require("../transaction.js").getUnitTests(),
-            Squasher : require("../squasher.js").getUnitTests()
+            Squasher : require("../squasher.js").getUnitTests(),
+            Entanglement : require("../entanglement.js").getUnitTests()
         };
 
         let log = function(param1, param2, param3) {
