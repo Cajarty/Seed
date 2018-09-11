@@ -174,6 +174,7 @@ module.exports = {
  const squasherExporter = require("./squasher.js");
  const blockchainExporter = require("./blockchain.js");
  const storageExporter = require("./storage/storage.js");
+ const unitTestingExporter = require("./tests/unitTesting.js");
 
  /**
   *  Helper function used recursively by the Entanglement with regards to visiting nodes when traversing the DAG
@@ -466,24 +467,35 @@ const VALIDATION_LEVEL = {
      * Confirms transactions can be added to the entanglement
      */
     entanglement_addsValidTransactionsToEntanglement : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let testTransaction = unitTestingExporter.getSeedConstructorTransaction();
+        let newTransaction = transactionExporter.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+        module.exports.tryAddTransaction(newTransaction, false);
+        test.assert(entanglement.contains(newTransaction.transactionHash), "Entanglement should have stored the valid transaction");
     },
     /**
      * Confirms adding transactions fails if the transaction is invalid
      */
     entanglement_doesNotAddInvalidTransactions : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let testTransaction = unitTestingExporter.getTestTransactions()[0];
+        let invalidTransaction = transactionExporter.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+        test.assertFail(() => {
+            module.exports.tryAddTransaction(invalidTransaction, false);
+        }, "Entanglement should have thrown an error on this transaction for referring to transactions which don't exist"); 
+    },
+
+    /**
+     * Confirms adding transactions validates older ones
+     */
+    entanglement_addingTransactionsValidatesOthers : function(test, log) {
+        // Making a transaction to validate constructor and prove it is more valid now
+        // Add when finishing the scenario for rule #5 and below, since building the scenario will mean
+        // making transactions which vaidate eachother
+        test.assert(false, "Test Not Implemented. Same scenario test requirement as Transaction Rule #5");
     },
     /**
      * Confirms adding transactions fails if the transaction would cause a cycle in the directed acyclic graph
      */
     entanglement_doesNotAddTransactionsIfCausesCycle : function(test, log) {
-        test.assert(false, "Test Not Implemented");
-    },
-    /**
-     * Confirms adding transactions validates older ones
-     */
-    entanglement_addingTransactionsValidatesOthers : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        test.assert(false, "Test Not Implemented. Same scenario test requirement as Transaction Rule #5");
     }
 }
