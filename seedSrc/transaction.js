@@ -80,8 +80,12 @@ module.exports = {
      * @return - True or false regarding whether the transaction is valid or not
      */
     isTransactionValid: function(transaction) {
-        let validator = new TransactionValidator();
-        return isValid(transaction, validator);
+        if (transaction.sender && transaction.execution && transaction.validatedTransactions && transaction.transactionHash && transaction.signature) {
+            let validator = new TransactionValidator();
+            return isValid(transaction, validator);
+        } else {
+            throw "Transaction is malformed";
+        }
     },
     /**
      * Determines whether a transaction is considered proper or not
@@ -91,8 +95,12 @@ module.exports = {
      * @return - True or false regarding whether the transaction is proper or not
      */
     isTransactionProper : function(transaction) {
-        let validator = new TransactionValidator();
-        return isProper(transaction, validator);
+        if (transaction.sender && transaction.execution && transaction.validatedTransactions && transaction.transactionHash && transaction.signature) {
+            let validator = new TransactionValidator();
+            return isProper(transaction, validator);
+        } else {
+            throw "Transaction is malformed";
+        }
     },
     /**
      * Notifies "Proper" transaction awaiting validation that a transaction has just been validated. Therefore, if a Proper transaction is
@@ -528,7 +536,7 @@ const transactionUnitTests = {
      */
     transactionValidation_createAndValidateATransaction : function(test, log) {
         let testTransaction = unitTestingExporter.getSeedConstructorTransaction();
-        let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+        let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp );
         test.assert(module.exports.isTransactionProper(newTransaction), "Newly created transaction should be proper");
         test.assert(module.exports.isTransactionValid(newTransaction), "Newly created transaction should be valid");
     },
@@ -577,6 +585,8 @@ const transactionUnitTests = {
      */
     transactionValidation_failsTransactionsBreakingValidationRule5 : function(test, log) {
         test.assert(false, "Test Not Implemented. Must implement cycle scenario");
+
+        // Clear scenario after
     },
     /**
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #6.
@@ -585,7 +595,9 @@ const transactionUnitTests = {
         // These tests are done together in code
         let testTransaction = unitTestingExporter.getSeedConstructorTransaction();
         let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
-        test.assertAreEqual(new TransactionValidator().doesFollowRules6And7(newTransaction), false, "ERRs");
+        newTransaction.execution.moduleChecksum += "G";
+        newTransaction.execution.functionChecksum += "3";
+        test.assertAreEqual(new TransactionValidator().doesFollowRules6And7(newTransaction), false, "Should not be able to match the checksums with any genuine loaded values.");
     },
     /**
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #8.
@@ -593,8 +605,10 @@ const transactionUnitTests = {
     transactionValidation_failsTransactionsBreakingValidationRule8 : function(test, log) {
         let testTransaction = unitTestingExporter.getSeedConstructorTransaction();
         let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
-
-        test.assertAreEqual(new TransactionValidator().doesFollowRule8(newTransaction), false, "ERRs");
+        let changeSetObj = JSON.parse(newTransaction.execution.changeSet);
+        changeSetObj.moduleData.totalSupply += 1000; // Lie and say we started with 1000 extra SEED
+        newTransaction.execution.changeSet = JSON.stringify(changeSetObj);
+        test.assertAreEqual(new TransactionValidator().doesFollowRule8(newTransaction), false, "Should not be able to modify changeSet data as our simulation should disagree");
     },
     /**
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #9.
@@ -635,11 +649,14 @@ const transactionUnitTests = {
         entanglement.trustTransactions(seedConstructor.validatedTransactions);
         log(entanglement);
         test.assertAreEqual(new TransactionValidator().doesFollowRule11(sameOwnerTransaction), false, "ERRs");
+        entanglement.remove(seedConstructor.transactionHash);
     },
     /**
      * An exception is thrown when an invalid block is checked for validation.
      */
     transactionValidation_throwsMalFormedTransaction : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        test.assertFail(() => {
+            module.exports.isTransactionValid({ sender : "131", changeSet : [ "{}" ]});
+        }, "Should throw on malformed transaction");
     }
 }

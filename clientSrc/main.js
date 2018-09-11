@@ -95,17 +95,6 @@ app.on('ready', function() {
     const menu = Menu.buildFromTemplate(menuTemplate);
     Menu.setApplicationMenu(menu);
 
-    // Confirm all subsystems work
-    seed.getUnitTestingExporter().runAllUnitTests(true);
-
-    // Clear all subsystems  
-
-    // Confirm SVM works and prove through simulations
-
-    // Clear all subsystems  
-
-    // Launch DApp
-
     let javascript = "let moduleButtonsDiv = document.getElementById(\"moduleButtons\");\n";
     let loadedModules = moduleLoader.loadModules();
     let keys = Object.keys(loadedModules);
@@ -119,6 +108,17 @@ app.on('ready', function() {
         javascript += "moduleButtonsDiv.appendChild(" + moduleButtonName + ");\n";
     }
     windows["Launcher"].webContents.executeJavaScript(javascript);
+
+    // Confirm all subsystems work
+    seed.getUnitTestingExporter().runAllUnitTests(true);
+    
+    // Clear all subsystems  
+
+    // Confirm SVM works and prove through simulations
+
+    // Clear all subsystems  
+
+    // Launch DApp
 });
 
 //If we're on a Mac, add an empty object to fix OS specific menubar issue
