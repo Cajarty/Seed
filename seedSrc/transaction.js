@@ -520,7 +520,12 @@ const transactionUnitTests = {
      * Transaction creation creates transactions with valid and accurate data, as well have as a correctly generated hash.
      */
     transactionCreation_createsAValidTransactionWithValidHash : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let newBlock = module.exports.newBlock(testBlock.generation, testBlock.transactions, testBlock.changeSet, testBlock.timestamp);
+        test.assertAreEqual(testBlock.generation, newBlock.generation, "Generation should be passed into the new block");
+        test.assertAreEqual(testBlock.transactions, newBlock.transactions, "Transactions should be passed into the new block");
+        test.assertAreEqual(testBlock.changeSet, newBlock.changeSet, "ChangeSets should be passed into the new block");
+        test.assertAreEqual(testBlock.timestamp, newBlock.timestamp, "Timestamps should be passed into the new block");
+        test.assertAreEqual(testBlock.blockHash, newBlock.blockHash, "New block should have generated the same hash as the old block");
     },
     /**
      * Validates that the transaction validation system is correct in positive cases.
