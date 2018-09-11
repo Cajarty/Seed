@@ -392,10 +392,12 @@ const fileStorageInjectorUnitTests = {
         let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
         test.assert(fsInjector != undefined, "Failed to create a file system injector");
         let readTransaction = fsInjector.readTransactionAsync(testTransaction.transactionHash, (err, transaction) => {
-            let oldSegment = test.switchSegment("fileStorage_readsTransactionsAsynchronously");
-            test.assert(err != null, "Reading threw unexpected error: " + err);
-            test.assertAreEqual(transaction.toString(), JSON.stringify(testTransaction), "Should have read the same data as test transaction");
-            test.switchSegment(oldSegment); 
+            if (err != null) {
+                let oldSegment = test.switchSegment("fileStorage_readsTransactionsAsynchronously");
+                test.assert(err != null, "Reading threw unexpected error: " + err);
+                test.assertAreEqual(transaction.toString(), JSON.stringify(testTransaction), "Should have read the same data as test transaction");
+                test.switchSegment(oldSegment); 
+            }
         });
     },
     /**
@@ -417,10 +419,12 @@ const fileStorageInjectorUnitTests = {
         let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
         test.assert(fsInjector != undefined, "Failed to create a file system injector");
         let readBlock = fsInjector.readBlockAsync(testBlock.generation, testBlock.blockHash, (err, block) => {
-            let oldSegment = test.switchSegment("fileStorage_readsBlocksAsynchronously");
-            test.assert(err != null, "Reading threw unexpected error: " + err);
-            test.assertAreEqual(block.toString(), JSON.stringify(testBlock), "Should have read the same data as test block");
-            test.switchSegment(oldSegment);
+            if (err != null) {
+                let oldSegment = test.switchSegment("fileStorage_readsBlocksAsynchronously");
+                test.assert(err != null, "Reading threw unexpected error: " + err);
+                test.assertAreEqual(block.toString(), JSON.stringify(testBlock), "Should have read the same data as test block");
+                test.switchSegment(oldSegment);
+            }
         });
     },
     /**
