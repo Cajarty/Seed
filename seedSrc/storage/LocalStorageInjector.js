@@ -320,7 +320,7 @@ const localStorageInjectorUnitTests = {
     /**
      * Confirm that LocalStorage can read transactions synchronously.
      */
-    flocalStorage_readsTransactionsSynchronously : function(test, log) {
+    localStorage_readsTransactionsSynchronously : function(test, log) {
         test.assert(false, "Test Not Implemented");
     },
     /**

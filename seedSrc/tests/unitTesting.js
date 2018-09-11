@@ -59,8 +59,11 @@ module.exports = {
             runBundledTests(test, unitTests, verbose, log);
         }
 
-        console.info("#### Tests Complete");
-        test.logState();
+
+        setTimeout(() => {
+            console.info("#### Tests Complete");
+            test.logState();
+        }, 1000);
     }
 }
 
@@ -161,6 +164,15 @@ class Test {
     newSegment(segmentName) {
         this.segments.push(segmentName);
         this.segmentName = segmentName;
+    }
+
+    /**
+     * Switches segments to go back to an existing group
+     */
+    switchSegment(segmentName) {
+        let oldSegment = this.segmentName;
+        this.segmentName = segmentName;
+        return oldSegment;
     }
 
     /**
