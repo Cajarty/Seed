@@ -68,7 +68,11 @@ module.exports = {
         return this.getTransaction(transactionHash, generation) != undefined;
     },
     getTransactionSender : function(transactionHash, generation) {
-        return this.getTransaction(transactionHash, generation)[0];
+        let leanTransactionData = this.getTransaction(transactionHash, generation);
+        if (leanTransactionData && leanTransactionData.length > 0) {
+            return leanTransactionData[0];
+        }
+        return undefined;
     },
     getUnitTests : function() {
         return blockchainUnitTests;

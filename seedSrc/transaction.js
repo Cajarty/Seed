@@ -70,25 +70,7 @@ module.exports = {
      * @return - Returns a new transaction created from existing data
      */
     createExistingTransaction : function(sender, execution, trustedTransactions, transactionHash, transactionSignature, timestamp ) {
-        let cryptoHelper = cryptoExporter.newCryptoHelper();
-        let svm = svmExporter.getVirtualMachine();
-
-        let moduleUsed = svm.getModule({ module : execution.moduleName });
-
-        if (moduleUsed != undefined) {
-            let functionHash = moduleUsed.functionHashes[execution.functionName];
-            if (functionHash != undefined) {
-                execution.moduleChecksum = cryptoHelper.hashToChecksum(moduleUsed.fullHash());
-                execution.functionChecksum = cryptoHelper.hashToChecksum(functionHash);
-
-                return new Transaction(sender, execution, trustedTransactions, transactionHash, transactionSignature, timestamp);
-            } else {
-                throw new Error("Error creating new transaction. Function used not found");
-            }
-        } else {
-            throw new Error("Error creating new transaction. Module used not found");
-        }
-        return undefined;
+        return new Transaction(sender, execution, trustedTransactions, transactionHash, transactionSignature, timestamp);  
     },
     /**
      * Determines whether a transaction is considered valid or not.
@@ -339,21 +321,26 @@ class TransactionValidator {
      */
     doesFollowRule8(transaction) {
         let svm = svmExporter.getVirtualMachine();
-        let functionToInvoke = svm.getModule({ module : transaction.execution.moduleName }).getFunctionByName(transaction.execution.functionName);
-        let txHashes = [];
-        for(let i = 0; i < transaction.validatedTransactions.length; i++) {
-            txHashes.push(transaction.validatedTransactions[i].transactionHash);
+        let usedModule = svm.getModule({ module : transaction.execution.moduleName });
+        if (usedModule) {
+            let functionToInvoke = usedModule.getFunctionByName(transaction.execution.functionName);
+            let txHashes = [];
+            for(let i = 0; i < transaction.validatedTransactions.length; i++) {
+                txHashes.push(transaction.validatedTransactions[i].transactionHash);
+            }
+            let simulationInfo = { 
+                module : transaction.execution.moduleName, 
+                function : transaction.execution.functionName, 
+                args : transaction.execution.args, 
+                user : transaction.sender, 
+                txHashes :  txHashes
+            }
+            let result = JSON.stringify(svm.simulate(simulationInfo));
+    
+            return result == transaction.execution.changeSet;
+        } else {
+            return false;
         }
-        let simulationInfo = { 
-            module : transaction.execution.moduleName, 
-            function : transaction.execution.functionName, 
-            args : transaction.execution.args, 
-            user : transaction.sender, 
-            txHashes :  txHashes
-        }
-        let result = JSON.stringify(svm.simulate(simulationInfo));
-
-        return result == transaction.execution.changeSet;
     }
 
     
@@ -371,12 +358,11 @@ class TransactionValidator {
         let entanglement = entanglementExporter.getEntanglement();
         for(let i = 0; i < transaction.validatedTransactions.length; i++) {
             let transactionInDAG = entanglement.getTransaction(transaction.validatedTransactions[i].transactionHash);
-            if (transactionInDAG != undefined) {
+            if (transactionInDAG) {
                 if (transaction.validatedTransactions[i].changeSet != transactionInDAG.execution.changeSet) {
                     return false;
                 }
             } else if (!blockchainExporter.doesContainTransactions(transaction.validatedTransactions[i].transactionHash)) {
-                throw new Error("All transactions being validated must exist");
                 return false;
             }
         }
@@ -417,8 +403,13 @@ class TransactionValidator {
                 if (transactionValidated.sender == transaction.sender) {
                     return false;
                 }
-            } else if (blockchainExporter.getTransactionSender(transaction.validatedTransactions[i].transactionHash) == transaction.sender) {
-                return false;
+            } else {
+                let inBlockchain = blockchainExporter.getTransactionSender(transaction.validatedTransactions[i].transactionHash);
+                if (inBlockchain && inBlockchain == transaction.sender) {
+                    return false;
+                } else {
+                    throw "We do not know of the block being validated in either the entanglement or blockchain."
+                }
             }
             
         }
@@ -577,49 +568,73 @@ const transactionUnitTests = {
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #4.
      */
     transactionValidation_failsTransactionsBreakingValidationRule4 : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let testTransaction = unitTestingExporter.getTestTransactions()[0];
+        let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+        test.assertAreEqual(new TransactionValidator().doesFollowRule4(newTransaction), false, "The created transaction should fail to have its parents validated, as they do not exist in the active entanglement");
     },
     /**
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #5.
      */
     transactionValidation_failsTransactionsBreakingValidationRule5 : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        test.assert(false, "Test Not Implemented. Must implement cycle scenario");
     },
     /**
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #6.
      */
-    transactionValidation_failsTransactionsBreakingValidationRule6 : function(test, log) {
-        test.assert(false, "Test Not Implemented");
-    },
-    /**
-     * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #7.
-     */
-    transactionValidation_failsTransactionsBreakingValidationRule7 : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+    transactionValidation_failsTransactionsBreakingValidationRule6And7 : function(test, log) {
+        // These tests are done together in code
+        let testTransaction = unitTestingExporter.getSeedConstructorTransaction();
+        let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+        test.assertAreEqual(new TransactionValidator().doesFollowRules6And7(newTransaction), false, "ERRs");
     },
     /**
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #8.
      */
     transactionValidation_failsTransactionsBreakingValidationRule8 : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let testTransaction = unitTestingExporter.getSeedConstructorTransaction();
+        let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+
+        test.assertAreEqual(new TransactionValidator().doesFollowRule8(newTransaction), false, "ERRs");
     },
     /**
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #9.
      */
     transactionValidation_failsTransactionsBreakingValidationRule9 : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let testTransaction = unitTestingExporter.getTestTransactions()[0];
+        let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+
+        test.assertAreEqual(new TransactionValidator().doesFollowRule9(newTransaction), false, "ERRs");
     },
     /**
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #10.
      */
     transactionValidation_failsTransactionsBreakingValidationRule10 : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let testTransaction = unitTestingExporter.getTestTransactions()[0];
+        let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+
+        test.assertAreEqual(new TransactionValidator().doesFollowRule10(newTransaction), false, "ERRs");
     },
     /**
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #11.
      */
     transactionValidation_failsTransactionsBreakingValidationRule11 : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let testTransaction = unitTestingExporter.getTestTransactions()[0];
+        let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+        // Modify the valid transaction so the transactions it validates claim to have the same sender as this
+        test.assertFail(() => {
+            new TransactionValidator().doesFollowRule11(newTransaction);
+        }, "Should fail as the expected transactions do not exist in the blockchain.");
+
+        let sameOwnerTransactionData = unitTestingExporter.getTestTransactions()[2];
+        let sameOwnerTransaction = module.exports.createExistingTransaction(sameOwnerTransactionData.sender, sameOwnerTransactionData.execution, sameOwnerTransactionData.validatedTransactions, sameOwnerTransactionData.transactionHash, sameOwnerTransactionData.signature, sameOwnerTransactionData.timestamp )
+        let seedConstructor = unitTestingExporter.getSeedConstructorTransaction();
+        // Manually add Seed Constructor to entanglement
+        let entanglement = entanglementExporter.getEntanglement();
+        entanglement.transactions[seedConstructor.transactionHash] = seedConstructor;
+        entanglement.addNode(seedConstructor.transactionHash);
+        entanglement.trustTransactions(seedConstructor.validatedTransactions);
+        log(entanglement);
+        test.assertAreEqual(new TransactionValidator().doesFollowRule11(sameOwnerTransaction), false, "ERRs");
     },
     /**
      * An exception is thrown when an invalid block is checked for validation.

@@ -95,6 +95,17 @@ app.on('ready', function() {
     const menu = Menu.buildFromTemplate(menuTemplate);
     Menu.setApplicationMenu(menu);
 
+    // Confirm all subsystems work
+    seed.getUnitTestingExporter().runAllUnitTests(true);
+
+    // Clear all subsystems  
+
+    // Confirm SVM works and prove through simulations
+
+    // Clear all subsystems  
+
+    // Launch DApp
+
     let javascript = "let moduleButtonsDiv = document.getElementById(\"moduleButtons\");\n";
     let loadedModules = moduleLoader.loadModules();
     let keys = Object.keys(loadedModules);
@@ -138,15 +149,13 @@ if (process.env.NODE_ENV !== 'production') {
  * and then the Main process launches the new window
  */
 ipcMain.on("launchModule", function(event, windowName, htmlFile) {
+    seed.newStorage(seed.newFileSystemInjector(__dirname), false);
     windows[windowName] = new BrowserWindow({width: 800, height: 500, title: windowName});
     windows[windowName].loadURL(url.format({
         pathname: path.join(__dirname, htmlFile),
         protocol: 'file:',
         slashes: true
     }));
-
-    seed.newStorage(seed.newFileSystemInjector(__dirname), false);
-    seed.getUnitTestingExporter().runAllUnitTests(true);
 });
 
 /**
