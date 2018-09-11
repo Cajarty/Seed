@@ -85,7 +85,6 @@ class CryptoHelper {
         try {
             ec.keyFromPublic(publicKey, 'hex');
         } catch(e) {
-            console.log(e);
             return false;
         }
         return true;
@@ -160,7 +159,6 @@ const cryptoUnitTests = {
     SHA256_hashesValidData : function(test, log) {
         let cryptoHelper = new CryptoHelper();
         let hash = cryptoHelper.sha256("TestData");
-        log("Display this");
         let realHash = "814d78962b0f8ac2bd63daf9f013ed0c07fe67fbfbfbc152b30a476304a0535d";
         test.assertAreEqual(hash, realHash, "Failed to generate correct SHA256 hash");
     },

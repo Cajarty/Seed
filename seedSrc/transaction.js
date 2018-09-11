@@ -165,6 +165,7 @@ module.exports = {
  const conformHelper = require("./helpers/conformHelper.js");
  const entanglementExporter = require("./entanglement.js");
  const blockchainExporter = require("./blockchain.js");
+ const unitTestingExporter = require("./tests/unitTesting");
 
  /**
   * Helper function used by exporter and Validator object. Determines whether the passed in transaction is proper or not.
@@ -515,41 +516,62 @@ class Transaction {
     }
 }
 
+
+
 const transactionUnitTests = {
     /**
      * Transaction creation creates transactions with valid and accurate data, as well have as a correctly generated hash.
      */
     transactionCreation_createsAValidTransactionWithValidHash : function(test, log) {
-        let newBlock = module.exports.newBlock(testBlock.generation, testBlock.transactions, testBlock.changeSet, testBlock.timestamp);
-        test.assertAreEqual(testBlock.generation, newBlock.generation, "Generation should be passed into the new block");
-        test.assertAreEqual(testBlock.transactions, newBlock.transactions, "Transactions should be passed into the new block");
-        test.assertAreEqual(testBlock.changeSet, newBlock.changeSet, "ChangeSets should be passed into the new block");
-        test.assertAreEqual(testBlock.timestamp, newBlock.timestamp, "Timestamps should be passed into the new block");
-        test.assertAreEqual(testBlock.blockHash, newBlock.blockHash, "New block should have generated the same hash as the old block");
+        let testTransaction = unitTestingExporter.getTestTransactions()[0];
+        let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+        test.assertAreEqual(testTransaction.sender, newTransaction.sender, "Created transactions should match test transaction's sender");
+        test.assertAreEqual(JSON.stringify(testTransaction.execution), JSON.stringify(newTransaction.execution), "Created transactions should match test transaction's execution");
+        test.assertAreEqual(testTransaction.validatedTransactions, newTransaction.validatedTransactions, "Created transactions should match test transaction's validated transactions");
+        test.assertAreEqual(testTransaction.transactionHash, newTransaction.transactionHash, "Created transactions should match test transaction's hash");
+        test.assertAreEqual(testTransaction.signature, newTransaction.signature, "Created transactions should match test transaction's signature");
+        test.assertAreEqual(testTransaction.timestamp, newTransaction.timestamp, "Created transactions should match test transaction's timestamp");
     },
     /**
      * Validates that the transaction validation system is correct in positive cases.
      */
     transactionValidation_createAndValidateATransaction : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let testTransaction = unitTestingExporter.getSeedConstructorTransaction();
+        let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+        test.assert(module.exports.isTransactionProper(newTransaction), "Newly created transaction should be proper");
+        test.assert(module.exports.isTransactionValid(newTransaction), "Newly created transaction should be valid");
     },
     /**
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #1.
      */
     transactionValidation_failsTransactionsBreakingValidationRule1 : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let testTransaction = unitTestingExporter.getSeedConstructorTransaction();
+        let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+        // Modify the data to make a different hash, breaking rule 1
+        newTransaction.execution.changeSet += " "; // Break it by adding a space to the data
+        test.assertAreEqual(new TransactionValidator().doesFollowRule1(newTransaction), false, "The new transaction should fail check rule#1 as it was tampered with so its hash does not match.");
     },
     /**
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #2.
      */
     transactionValidation_failsTransactionsBreakingValidationRule2 : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let testTransaction = unitTestingExporter.getSeedConstructorTransaction();
+        let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+        // The send's public key must be valid for rule #2, so tamper with it
+        newTransaction.sender += 'G3F'; // Break it by extending it so its too long
+        test.assertAreEqual(new TransactionValidator().doesFollowRule2(newTransaction), false, "The new transaction should fail check rule#2 as it was tampered with so its public key is not valid.");
     },
     /**
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #3.
      */
     transactionValidation_failsTransactionsBreakingValidationRule3 : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let testTransaction = unitTestingExporter.getSeedConstructorTransaction();
+        let otherTestTransaction = unitTestingExporter.getTestTransactions()[0];
+        let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+        // The send's public key must be valid for rule #2, so tamper with it
+        newTransaction.sender = otherTestTransaction.sender; // Break it by swapping the sender with another transactions sender
+        test.assert(new TransactionValidator().doesFollowRule2(newTransaction), "Despite changing the Sender, the public key should still be valid");
+        test.assertAreEqual(new TransactionValidator().doesFollowRule3(newTransaction), false, "The new transaction should fail check rule#3 as it was tampered with so its public key is not the one who signed it.");
     },
     /**
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #4.
