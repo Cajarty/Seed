@@ -330,9 +330,9 @@ const fileStorageInjectorUnitTests = {
         let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
         test.assert(fsInjector != undefined, "Failed to create a file system injector");
         fsInjector.writeTransactionAsync(testTransaction.transactionHash, JSON.stringify(testTransaction), (err) => {
-            let oldSegment = test.switchSegment("fileStorage_storesTransactionsAsynchronously");
-            test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
-            test.switchSegment(oldSegment);
+            test.runAssertsFromAsync(() => {
+                test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
+            }, "fileStorage_storesTransactionsAsynchronously");
         });
     },
     /**
@@ -355,9 +355,9 @@ const fileStorageInjectorUnitTests = {
         let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
         test.assert(fsInjector != undefined, "Failed to create a file system injector");
         fsInjector.writeBlockAsync(testBlock.blockHash, JSON.stringify(testBlock), testBlock.generation, (err) => {
-            let oldSegment = test.switchSegment("fileStorage_storesBlocksAsynchronously");
-            test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
-            test.switchSegment(oldSegment);
+            test.runAssertsFromAsync(() => {
+                test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
+            }, "fileStorage_storesBlocksAsynchronously");
         });
     },
     /**
@@ -393,10 +393,10 @@ const fileStorageInjectorUnitTests = {
         test.assert(fsInjector != undefined, "Failed to create a file system injector");
         let readTransaction = fsInjector.readTransactionAsync(testTransaction.transactionHash, (err, transaction) => {
             if (err != null) {
-                let oldSegment = test.switchSegment("fileStorage_readsTransactionsAsynchronously");
-                test.assert(err != null, "Reading threw unexpected error: " + err);
-                test.assertAreEqual(transaction.toString(), JSON.stringify(testTransaction), "Should have read the same data as test transaction");
-                test.switchSegment(oldSegment); 
+                test.runAssertsFromAsync(() => {
+                    test.assert(err != null, "Reading threw unexpected error: " + err);
+                    test.assertAreEqual(transaction.toString(), JSON.stringify(testTransaction), "Should have read the same data as test transaction");
+                }, "fileStorage_readsTransactionsAsynchronously");
             }
         });
     },
@@ -420,10 +420,10 @@ const fileStorageInjectorUnitTests = {
         test.assert(fsInjector != undefined, "Failed to create a file system injector");
         let readBlock = fsInjector.readBlockAsync(testBlock.generation, testBlock.blockHash, (err, block) => {
             if (err != null) {
-                let oldSegment = test.switchSegment("fileStorage_readsBlocksAsynchronously");
-                test.assert(err != null, "Reading threw unexpected error: " + err);
-                test.assertAreEqual(block.toString(), JSON.stringify(testBlock), "Should have read the same data as test block");
-                test.switchSegment(oldSegment);
+                test.runAssertsFromAsync(() => {
+                    test.assert(err != null, "Reading threw unexpected error: " + err);
+                    test.assertAreEqual(block.toString(), JSON.stringify(testBlock), "Should have read the same data as test block");
+                }, "fileStorage_readsBlocksAsynchronously");
             }
         });
     },
@@ -442,15 +442,15 @@ const fileStorageInjectorUnitTests = {
                 fsInjector.removeTransactionAsync(copyTransaction.transactionHash, (err) => {
                     // If it failed to remove, invoke the error message
                     if (err == null) {
-                        let oldSegment = test.switchSegment("fileStorage_removesTransactionFromStorage");
-                        test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
-                        test.switchSegment(oldSegment);
+                        test.runAssertsFromAsync(() => {
+                            test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
+                        }, "fileStorage_removesTransactionFromStorage");
                     }
                 });
             } else {
-                let oldSegment = test.switchSegment("fileStorage_removesTransactionFromStorage");
-                test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
-                test.switchSegment(oldSegment);
+                test.runAssertsFromAsync(() => {
+                    test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
+                }, "fileStorage_removesTransactionFromStorage");
             }
         });
     },
@@ -469,15 +469,15 @@ const fileStorageInjectorUnitTests = {
                 fsInjector.removeBlockAsync(copyBlock.generation, copyBlock.blockHash, (err) => {
                     // If it failed to remove, invoke the error message
                     if (err == null) {
-                        let oldSegment = test.switchSegment("fileStorage_removesBlocksFromStorage");
-                        test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
-                        test.switchSegment(oldSegment);
+                        test.runAssertsFromAsync(() => {
+                            test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
+                        }, "fileStorage_removesBlocksFromStorage");
                     }
                 });
             } else {
-                let oldSegment = test.switchSegment("fileStorage_removesBlocksFromStorage");
-                test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
-                test.switchSegment(oldSegment);
+                test.runAssertsFromAsync(() => {
+                    test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
+                }, "fileStorage_removesBlocksFromStorage");
             }
         });
     },

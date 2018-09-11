@@ -176,6 +176,16 @@ class Test {
     }
 
     /**
+     * Lets the execution of asserts occur after a function leaves, when an asynchronous
+     * callback tries to pass/fail a test after the fact.
+     */
+    runAssertsFromAsync(functionToInvoke, segmentName) {
+        let oldSegment = this.switchSegment(segmentName);
+        functionToInvoke();
+        this.switchSegment(oldSegment);
+    }
+
+    /**
      * Logs the unit tests based on the current state
      */
     logState() {
