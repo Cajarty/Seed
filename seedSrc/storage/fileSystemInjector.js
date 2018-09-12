@@ -342,7 +342,9 @@ const fileStorageInjectorUnitTests = {
         try {
             fsInjector.writeTransactionSync(testTransaction2.transactionHash, JSON.stringify(testTransaction2));
             success = true;
-        } catch (e) {}
+        } catch (e) {
+            log(e);
+        }
         test.assert(success, "Writing synchronously should not fail for valid data");
     },
     /**
@@ -369,7 +371,9 @@ const fileStorageInjectorUnitTests = {
         try {
             fsInjector.writeBlockSync(testBlock2.blockHash, JSON.stringify(testBlock2), testBlock2.generation);
             success = true;
-        } catch (e) {}
+        } catch (e) {
+            log(e)
+        }
         test.assert(success, "Writing synchronously should not fail for valid data");
     },
     /**
