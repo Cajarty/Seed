@@ -166,6 +166,9 @@ module.exports = {
     },
     getUnitTests : function() {
         return entanglementUnitTests;
+    },
+    clearAll : function() {
+        entanglement = new Entanglement();
     }
  }
 

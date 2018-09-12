@@ -212,7 +212,6 @@ module.exports = {
         let block = require("./squasher.js").transactionsToBlock(transactionsJSON);
         module.exports.getLedger().applyBlock(block);
         test.assertAreEqual(module.exports.getLedger().getModuleData("Relay").totalRelays, 5, "Should have five relays between the three transactions that are now squashed in the block");
-        module.exports.getLedger().moduleData = [];
         module.exports.getLedger().moduleData["Relay"] = oldModuleData;
     }
 }

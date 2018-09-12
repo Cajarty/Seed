@@ -539,8 +539,6 @@ const localStorageInjectorUnitTests = {
         let blocks = lsInjector.readBlockchainsSync();
         // blocks[1] and blocks[2] may or may not be partially written at this pint due to the being asynchronous,
         // hpwever, block[0] should be fully written as it was synchronous
-        log("##1##: " + blocks[1]);
-        log("##1##: " + testBlock2);
         test.assertAreEqual(blocks[1], JSON.stringify(testBlock2), "The first block read should be valid" );
     }
 }

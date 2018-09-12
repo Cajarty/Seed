@@ -74,7 +74,9 @@ const svmExporter = require("../virtualMachine/virtualMachine.js");
 const transactionExporter = require("../transaction.js");
 const zlib = require('zlib');
 const blockExporter = require("../block.js");
-
+const unitTestingExporter = require("../tests/unitTesting.js");
+const fileSystemInjector = require("./fileSystemInjector.js");
+const localStorageInjector = require("./localStorageInjector.js");
 
 /**
  * The implementation of the Storage object which wraps the logic regarding saving/loading transactions and blocks
@@ -133,7 +135,7 @@ class Storage {
      * @param replacedBlocks - An array of blocks that need to be deleted
      */
     saveBlock(newBlock, replacedBlocks) {
-        this.databaseInjector.writeBlockAsync(newBlock.blockHash, this.tryCompress(newBlock), newBlock.generation);
+        this.databaseInjector.writeBlockSync(newBlock.blockHash, this.tryCompress(newBlock), newBlock.generation);
         let transactions = JSON.parse(newBlock.transactions);
         let transactionHashes = Object.keys(transactions);
         for(let i = 0; i < transactionHashes.length; i++) {
@@ -152,7 +154,7 @@ class Storage {
      * @param newTransaction - The transaction to store in storage
      */
     saveTransaction(newTransaction) {
-        this.databaseInjector.writeTransactionAsync(newTransaction.transactionHash, this.tryCompress(newTransaction));
+        this.databaseInjector.writeTransactionSync(newTransaction.transactionHash, this.tryCompress(newTransaction));
     }
 
     /**
@@ -187,43 +189,91 @@ class Storage {
     }
 }
 
+const testLocalStorage = {};
+
 const storageUnitTests = {
     /**
      * Confirm that Storage can save a transaction to the file system using FileStorageInjector.
      */
     storage_canSaveTransactionToFileSystem : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let toSave = unitTestingExporter.getTestTransactions()[0];
+        let fsInjector = fileSystemInjector.newFileSystemInjector(__dirname, "storageTests");
+        let testStorage = new Storage(fsInjector, false);
+        try {
+            testStorage.saveTransaction(toSave);
+            test.assertAreEqual(fsInjector.readTransactionSync(toSave.transactionHash), JSON.stringify(toSave), "Should have saved the saved transaction stored");
+        } catch (e) {
+            test.assert(false, "Failed to save Transaction: " + e);
+        }
     },
     /**
      * Confirm that Storage can save a block to the file system using FileStorageInjector.
      */
     storage_canSaveBlockToFileSystem : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        blockchainExporter.clearAll();
+        let toSave = unitTestingExporter.getTestBlocks()[0];
+        let fsInjector = fileSystemInjector.newFileSystemInjector(__dirname, "storageTests");
+        let testStorage = new Storage(fsInjector, false);
+        try {
+            testStorage.saveBlock(toSave);
+            test.assertAreEqual(fsInjector.readBlockSync(toSave.generation, toSave.blockHash), JSON.stringify(toSave), "Should have saved the saved block stored");
+        } catch (e) {
+            test.assert(false, "Failed to save Transaction: " + e);
+        }
     },
     /**
      * Confirm that Storage, using FileStorageInjector, can load all the initial ledger state, reading all blockchains/entanglement and 
      * applying all blocks/transactions to the virtual machine.
      */
     storage_canLoadInitialStateFromFileSystem : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let saved = unitTestingExporter.getTestBlocks()[0];
+        let fsInjector = fileSystemInjector.newFileSystemInjector(__dirname, "storageTests");
+        let testStorage = new Storage(fsInjector, false);
+        testStorage.loadInitialState();
+        test.assertAreEqual(blockchainExporter.getBlockchains()[1].length, 1, "Should only have one generation-one block loaded");
+        test.assertAreEqual(JSON.stringify(blockchainExporter.getBlockchains()[1][0]), JSON.stringify(saved), "The discovered block should be the one saved from earlier.");
+        blockchainExporter.clearAll();
     },
     /**
      * Confirm that Storage can save a transaction to local storage using LocalStorageInjector.
      */
     storage_canSaveTransactionToLocalStorage : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let toSave = unitTestingExporter.getTestTransactions()[0];
+        let lsInjector = localStorageInjector.newLocalStorageInjector(testLocalStorage);
+        let testStorage = new Storage(lsInjector, false);
+        try {
+            testStorage.saveTransaction(toSave);
+            test.assertAreEqual(lsInjector.readTransactionSync(toSave.transactionHash), JSON.stringify(toSave), "Should have saved the transaction attempted to be stored");
+        } catch (e) {
+            test.assert(false, "Failed to save Transaction: " + e);
+        }
     },
     /**
      * Confirm that Storage can save a block to local storage using LocalStorageInjector.
      */
     storage_canSaveBlockToLocalStorage : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        blockchainExporter.clearAll();
+        let toSave = unitTestingExporter.getTestBlocks()[0];
+        let lsInjector = localStorageInjector.newLocalStorageInjector(testLocalStorage);
+        let testStorage = new Storage(lsInjector, false);
+        try {
+            testStorage.saveBlock(toSave);
+            test.assertAreEqual(lsInjector.readBlockSync(toSave.generation, toSave.blockHash), JSON.stringify(toSave), "Should have saved the block attempted to be stored");
+        } catch (e) {
+            test.assert(false, "Failed to save Transaction: " + e);
+        }
     },
     /**
      * Confirm that Storage, using LocalStorageInjector, can load all the initial ledger state, reading all blockchains/entanglement and applying 
      * all blocks/transactions to the virtual machine.
      */
     storage_canLoadInitialStateFromLocalStorage : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let saved = unitTestingExporter.getTestBlocks()[0];
+        let lsInjector = localStorageInjector.newLocalStorageInjector(testLocalStorage);
+        let testStorage = new Storage(lsInjector, false);
+        testStorage.loadInitialState();
+        test.assertAreEqual(blockchainExporter.getBlockchains()[1].length, 1, "Should only have one generation-one block loaded");
+        test.assertAreEqual(JSON.stringify(blockchainExporter.getBlockchains()[1][0]), JSON.stringify(saved), "The discovered block should be the one saved from earlier.");
+        blockchainExporter.clearAll();
     }
 }

@@ -74,6 +74,9 @@ module.exports = {
     },
     getUnitTests : function() {
         return blockchainUnitTests;
+    },
+    clearAll : function() {
+        blockchain = {};
     }
  }
  

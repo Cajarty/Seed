@@ -647,7 +647,6 @@ const transactionUnitTests = {
         entanglement.transactions[seedConstructor.transactionHash] = seedConstructor;
         entanglement.addNode(seedConstructor.transactionHash);
         entanglement.trustTransactions(seedConstructor.validatedTransactions);
-        log(entanglement);
         test.assertAreEqual(new TransactionValidator().doesFollowRule11(sameOwnerTransaction), false, "ERRs");
         entanglement.remove(seedConstructor.transactionHash);
     },
