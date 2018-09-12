@@ -19,25 +19,23 @@ module.exports = {
      * @param {*} block - The block to add to the blockchains
      */
     addTestamentBlock: function(block, saveToStorage) {
-        if (saveToStorage == undefined) {
-            saveToStorage = true;
+        if (blockExporter.isValid(block)) {
+            if (saveToStorage == undefined) {
+                saveToStorage = true;
+            }
+            ensureCreated(block.generation);
+            blockchain[block.generation].push(block);
+    
+            let replacedBlocks = trySquash(block, saveToStorage);
+            
+            if (saveToStorage) {
+                storageExporter.getStorage().saveBlock(block, replacedBlocks);
+            }
+            debugBlockchain();
+            return true;
+        } else {
+            return false;
         }
-        ensureCreated(block.generation);
-        blockchain[block.generation].push(block);
-
-        let replacedBlocks = undefined;
-
-        if (squasherExporter.doesTriggerSquashing(block.blockHash)) {
-            let nextGenerationBlock = squasherExporter.blocksToGenerationBlock(blockchain[block.generation]);
-
-            replacedBlocks = deleteGenerationOfBlocks(block.generation);
-
-            this.addTestamentBlock(nextGenerationBlock, saveToStorage);
-        }
-        if (saveToStorage) {
-            storageExporter.getStorage().saveBlock(block, replacedBlocks);
-        }
-        debugBlockchain();
     },
     /**
      * @return - Gets the blockchain mapping
@@ -79,11 +77,29 @@ module.exports = {
     }
  }
  
+ const blockExporter = require("./block.js");
  const squasherExporter = require("./squasher.js");
  const storageExporter = require("./storage/storage.js");
+ const unitTestingExporter = require("./tests/unitTesting.js");
+ const conformHelper = require("./helpers/conformHelper.js");
 
  // The mapping of blocks in the blockchain 
  let blockchain = {}
+
+ /**
+  * Helper method which tries to squash a blockchain
+
+  * @param {*} trasnaction - The block checking for squashing on
+  */
+ let trySquash = function(block, saveToStorage) {
+    if (squasherExporter.doesTriggerSquashing(block.blockHash)) {
+        let nextGenerationBlock = squasherExporter.blocksToGenerationBlock(blockchain[block.generation]);
+        let replacedBlocks = deleteGenerationOfBlocks(block.generation);
+        module.exports.addTestamentBlock(nextGenerationBlock, saveToStorage);
+        return replacedBlocks;
+    }
+    return undefined;
+ }
 
  /**
   * Helper function for deleting a certain generation of blocks from the blockchain*
@@ -135,18 +151,28 @@ module.exports = {
      * Confirms blocks can be added to the blockchains
      */
     blockchain_addsValidBlockToBlockchain : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let validBlock = unitTestingExporter.getTestBlocks()[0];
+        module.exports.addTestamentBlock(validBlock, false);
+        test.assert(blockchain[1]!= undefined && blockchain[1][0].blockHash == validBlock.blockHash, "Failed to add block");
     },
     /**
      * Confirms adding blocks fails if the block is invalid
      */
     blockchain_doesNotAddInvalidBlockToBlockchain : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let invalidBlock = conformHelper.deepCopy(unitTestingExporter.getTestBlocks()[1]);
+        invalidBlock.generation = 0; // Make the block invalid by modifying it
+        test.assertFail(() =>  {
+            module.exports.addTestamentBlock(invalidBlock, false);
+        }, "The block validation check should have thrown on error on malformed block");
+        test.assertAreEqual(blockchain[0], undefined, "Generation zero should still not (and never) exist");
     },
     /**
      * Confirm blocks can invoke the block squashing mechanism if they have the right hash.
      */
     blockchain_blocksCanInvokeSquashingMechanism : function(test, log) {
-        test.assert(false, "Test Not Implemented");
+        let invalidBlock = conformHelper.deepCopy(unitTestingExporter.getTestBlocks()[1]);
+        invalidBlock.blockHash = '0' + invalidBlock.blockHash.substr(1);
+        trySquash(invalidBlock, false);
+        test.assertAreEqual(blockchain[1], undefined, "There should be no blocks remaining in generation 1, as they were squashed");
     }
 }
