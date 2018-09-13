@@ -55,7 +55,6 @@ let rule2TestForTransactionValidation = function(block) {
         let transactionData = transactions[transactionHash];
         let sender = transactionData[0];
         let signature = transactionData[4]
-        console.info("Confirming::", sender, signature, transactionHash);
         if (!cryptoExporter.newCryptoHelper().verifySignature(sender, signature, transactionHash)) {
             return false;
         }

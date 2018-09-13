@@ -16,6 +16,7 @@ module.exports = {
      */
     loadModules : function() {
         let svm = seed.getSVMExporter().getVirtualMachine();
+        let entanglement = seed.getEntanglementExporter().getEntanglement();
         let dappsToLoad = {};
         let getDirectories = path => readdirSync(path).filter(fileOrFolder => statSync(join(path, fileOrFolder)).isDirectory());
         let directories = getDirectories("./modules");

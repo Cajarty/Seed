@@ -169,34 +169,24 @@ module.exports = {
  let isProper = function(transaction, validator) {
     //Prove the Transaction.Sender, Transaction.Execution and Transaction.ValidatedTransactions are the content that creates the Transaction.TransactionHash
     let rule1 = validator.doesFollowRule1(transaction);
-
     //Prove that the Transaction.Sender is a valid public key, and therefore was derived from a valid private key
     let rule2 = validator.doesFollowRule2(transaction);
-
     //Prove that the Transaction.Sender is the public key consenting to the transaction
     let rule3 = validator.doesFollowRule3(transaction);
-
     //Prove that the Transaction.ValidatedTransactions is using verifiable data that other users have verified, while still being new-enough that its in the DAG still. If we don't have these Hash's, this is an indicator that
     //we may have differing versions of history, OR that we simply do not know of these transactions yet
     let rule4 = validator.doesFollowRule4(transaction);
-
     //Prove that this new Transaction and its validate transactions do not create a cycle in the DAG
     let rule5 = validator.doesFollowRule5(transaction);
-
     //Prove that we agree on the module code being executed, so we're using the same versions
     let rules6And7 = validator.doesFollowRules6And7(transaction)
-
     //Prove that, when we simulate the execution, we get the same ChangeSet (Prove their statement of change was right)
     let rule8 = validator.doesFollowRule8(transaction);
-
     //Prove that their Transaction.ValidatedTransactions.ChangeSets aggree with the transactions they're validatings results.
     //NOTE: If they didn't agree, they shouldn't have mentioned them. We only submit validated transactions we agree with. Ones we disagree with are simply ignored, never referenced, and therefore never validated
     let rule9 = validator.doesFollowRule9(transaction);
-
     let rule11 = validator.doesFollowRule11(transaction);
-
     let result = rule1 && rule2 && rule3 && rule4 && rule5 && rules6And7 && rule8 && rule9 && rule11;
-
     if (!result) {
         console.info("isTransactionValid Failed", rule1, rule2, rule3, rule4, rule5, rules6And7, rule8, rule9, rule11);
     }
@@ -413,10 +403,12 @@ class TransactionValidator {
                 }
             } else {
                 let inBlockchain = blockchainExporter.getTransactionSender(transaction.validatedTransactions[i].transactionHash);
-                if (inBlockchain && inBlockchain == transaction.sender) {
-                    return false;
+                if (inBlockchain != undefined) {
+                    if (inBlockchain == transaction.sender) {
+                        return false;
+                    }
                 } else {
-                    throw "We do not know of the block being validated in either the entanglement or blockchain."
+                    throw new Error("We do not know of the block being validated in either the entanglement or blockchain.");
                 }
             }
             

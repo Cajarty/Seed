@@ -109,15 +109,6 @@ app.on('ready', function() {
     }
     windows["Launcher"].webContents.executeJavaScript(javascript);
 
-    // Confirm all subsystems work
-    seed.getUnitTestingExporter().runAllUnitTests(true);
-    
-    // Clear all subsystems  
-
-    // Confirm SVM works and prove through simulations
-
-    // Clear all subsystems  
-
     // Launch DApp
 });
 
@@ -176,7 +167,7 @@ ipcMain.once("runUnitTests", () => {
  * Runs unit tests. Assumes the state of the Seed cryptocurrency is already prepped for unit tests
  */
 ipcMain.once("loadFromDisk", () => {
-    seed.getStorage().loadInitialState()
+    seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false).loadInitialState()
     console.info("Loaded Data", seed.getLedgerExporter().getLedger());
 });
 
@@ -328,7 +319,5 @@ promiseIpc.on("getModule", (moduleName) => {
     return seed.getSVMExporter().getModule({ module : moduleName });
 });
 
-// Fetches the entanglement (TODO: Change this. This is needed to cache the first version of the entanglement)
-seed.getEntanglementExporter().getEntanglement();
 // Switch to the first user for testing
 switchAccount("ABC");

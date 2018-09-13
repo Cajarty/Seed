@@ -25,7 +25,6 @@ module.exports = {
      */
     getVirtualMachine : function() {
         if (virtualMachine == null) {
-            console.info("New VM");
             virtualMachine = new VirtualMachine();
         }
         return virtualMachine;

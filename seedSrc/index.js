@@ -198,6 +198,6 @@ module.exports = {
         if (!localStorage) {
             throw "LocalStorage must be passed into newLocalStorageInjector";
         }
-        return localStorageInjectorExporter.localStorage;
+        return localStorageInjectorExporter.newLocalStorageInjector(localStorage);
     }
  }

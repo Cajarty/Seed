@@ -63,6 +63,7 @@ module.exports = {
                 entanglement.addEdge(transaction.transactionHash, children[i]);
             }
             if (saveToStorage) {
+                console.info("# Saved To Tangle", transaction);
                 storageExporter.getStorage().saveTransaction(transaction);
             }
         }

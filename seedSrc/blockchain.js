@@ -31,7 +31,7 @@ module.exports = {
             if (saveToStorage) {
                 storageExporter.getStorage().saveBlock(block, replacedBlocks);
             }
-            debugBlockchain();
+            //debugBlockchain();
             return true;
         } else {
             return false;
