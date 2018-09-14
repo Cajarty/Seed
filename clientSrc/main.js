@@ -160,6 +160,8 @@ ipcMain.on("executeJavaScript", function(event, windowName, javaScriptString, ca
  * Runs unit tests. Assumes the state of the Seed cryptocurrency is already prepped for unit tests
  */
 ipcMain.once("runUnitTests", () => {
+    //let transactions = seed.getEntanglementExporter().getEntanglement();
+    //console.log(transactions);
     seed.getScenarioTestExporter().seedScenarioSetupTest();
 });
 
@@ -167,8 +169,7 @@ ipcMain.once("runUnitTests", () => {
  * Runs unit tests. Assumes the state of the Seed cryptocurrency is already prepped for unit tests
  */
 ipcMain.once("loadFromDisk", () => {
-    seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false).loadInitialState()
-    console.info("Loaded Data", seed.getLedgerExporter().getLedger());
+    seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false).loadInitialState();
 });
 
 /**
@@ -215,6 +216,7 @@ promiseIpc.on("getTransaction", (transactionHash) => {
  * JSON object and the amount of transactions they with their transaction to validate.
  */
 promiseIpc.on("createTransaction", (moduleName, functionName, args, numOfValidations) => {
+    console.info("createTransaction", moduleName, functionName, args, numOfValidations);
     let account = seed.getAccountExporter().newAccount( { entropy : activeAccountEntropy, network : "00" });
     return seed.getSVMExporter().getVirtualMachine().createTransaction(account, moduleName, functionName, args, numOfValidations);
 });

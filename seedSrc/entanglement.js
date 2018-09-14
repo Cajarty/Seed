@@ -43,6 +43,7 @@ module.exports = {
         if (saveToStorage == undefined) {
             saveToStorage = true;
         }
+        console.info("# Saving", transaction.transactionHash);
         if (!entanglement.contains(transaction.transactionHash)) {
             let children = [];
             for(let i = 0; i < transaction.validatedTransactions.length; i++) {
@@ -426,7 +427,8 @@ const VALIDATION_LEVEL = {
     checkForCycle(fromName, toName) {
         let from = this.addNode(fromName)
         let checkCycle = function(vertex, path) {
-            if (vertex.name === toName) {
+            console.info("Check: ", vertex.node, toName);
+            if (vertex.node === toName) {
                 throw new Error("Theres a cycle foo!!!!!");
             }
         }
@@ -441,6 +443,7 @@ const VALIDATION_LEVEL = {
     trustTransactions(transactionsToTrust) {
         for(let i = 0; i < transactionsToTrust.length; i++) {
             let hashToTrust = transactionsToTrust[i].transactionHash;
+            console.info("TRUST", hashToTrust);
             if (this.contains(hashToTrust) && this.vertices[hashToTrust].trust < 1) {
                 this.increaseTrust(hashToTrust);
             }
@@ -491,15 +494,40 @@ const VALIDATION_LEVEL = {
      * Confirms adding transactions validates older ones
      */
     entanglement_addingTransactionsValidatesOthers : function(test, log) {
-        // Making a transaction to validate constructor and prove it is more valid now
-        // Add when finishing the scenario for rule #5 and below, since building the scenario will mean
-        // making transactions which vaidate eachother
-        test.assert(false, "Test Not Implemented. Same scenario test requirement as Transaction Rule #5");
+        let entanglement = module.exports.getEntanglement();
+        // Must simulate a "ABC" validates "DEF" scenario
+        entanglement.addNode("ABC");
+        entanglement.addNode("DEF");
+        entanglement.addEdge("ABC", "DEF");
+        entanglement.transactions["ABC"] = { validatedTransactions : [ { transactionHash : "DEF" } ] };
+        entanglement.transactions["DEF"] = { validatedTransactions : [] };
+
+        // Values should start with no trust
+        test.assertAreEqual(entanglement.vertices["ABC"].trust, 0, "Should start with zero trust");
+        test.assertAreEqual(entanglement.vertices["DEF"].trust, 0, "Should start with zero trust");
+
+        // Increase the trust of ABC
+        entanglement.increaseTrust("ABC");
+
+        // DEF's trust should have increased as well
+        test.assert(entanglement.vertices["DEF"].trust > 0, "DEF's trust should have increased by trusting ABC");
     },
     /**
      * Confirms adding transactions fails if the transaction would cause a cycle in the directed acyclic graph
      */
     entanglement_doesNotAddTransactionsIfCausesCycle : function(test, log) {
-        test.assert(false, "Test Not Implemented. Same scenario test requirement as Transaction Rule #5");
+        let entanglement = module.exports.getEntanglement();
+        entanglement.addNode("ABC"); // Add ABC
+        entanglement.addNode("DEF"); // Add DEF
+        entanglement.addEdge("ABC", "DEF"); // ABC -> DEF
+        entanglement.addNode("GHI"); // Add GHI
+        entanglement.addEdge("DEF", "GHI"); // DEF -> GHI
+        entanglement.addEdge("GHI", "ABC"); // DEF -> GHI
+        test.assertFail(() => {
+            let result = entanglement.checkForCycle("GHI", "GHI");
+        }, "The added nodes should have cauled a cycle when checked");
+        entanglement.remove("ABC");
+        entanglement.remove("DEF");
+        entanglement.remove("GHI");
     }
 }

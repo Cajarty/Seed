@@ -576,9 +576,12 @@ const transactionUnitTests = {
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #5.
      */
     transactionValidation_failsTransactionsBreakingValidationRule5 : function(test, log) {
-        test.assert(false, "Test Not Implemented. Must implement cycle scenario");
-
-        // Clear scenario after
+        let testTransaction = unitTestingExporter.getSeedConstructorTransaction();
+        let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp );
+        entanglementExporter.tryAddTransaction(newTransaction, false);
+        test.assertFail( () => {
+            new TransactionValidator().doesFollowRule5(newTransaction)
+        }, "Should fail to add the new transaction under Transaction Validation rule #5")
     },
     /**
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #6.
