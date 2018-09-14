@@ -221,7 +221,6 @@ class VirtualMachine {
      * @param {*} transaction - The transaction to attempt to receive
      */
     incomingTransaction(transaction, saveToStorage) {
-        console.info("Incoming");
         // If its a proper, formed transaction
         if (transactionExporter.isTransactionProper(transaction)) {
             // We add it to the entanglement
@@ -388,7 +387,7 @@ const virtualMachineUnitTests = {
     svm_canInvokeModuleSetterFunctionsWhichAndStateChanged : function(test, log) {
         let svm = module.exports.getVirtualMachine();
         let changes = svm.invoke({ module : "Test", function : "addToTestValue", user : "ABC", args : { value : 2 }});
-        // Prove our invoknig got the same values as the simulation of trying to add 2
+        // Prove our invoking got the same values as the simulation of trying to add 2
         test.assert(changes.moduleData.testValue, 2, "Should have changed the test value by 2");
         // Prove that invoking the test did change the ledgers value
         let testValue = svm.simulate({ module : "Test", function : "getTestValue", user : "ABC"});
@@ -403,7 +402,8 @@ const virtualMachineUnitTests = {
         let seedConstructorData = unitTestingExporter.getSeedConstructorTransaction();
         let seedConstructorTx = transactionExporter.createExistingTransaction(seedConstructorData.sender, seedConstructorData.execution, seedConstructorData.validatedTransactions, seedConstructorData.transactionHash, seedConstructorData.signature, seedConstructorData.timestamp );
         let svm = module.exports.getVirtualMachine();
-        log(seedConstructorTx);
         svm.incomingTransaction(seedConstructorTx, false);
+        let txHash = seedConstructorTx.transactionHash;
+        test.assert(entanglement.getEntanglement().contains(txHash) != undefined, "Entanglement should have constructor stored");
     }
 }

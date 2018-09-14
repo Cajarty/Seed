@@ -205,8 +205,6 @@ const messagingUnitTests = {
         module.exports.unsubscribe("Seed", "totalSupply", testReceipts[0]);
         module.exports.unsubscribe("Seed", "approve", testReceipts[1]);
 
-        log(moduleDataCallbacks, testReceipts[0]);
-        log(functionCallbacks, testReceipts[1]);
         test.assertAreEqual(moduleDataCallbacks["SeedtotalSupply"][testReceipts[0].substr(1)], undefined, "Should have removed function callback subscription");
         test.assertAreEqual(functionCallbacks["Seedapprove"][testReceipts[1].substr(1)], undefined, "Should have removed data change callback subscription");
     }

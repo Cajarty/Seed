@@ -90,8 +90,6 @@ module.exports = {
     }
 }
 
-
-
 let runBundledTests = function(test, unitTests, verbose, log) {
     let keys = Object.keys(unitTests);
     for(let i = 0; i < keys.length; i++) {

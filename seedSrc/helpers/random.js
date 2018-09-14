@@ -175,7 +175,6 @@ const randomUnitTests = {
             } else if (distribution[key] < lowest) {
                 lowest = distribution[key];
             }
-            console.info(median, distribution[key]);
             median += distribution[key];
         }
         median /= 10;

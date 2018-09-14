@@ -43,7 +43,6 @@ module.exports = {
         if (saveToStorage == undefined) {
             saveToStorage = true;
         }
-        console.info("# Saving", transaction.transactionHash);
         if (!entanglement.contains(transaction.transactionHash)) {
             let children = [];
             for(let i = 0; i < transaction.validatedTransactions.length; i++) {
@@ -54,7 +53,6 @@ module.exports = {
                     if (blockchainExporter.doesContainTransactions(child)) {
                         // It must exist in a previous block. If it does not exist in any 1st generaion block, consider it malformed
                     } else {
-                        console.info(transaction.transactionHash, "Failed To Find (2)", child);
                         throw new Error("Trying to add transaction who's childs do not exist");
                     }
                 }
@@ -64,7 +62,6 @@ module.exports = {
                 entanglement.addEdge(transaction.transactionHash, children[i]);
             }
             if (saveToStorage) {
-                console.info("# Saved To Tangle", transaction);
                 storageExporter.getStorage().saveTransaction(transaction);
             }
         }
@@ -408,7 +405,6 @@ const VALIDATION_LEVEL = {
         let from = this.addNode(fromName)
         let to = this.addNode(toName);
         if (to.incoming.hasOwnProperty(fromName)) {
-            console.info("wah");
             return;
         }
         this.checkForCycle(fromName, toName);
@@ -427,7 +423,6 @@ const VALIDATION_LEVEL = {
     checkForCycle(fromName, toName) {
         let from = this.addNode(fromName)
         let checkCycle = function(vertex, path) {
-            console.info("Check: ", vertex.node, toName);
             if (vertex.node === toName) {
                 throw new Error("Theres a cycle foo!!!!!");
             }
