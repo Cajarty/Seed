@@ -30,6 +30,10 @@ Once run, instructions will appear on the screen regarding how to open the conso
 
 In the near future, a proper UI will be implemented for the client.
 
+## Run Unit Tests
+
+In order to run the unit tests, instead run the command "npm test"
+
 -----
 
 # Project Roadmap
