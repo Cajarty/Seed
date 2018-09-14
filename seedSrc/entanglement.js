@@ -53,7 +53,6 @@ module.exports = {
                     if (blockchainExporter.doesContainTransactions(child)) {
                         // It must exist in a previous block. If it does not exist in any 1st generaion block, consider it malformed
                     } else {
-                        console.info(transaction.transactionHash, "Failed To Find (2)", child);
                         throw new Error("Trying to add transaction who's childs do not exist");
                     }
                 }
@@ -163,6 +162,12 @@ module.exports = {
             return true;
         }
         return false;
+    },
+    getUnitTests : function() {
+        return entanglementUnitTests;
+    },
+    clearAll : function() {
+        entanglement = new Entanglement();
     }
  }
 
@@ -171,6 +176,7 @@ module.exports = {
  const squasherExporter = require("./squasher.js");
  const blockchainExporter = require("./blockchain.js");
  const storageExporter = require("./storage/storage.js");
+ const unitTestingExporter = require("./tests/unitTesting.js");
 
  /**
   *  Helper function used recursively by the Entanglement with regards to visiting nodes when traversing the DAG
@@ -399,7 +405,6 @@ const VALIDATION_LEVEL = {
         let from = this.addNode(fromName)
         let to = this.addNode(toName);
         if (to.incoming.hasOwnProperty(fromName)) {
-            console.info("wah");
             return;
         }
         this.checkForCycle(fromName, toName);
@@ -418,7 +423,7 @@ const VALIDATION_LEVEL = {
     checkForCycle(fromName, toName) {
         let from = this.addNode(fromName)
         let checkCycle = function(vertex, path) {
-            if (vertex.name === toName) {
+            if (vertex.node === toName) {
                 throw new Error("Theres a cycle foo!!!!!");
             }
         }
@@ -457,3 +462,66 @@ const VALIDATION_LEVEL = {
         }
     }
  }
+
+ const entanglementUnitTests = {
+    /**
+     * Confirms transactions can be added to the entanglement
+     */
+    entanglement_addsValidTransactionsToEntanglement : function(test, log) {
+        let testTransaction = unitTestingExporter.getSeedConstructorTransaction();
+        let newTransaction = transactionExporter.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+        module.exports.tryAddTransaction(newTransaction, false);
+        test.assert(entanglement.contains(newTransaction.transactionHash), "Entanglement should have stored the valid transaction");
+    },
+    /**
+     * Confirms adding transactions fails if the transaction is invalid
+     */
+    entanglement_doesNotAddInvalidTransactions : function(test, log) {
+        let testTransaction = unitTestingExporter.getTestTransactions()[0];
+        let invalidTransaction = transactionExporter.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
+        test.assertFail(() => {
+            module.exports.tryAddTransaction(invalidTransaction, false);
+        }, "Entanglement should have thrown an error on this transaction for referring to transactions which don't exist"); 
+    },
+
+    /**
+     * Confirms adding transactions validates older ones
+     */
+    entanglement_addingTransactionsValidatesOthers : function(test, log) {
+        let entanglement = module.exports.getEntanglement();
+        // Must simulate a "ABC" validates "DEF" scenario
+        entanglement.addNode("ABC");
+        entanglement.addNode("DEF");
+        entanglement.addEdge("ABC", "DEF");
+        entanglement.transactions["ABC"] = { validatedTransactions : [ { transactionHash : "DEF" } ] };
+        entanglement.transactions["DEF"] = { validatedTransactions : [] };
+
+        // Values should start with no trust
+        test.assertAreEqual(entanglement.vertices["ABC"].trust, 0, "Should start with zero trust");
+        test.assertAreEqual(entanglement.vertices["DEF"].trust, 0, "Should start with zero trust");
+
+        // Increase the trust of ABC
+        entanglement.increaseTrust("ABC");
+
+        // DEF's trust should have increased as well
+        test.assert(entanglement.vertices["DEF"].trust > 0, "DEF's trust should have increased by trusting ABC");
+    },
+    /**
+     * Confirms adding transactions fails if the transaction would cause a cycle in the directed acyclic graph
+     */
+    entanglement_doesNotAddTransactionsIfCausesCycle : function(test, log) {
+        let entanglement = module.exports.getEntanglement();
+        entanglement.addNode("ABC"); // Add ABC
+        entanglement.addNode("DEF"); // Add DEF
+        entanglement.addEdge("ABC", "DEF"); // ABC -> DEF
+        entanglement.addNode("GHI"); // Add GHI
+        entanglement.addEdge("DEF", "GHI"); // DEF -> GHI
+        entanglement.addEdge("GHI", "ABC"); // DEF -> GHI
+        test.assertFail(() => {
+            let result = entanglement.checkForCycle("GHI", "GHI");
+        }, "The added nodes should have cauled a cycle when checked");
+        entanglement.remove("ABC");
+        entanglement.remove("DEF");
+        entanglement.remove("GHI");
+    }
+}

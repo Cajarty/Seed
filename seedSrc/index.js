@@ -21,6 +21,7 @@ const storageExporter = require("./storage/storage.js");
 const blockchainExporter = require("./blockchain.js");
 const fileSystemInjectorExporter = require("./storage/fileSystemInjector.js");
 const localStorageInjectorExporter = require("./storage/localStorageInjector.js");
+const unitTestingExporter = require("./tests/unitTesting.js");
 
 module.exports = {
     /**
@@ -86,6 +87,12 @@ module.exports = {
      */
     getStorageExporter : function() {
         return storageExporter;
+    },
+    /**
+     * @return - The Unit Testing exporter for making unit tests
+     */
+    getUnitTestingExporter : function() {
+        return unitTestingExporter;
     },
     /**
      * Subscribes for callback to be invoked whenever the given module has the given function validated
@@ -191,6 +198,6 @@ module.exports = {
         if (!localStorage) {
             throw "LocalStorage must be passed into newLocalStorageInjector";
         }
-        return localStorageInjectorExporter.localStorage;
+        return localStorageInjectorExporter.newLocalStorageInjector(localStorage);
     }
  }

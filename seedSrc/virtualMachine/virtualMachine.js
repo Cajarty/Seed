@@ -23,12 +23,14 @@ module.exports = {
     /**
      * Creates a new VirtualMachine object
      */
-    getVirtualMachine: function() {
+    getVirtualMachine : function() {
         if (virtualMachine == null) {
-            console.info("New VM");
             virtualMachine = new VirtualMachine();
         }
         return virtualMachine;
+    },
+    getUnitTests : function() {
+        return virtualMachineUnitTests;
     }
 }
 
@@ -37,8 +39,11 @@ const containerExporter = require("./container.js");
 const conformHelper = require("../helpers/conformHelper.js");
 const ledgerExporter = require("../ledger.js");
 const entanglement = require("../entanglement.js");
+const blockchain = require("../blockchain.js");
 const transactionExporter = require("../transaction.js");
 const messagingExporter = require("../messaging.js");
+const moduleExporter = require("../module.js");
+const unitTestingExporter = require("../tests/unitTesting.js");
 
 class VirtualMachine {
     
@@ -339,3 +344,66 @@ class VirtualMachine {
     }
 }
 
+const virtualMachineUnitTests = {
+    /**
+     * Confirm the virtual machine can have modules added to it and be stored in the ledger.
+     */
+    svm_modulesCanBeAdded : function(test, log) {
+        let svm = module.exports.getVirtualMachine();
+        svm.addModule(moduleExporter.getTestModule());
+        test.assert(svm.getModule({ module : "Test" }) != undefined, "Should have stored the created module");
+    },
+    /**
+     * Confirm the virtual machine can read a modules data from the ledger.
+     */
+    svm_canReadModuleDataFromLedger : function(test, log) {
+        let ledgerData = ledgerExporter.getLedger().getModuleData("Test");
+        test.assert(ledgerData != undefined, "The Test module should exist in the ledger");
+        test.assertAreEqual(ledgerData.testValue, 5, "The Test.testValue data should have defaulted to 5");
+    },
+    /**
+     * Confirm “getter” functions can be invoked to fetch Module data.
+     */
+    svm_canInvokeModuleGetterFunctions: function(test, log) {
+        let svm = module.exports.getVirtualMachine();
+        let testValue = svm.simulate({ module : "Test", function : "getTestValue", user : "ABC"});
+        test.assert(testValue, 5, "Value from getter should match default value of 5");
+    },
+    /**
+     * Confirm “setters” can be simulated
+     */
+    svm_canSimulateModuleSetterFunctions : function(test, log) {
+        let svm = module.exports.getVirtualMachine();
+        let simulatedChangeSet = svm.simulate({ module : "Test", function : "addToTestValue", user : "ABC", args : { value : 2 }});
+        // Prove our simulation tries to add 2 to the test value
+        test.assert(simulatedChangeSet.moduleData.testValue, 2, "Should have simulated how much things would change if it added 2");
+        // Prove the simulation did not alter the real value
+        let testValue = svm.simulate({ module : "Test", function : "getTestValue", user : "ABC"});
+        test.assert(testValue, 5, "The testValue should still have been 5 as the simulation should not modify ledger");
+    },
+    /**
+     * Confirm “setters” can be invoked and the ledger updates accordingly.
+     */
+    svm_canInvokeModuleSetterFunctionsWhichAndStateChanged : function(test, log) {
+        let svm = module.exports.getVirtualMachine();
+        let changes = svm.invoke({ module : "Test", function : "addToTestValue", user : "ABC", args : { value : 2 }});
+        // Prove our invoking got the same values as the simulation of trying to add 2
+        test.assert(changes.moduleData.testValue, 2, "Should have changed the test value by 2");
+        // Prove that invoking the test did change the ledgers value
+        let testValue = svm.simulate({ module : "Test", function : "getTestValue", user : "ABC"});
+        test.assert(testValue, 7, "The testValue should still have been 7 after adding 2 to the default value of 5");
+    },
+    /**
+     * Confirm transactions can be added to the virtual machine, executing them and storing their changes to the ledger.
+     */
+    svm_addingTransactionsExecutesAndStoresInledger : function(test, log) {
+        entanglement.clearAll();
+        blockchain.clearAll();
+        let seedConstructorData = unitTestingExporter.getSeedConstructorTransaction();
+        let seedConstructorTx = transactionExporter.createExistingTransaction(seedConstructorData.sender, seedConstructorData.execution, seedConstructorData.validatedTransactions, seedConstructorData.transactionHash, seedConstructorData.signature, seedConstructorData.timestamp );
+        let svm = module.exports.getVirtualMachine();
+        svm.incomingTransaction(seedConstructorTx, false);
+        let txHash = seedConstructorTx.transactionHash;
+        test.assert(entanglement.getEntanglement().contains(txHash) != undefined, "Entanglement should have constructor stored");
+    }
+}

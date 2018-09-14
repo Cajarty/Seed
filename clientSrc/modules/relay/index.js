@@ -17,8 +17,10 @@ const seedHLAPI = require("../../seedHLAPI.js").getSeedHLAPI(promiseIpc);
  */
 function relay() {
     let entropy = ("Z" + (Math.random() * 100) % 100) + "_123456789012345678901234567890";
+    console.info("Relay1");
     seedHLAPI.switchAccount(entropy)
         .then(() => {
+            console.info("Relay2");
             seedHLAPI.createTransaction("Relay", "relay", {}, 4);
         });
 }

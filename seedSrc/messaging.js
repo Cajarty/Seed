@@ -98,8 +98,8 @@ module.exports = {
             case "U":
                 userDataCallbacks[moduleName + funcNameOrDataKey + optionalUser][receipt] = undefined;
             break;
-                moduleDataCallbacks[moduleName + funcNameOrDataKey][receipt] = undefined;
             case "M":
+                moduleDataCallbacks[moduleName + funcNameOrDataKey][receipt] = undefined;
             break;
         }
     },
@@ -156,5 +156,56 @@ module.exports = {
             }
             
         }
+    },
+    getUnitTests : function() {
+        return messagingUnitTests;
+    }
+}
+
+let testReceipts = [];
+
+const messagingUnitTests = {
+    /**
+     * Confirm the ability to subscribe for messages relating to module function callbacks being executed in the ledger machine.
+     */
+    messaging_subscribingForModuleFunctions : function(test, log) {
+        testReceipts = [ module.exports.subscribeToFunctionCallback("Seed", "transfer", () => {}) ];
+        test.assert(testReceipts[0] != undefined, "A receipt must be returned");
+        test.assert(functionCallbacks["Seedtransfer"] != undefined, "The callback's module+functionName must have organized the storage for the new callback type");
+        test.assert(functionCallbacks["Seedtransfer"][testReceipts[0].substr(1)] != undefined, "The callback must have been saved");
+    },
+    /**
+     * Confirm the ability to subscribe for messages relating to module data changes callbacks being executed in the ledger machine.
+     */
+    messaging_subscribingForModuleDataChanges : function(test, log) {
+        let receipt = module.exports.subscribeToDataChange("Seed", "totalSupply", () => {});
+        testReceipts.push(receipt);
+        test.assert(receipt != undefined, "A receipt must be returned");
+        test.assert(moduleDataCallbacks["SeedtotalSupply"] != undefined, "The callback's module+key must have organized the storage for the new callback type");
+        test.assert(moduleDataCallbacks["SeedtotalSupply"][receipt.substr(1)] != undefined, "The callback must have been saved");
+    },
+    /**
+     * Confirm the ability to unsubscribe from messaging.
+     */
+    messaging_unsubscribingFromMessaging : function(test, log) {
+        module.exports.unsubscribe("Seed", "transfer", testReceipts[0]);
+        test.assertAreEqual(functionCallbacks["Seedtransfer"][testReceipts[0].substr(1)], undefined, "Should have removed subscription");
+        testReceipts = [ testReceipts[1] ];
+    },
+    /**
+     * Confirm, once unsubscribed, previously invokable callbacks stop being invoked.
+     */
+    messaging_unsubscribingCleansUpCallbacksWithoutLeaks : function(test, log) {
+        let callback = () => {
+            log("MEMORY LEAK");
+            test.assert(false, "A memory leak occured");
+        }
+        testReceipts.push(module.exports.subscribeToFunctionCallback("Seed", "approve", callback));
+        
+        module.exports.unsubscribe("Seed", "totalSupply", testReceipts[0]);
+        module.exports.unsubscribe("Seed", "approve", testReceipts[1]);
+
+        test.assertAreEqual(moduleDataCallbacks["SeedtotalSupply"][testReceipts[0].substr(1)], undefined, "Should have removed function callback subscription");
+        test.assertAreEqual(functionCallbacks["Seedapprove"][testReceipts[1].substr(1)], undefined, "Should have removed data change callback subscription");
     }
 }

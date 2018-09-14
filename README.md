@@ -30,6 +30,10 @@ Once run, instructions will appear on the screen regarding how to open the conso
 
 In the near future, a proper UI will be implemented for the client.
 
+## Run Unit Tests
+
+In order to run the unit tests, instead run the command "npm test"
+
 -----
 
 # Project Roadmap
@@ -66,10 +70,10 @@ In the near future, a proper UI will be implemented for the client.
     - [x] Transaction Squashing
     - [x] Blockchain Portion
     - [ ] State Saving and Loading
-- [ ] Implement Unit Tests Unit Test
+- [x] Implement Unit Tests Unit Test
     - [x] For Entanglement
-    - [ ] For Transaction Squashing
-    - [ ] For Blockchain Portions
+    - [x] For Transaction Squashing
+    - [x] For Blockchain Portions
 
 ## DApp Modules & Virtual Machine
 
@@ -79,9 +83,25 @@ In the near future, a proper UI will be implemented for the client.
 - [x] [Design Modules & Virtual Machine](https://steemit.com/blockchain/@carsonroscoe/seed-development-design-module-smart-contracts-and-the-svm)
 - [x] [Implement Basic Module Design](https://steemit.com/utopian-io/@carsonroscoe/seed-development-modules-smart-contracts-and-the-svm)
 - [x] [Implement Virtual Machine](https://steemit.com/utopian-io/@carsonroscoe/seed-development-modules-smart-contracts-and-the-svm)
-- [x] [Implement Unit Tests For Example Modules & Virtual Machine](https://steemit.com/utopian-io/@carsonroscoe/seed-development-modules-smart-contracts-and-the-svm)
+- [x] [Implement Unit Tests For Example Modules](https://steemit.com/utopian-io/@carsonroscoe/seed-development-modules-smart-contracts-and-the-svm)
 - [x] Connect Virtual Machine To Blockchain/Entanglement Ledger
 - [x] Subscription System For External DApp Integration
+- [x] Implement Unit Tests
+    - [x] For Seed Virtual Machine
+    - [x] For Ledger
+    - [x] For Subscription System
+
+## Storage
+
+- [x] [Design Storage Saving & Loading](https://steemit.com/crypto/@carsonroscoe/seed-development-transaction-and-block-storage)
+- [x] Implement
+    - [x] [Dynamic Storage System](https://steemit.com/utopian-io/@carsonroscoe/3q2gw4-seed-development-transaction-and-block-storage)
+    - [x] [File Storage Implementation](https://steemit.com/utopian-io/@carsonroscoe/3q2gw4-seed-development-transaction-and-block-storage)
+    - [x] [Local Storage Implementation](https://steemit.com/utopian-io/@carsonroscoe/3q2gw4-seed-development-transaction-and-block-storage)
+- [x] Unit Test
+    - [x] File Storage
+    - [x] Local Storage
+    - [x] Storage Subsystem
 
 ## Client
 

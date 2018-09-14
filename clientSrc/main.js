@@ -108,6 +108,8 @@ app.on('ready', function() {
         javascript += "moduleButtonsDiv.appendChild(" + moduleButtonName + ");\n";
     }
     windows["Launcher"].webContents.executeJavaScript(javascript);
+
+    // Launch DApp
 });
 
 //If we're on a Mac, add an empty object to fix OS specific menubar issue
@@ -138,14 +140,13 @@ if (process.env.NODE_ENV !== 'production') {
  * and then the Main process launches the new window
  */
 ipcMain.on("launchModule", function(event, windowName, htmlFile) {
+    seed.newStorage(seed.newFileSystemInjector(__dirname), false);
     windows[windowName] = new BrowserWindow({width: 800, height: 500, title: windowName});
     windows[windowName].loadURL(url.format({
         pathname: path.join(__dirname, htmlFile),
         protocol: 'file:',
         slashes: true
     }));
-
-    seed.newStorage(seed.newFileSystemInjector(__dirname), false);
 });
 
 /**
@@ -159,6 +160,8 @@ ipcMain.on("executeJavaScript", function(event, windowName, javaScriptString, ca
  * Runs unit tests. Assumes the state of the Seed cryptocurrency is already prepped for unit tests
  */
 ipcMain.once("runUnitTests", () => {
+    //let transactions = seed.getEntanglementExporter().getEntanglement();
+    //console.log(transactions);
     seed.getScenarioTestExporter().seedScenarioSetupTest();
 });
 
@@ -166,8 +169,7 @@ ipcMain.once("runUnitTests", () => {
  * Runs unit tests. Assumes the state of the Seed cryptocurrency is already prepped for unit tests
  */
 ipcMain.once("loadFromDisk", () => {
-    seed.getStorage().loadInitialState()
-    console.info("Loaded Data", seed.getLedgerExporter().getLedger());
+    seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false).loadInitialState();
 });
 
 /**
@@ -214,6 +216,7 @@ promiseIpc.on("getTransaction", (transactionHash) => {
  * JSON object and the amount of transactions they with their transaction to validate.
  */
 promiseIpc.on("createTransaction", (moduleName, functionName, args, numOfValidations) => {
+    console.info("createTransaction", moduleName, functionName, args, numOfValidations);
     let account = seed.getAccountExporter().newAccount( { entropy : activeAccountEntropy, network : "00" });
     return seed.getSVMExporter().getVirtualMachine().createTransaction(account, moduleName, functionName, args, numOfValidations);
 });
@@ -318,7 +321,5 @@ promiseIpc.on("getModule", (moduleName) => {
     return seed.getSVMExporter().getModule({ module : moduleName });
 });
 
-// Fetches the entanglement (TODO: Change this. This is needed to cache the first version of the entanglement)
-seed.getEntanglementExporter().getEntanglement();
 // Switch to the first user for testing
 switchAccount("ABC");

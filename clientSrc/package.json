@@ -4,7 +4,8 @@
   "description": "An Electorn interface for the seed protocol.",
   "main": "main.js",
   "scripts": {
-    "start": "Electron ."
+    "start": "Electron .",
+    "test": "node test.js --v"
   },
   "repository": {
     "type": "git",

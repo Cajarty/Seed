@@ -1,0 +1,177 @@
+### UNIT TESTS ###
+
+# Cryptography Tests
+
+    // Done
+    SHA256_hashesValidData:
+    SHA256_hashesSmallData:
+    SHA256_hashesLargeData:
+    SHA256_throwsOnEmptyData:
+    GeneratePrivateKey_generatesProperPrivateKey:
+    GeneratePrivateKey_entropyCanBeAdded:
+    GenerateKeyPair_generatesProperKeyPair:
+    GenerateKeyPair_entropyCanBeAdded:
+    GetPublicKey_getsProperPublicKey:
+    GetPublicKey_throwsOnNullPrivate:
+    PublicKeyToPublicAddress_getsProperAddress:
+    PublicKeyToPublicAddress_throwsOnEmptyData:
+    Sign_createsProperSignature:
+    Sign_throwsOnEmptyData:
+    VerifySignature_verifiesValidSignatures:
+    VerifySignature_failsOnInvalidSignature:
+
+    // To Do
+    hashToChecksum gets the proper checksum from a hash
+    hashToChecksum throws on invalid input
+
+# Account Tests
+
+    // Done
+    constructor_privateKeyGeneratesValidData():
+    constructor_nullPrivateKeyThrows():
+    constructor_publicKeyGeneratesValidData():
+    constructor_nullPublicKeyThrows():
+    constructor_entropyGeneratesKeys():
+    canSign_returnsTrueForPrivateKeyAccounts():
+    canSign_returnsFalseForPublicKeyAccounts():
+    sign_privateKeyAccountCanSign():
+    sign_publicKeyAccountThrows():
+    sign_twoAccountsOneTransactionGenerateDifferentSignatures():
+    sign_oneAccountTwoTransactionsGenerateDifferentSignatures():
+    verify_privateKeyAccountsCanVerify():
+    verify_publicKeyAccountsCanVerify():
+    verify_returnsFalseOnBadSignatures():
+    verify_cantVerifySignaturesAAccountDidntSign():
+
+# Random Tests
+
+    //To Do
+    generateSeedFromHashes gets the Seed we want
+    generateSeedFromHashes handles invalid input
+    Random can get next value with forced seed and get expected values
+    Show a distribution over a million randoms, confirming a fairly good distribution
+
+# Block
+
+    //To Do
+    Create a new block and have it have proper data & proper hash
+    Validate valid block and have it work
+    Validate invalid block and have it catch the invalid one
+
+# Transaction
+
+    //To Do
+    Create a new transaction and have it have proper data & proper hash
+    Show validation works
+    Create a transaction out of existing data and validate it
+
+# Squashing
+
+    //To Do
+    Confirm a hash would trigger squashing mechanism
+    Confirm an invalid hash would not trigger squashing mechanism
+    Squashing two objects with relative data works
+    Squashing two objects with absolute data works
+    Confirm order matters and rearranging absolute data's transactions gives differing results
+    Squashes multiple transactions into a valid block
+    Squashes multiple blocks into a valid block
+
+# Entanglement
+
+    // To Do
+    Can add transactions to the entanglement
+    Adding transactions fails if the transaction is invalid
+    Adding transactions fails if the transaction would add a cycle
+    Adding transactions validates older transactions
+
+# Blockchain
+
+    // To Do
+    Can add blocks to the Blockchain
+    Adding blocks fails if the block is invalid
+    Blocks can trigger block squashing
+
+# Ledger
+
+    // To Do
+    Can read from the ledger
+    Can apply changes that change the ledger
+    Can get a deep copy of module data from ledger
+    Can "apply changes" of numerous transactions and be modified the expected way
+    Can "apply changes" of a block (which is the same transactions as above) and be modified the same way
+
+# Virtual machines
+
+    // To Do
+    Can add modules and have them be stored
+    Can read directly from ledger
+    Can simulate "getters" to fetch Modula data
+    Can simulate "setters" to see what would change
+    Can invoke "setters" and have the ledger change
+    Can add transactions execute and be stored
+    Can add transactions which trigger squashing
+
+# FileStorage
+
+    // To Do
+    Can write a transaction to the file system asynchronously
+    Can write a transaction to the file system synchronously
+    Can write a block to the file system asynchronously
+    Can write a block to the file system synchronously
+    Can read a transaction synchronously
+    Can read a transaction asynchronously
+    Can read a block synchronously
+    Can read a transaction synchronously
+    Can remove a transaction
+    Can remove a block
+    Can get all transactions in the entanglement synchronously
+    Can get all blocks for a generation synchronously
+    Can get all blocks for all generations synchronously
+
+# LocalStorage
+
+    // To Do
+    Can write a transaction to the LocalStorage asynchronously
+    Can write a transaction to the LocalStorage synchronously
+    Can write a block to the LocalStorage asynchronously
+    Can write a block to the LocalStorage synchronously
+    Can read a transaction synchronously
+    Can read a transaction asynchronously
+    Can read a block synchronously
+    Can read a transaction synchronously
+    Can remove a transaction
+    Can remove a block
+    Can get all transactions in the entanglement synchronously
+    Can get all blocks for a generation synchronously
+    Can get all blocks for all generations synchronously
+
+# Storage
+
+    // To Do
+    FileStorage:
+        Can save a transaction
+        Can save a block
+        Can load the initial ledger state, reading all blockchains/entanglement and applying to virtual machines
+    LocalStorage:
+        Can save a transaction
+        Can save a block
+        Can load the initial ledger state, reading all blockchains/entanglement and applying to virtual machines
+
+# Message
+
+    //To Do
+    Can subscribe for messages relating to function callbacks
+    Can sunscribe for messages relating to data changing
+    Can unsubscribe for messages
+    Receives messages during function callbacks
+    Receives messages during data changes
+    Once unsubscribed, previously received messages stop being received
+
+### MODULE & SVM SCENARIO TESTS ###
+
+Creating Seed, Launching it. Relaying it.
+Scenario revolving users sending Seed
+Scenario revolving users approving/transfering Seed between eachother
+Scenario revolving user burniuoiuoing currency, removing from circulation
+Scenario(s) revolving users trying to "cheat" and being rejected
+LARGE scenario revolving around hundreds of users/transactions being sent & stored

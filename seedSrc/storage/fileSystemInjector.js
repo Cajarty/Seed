@@ -16,6 +16,9 @@ module.exports = {
      */
     newFileSystemInjector : function(baseDirectory, dataFolderName) {
         return new FileSystemInjector(baseDirectory, dataFolderName);
+    },
+    getUnitTests : function() {
+        return fileStorageInjectorUnitTests;
     }
 }
 
@@ -23,6 +26,8 @@ const fs = require('fs')
 const readdirSync = fs.readdirSync;
 const statSync = fs.statSync;
 const { join } = require('path')
+const conformHelper = require("../helpers/conformHelper.js");
+const unitTestingExporter = require("../tests/unitTesting.js");
 
 /**
  * Helper function which ensures a directory exists, and creates it if not
@@ -171,6 +176,19 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
     }
 
     /**
+     * Writes a block to storage synchronously
+     * 
+     * @param {*} storageName - The name to use in storage (e.g. block hash)
+     * @param {*} storageObject - The block to store in storage
+     * @param {*} generation - The generation of block it is
+     */
+    writeBlockSync(storageName, storageObject, generation) {
+        ensureCreated(this.blockPath(generation));
+        let path = this.blockPath(generation, storageName);
+        fs.writeFileSync(path, storageObject);
+    }
+
+    /**
      * Writes a transaction to storage asynchronously, invoking an optional
      * callback upon completion
      * 
@@ -188,6 +206,17 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
         }
         let path = this.transactionPath(storageName);
         fs.writeFile(path, storageObject, callback);
+    }
+
+    /**
+     * Writes a transaction to storage synchronously
+     * 
+     * @param {*} storageName - The name of the transaction to store
+     * @param {*} storageObject - The transaction to store
+     */
+    writeTransactionSync(storageName, storageObject) {
+        let path = this.transactionPath(storageName);
+        fs.writeFileSync(path, storageObject);
     }
 
     /**
@@ -285,5 +314,216 @@ class FileSystemInjector /* implements IDatabaseInjector.interface */ {
             transactions.push(this.readTransactionSync(transactionHash));
         }
         return transactions;
+    }
+}
+
+const fileStorageInjectorUnitTests = {
+    /**
+     * Confirm that transactions can be written to storage asynchronously.
+     */
+    fileStorage_storesTransactionsAsynchronously : function(test, log) {
+        let testTransaction = unitTestingExporter.getTestTransactions()[0];
+        let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
+        test.assert(fsInjector != undefined, "Failed to create a file system injector");
+        fsInjector.writeTransactionAsync(testTransaction.transactionHash, JSON.stringify(testTransaction), (err) => {
+            test.runAssertsFromAsync(() => {
+                test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
+            }, "fileStorage_storesTransactionsAsynchronously");
+        });
+    },
+    /**
+     * Confirm that transactions can be written to storage synchronously.
+     */
+    fileStorage_storesTransactionsSynchronously : function(test, log) {
+        let testTransaction2 = unitTestingExporter.getTestTransactions()[1];
+        let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
+        test.assert(fsInjector != undefined, "Failed to create a file system injector");
+        let success = false;
+        try {
+            fsInjector.writeTransactionSync(testTransaction2.transactionHash, JSON.stringify(testTransaction2));
+            success = true;
+        } catch (e) {
+            log(e);
+        }
+        test.assert(success, "Writing synchronously should not fail for valid data");
+    },
+    /**
+     * Confirm that blocks can be written to storage asynchronously.
+     */
+    fileStorage_storesBlocksAsynchronously : function(test, log) {
+        let testBlock = unitTestingExporter.getTestBlocks()[0];
+        let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
+        test.assert(fsInjector != undefined, "Failed to create a file system injector");
+        fsInjector.writeBlockAsync(testBlock.blockHash, JSON.stringify(testBlock), testBlock.generation, (err) => {
+            test.runAssertsFromAsync(() => {
+                test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
+            }, "fileStorage_storesBlocksAsynchronously");
+        });
+    },
+    /**
+     * Confirm that blocks can be written to storage synchronously.
+     */
+    fileStorage_storesBlocksSynchronously : function(test, log) {
+        let testBlock2 = unitTestingExporter.getTestBlocks()[1];
+        let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
+        test.assert(fsInjector != undefined, "Failed to create a file system injector");
+        let success = false;
+        try {
+            fsInjector.writeBlockSync(testBlock2.blockHash, JSON.stringify(testBlock2), testBlock2.generation);
+            success = true;
+        } catch (e) {
+            log(e)
+        }
+        test.assert(success, "Writing synchronously should not fail for valid data");
+    },
+    /**
+     * Confirm that FileStorage can read transactions synchronously.
+     */
+    fileStorage_readsTransactionsSynchronously : function(test, log) {
+        let testTransaction2 = unitTestingExporter.getTestTransactions()[1];
+        let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
+        test.assert(fsInjector != undefined, "Failed to create a file system injector");
+        test.assertFail(() => {
+            let readTransaction = fsInjector.readTransactionSync(testTransaction2.transactionHash);
+            test.assertAreEqual(readTransaction, JSON.string(testTransaction2), "The read transaction should match the written one from previous test");
+        }, "Reading synchronously should not fail as the data should reliably exist from previous synchronous test");
+
+    },
+    /**
+     * Confirm that FileStorage can read transactions asynchronously.
+     */
+    fileStorage_readsTransactionsAsynchronously : function(test, log) {
+        let testTransaction = unitTestingExporter.getTestTransactions()[0];
+        let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
+        test.assert(fsInjector != undefined, "Failed to create a file system injector");
+        let readTransaction = fsInjector.readTransactionAsync(testTransaction.transactionHash, (err, transaction) => {
+            if (err != null) {
+                test.runAssertsFromAsync(() => {
+                    test.assert(err != null, "Reading threw unexpected error: " + err);
+                    test.assertAreEqual(transaction.toString(), JSON.stringify(testTransaction), "Should have read the same data as test transaction");
+                }, "fileStorage_readsTransactionsAsynchronously");
+            }
+        });
+    },
+    /**
+     * Confirm that FileStorage can read blocks synchronously. 
+     */
+    fileStorage_readsBlocksSynchronously : function(test, log) {
+        let testBlock2 = unitTestingExporter.getTestBlocks()[1];
+        let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
+        test.assert(fsInjector != undefined, "Failed to create a file system injector");
+        test.assertFail(() => {
+            let readBlock = fsInjector.readBlockSync(testBlock2.blockHash);
+            test.assertAreEqual(readBlock, JSON.string(testBlock2), "The read block should match the written one from previous test");
+        }, "Reading synchronously should not fail as the data should reliably exist from previous synchronous test");
+
+    },
+    /**
+     * Confirm that FileStorage can read blocks asynchronously.
+     */
+    fileStorage_readsBlocksAsynchronously : function(test, log) {
+        let testBlock = unitTestingExporter.getTestBlocks()[0];
+        let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
+        test.assert(fsInjector != undefined, "Failed to create a file system injector");
+        let readBlock = fsInjector.readBlockAsync(testBlock.generation, testBlock.blockHash, (err, block) => {
+            if (err != null) {
+                test.runAssertsFromAsync(() => {
+                    test.assert(err != null, "Reading threw unexpected error: " + err);
+                    test.assertAreEqual(block.toString(), JSON.stringify(testBlock), "Should have read the same data as test block");
+                }, "fileStorage_readsBlocksAsynchronously");
+            }
+        });
+    },
+    /**
+     * Confirm that transactions can be removed from storage.
+     */
+    fileStorage_removesTransactionFromStorage : function(test, log) {
+        let testTransaction = unitTestingExporter.getTestTransactions()[0];
+        let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
+        test.assert(fsInjector != undefined, "Failed to create a file system injector");
+        let copyTransaction = conformHelper.deepCopy(testTransaction);
+        copyTransaction.transactionHash = "MODIFIEDCOPY";
+        // Must save a copy that won't interrupt other tests as we're removing it asynchronously
+        fsInjector.writeTransactionAsync(copyTransaction.transactionHash, JSON.stringify(copyTransaction), (err) => {
+            if (err == null) {
+                // As the copy saved, remove it
+                fsInjector.removeTransactionAsync(copyTransaction.transactionHash, (err) => {
+                    // If it failed to remove, invoke the error message
+                    if (err == null) {
+                        test.runAssertsFromAsync(() => {
+                            test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
+                        }, "fileStorage_removesTransactionFromStorage");
+                    }
+                });
+            } else {
+                test.runAssertsFromAsync(() => {
+                    test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
+                }, "fileStorage_removesTransactionFromStorage");
+            }
+        });
+    },
+    /**
+     * Confirm that blocks can be removed from storage.
+     */
+    fileStorage_removesBlocksFromStorage : function(test, log) {
+        let testBlock = unitTestingExporter.getTestBlocks()[0];
+        let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
+        test.assert(fsInjector != undefined, "Failed to create a file system injector");
+        let copyBlock = conformHelper.deepCopy(testBlock);
+        copyBlock.blockHash = "MODIFIEDCOPY";
+        // Must save a copy that won't interrupt other tests as we're removing it asynchronously
+        fsInjector.writeBlockAsync(copyBlock.blockHash, JSON.stringify(copyBlock), copyBlock.generation, (err) => {
+            if (err == null) {
+                // As the copy saved, remove it
+                fsInjector.removeBlockAsync(copyBlock.generation, copyBlock.blockHash, (err) => {
+                    // If it failed to remove, invoke the error message
+                    if (err == null) {
+                        test.runAssertsFromAsync(() => {
+                            test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
+                        }, "fileStorage_removesBlocksFromStorage");
+                    }
+                });
+            } else {
+                test.runAssertsFromAsync(() => {
+                    test.assert(err == null, "Test was supposed to pass however failed with error: " + err);
+                }, "fileStorage_removesBlocksFromStorage");
+            }
+        });
+    },
+    /**
+     * Confirm that FileStorage can read all transactions in the entanglement synchronously.
+     */
+    fileStorage_readsFullEntanglementFromStorage : function(test, log) {
+        let testTransaction2 = unitTestingExporter.getTestTransactions()[1];
+        let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
+        test.assert(fsInjector != undefined, "Failed to create a file system injector");
+        let transactions = fsInjector.readEntanglementSync();
+        // transaction[0] and [2] may or may not be partially written at this point due to them being asynchronous,
+        // however, transaction[1] should be fully written as it was synchronous
+        test.assertAreEqual(transactions[1], JSON.stringify(testTransaction2), "The second transaction read should be valid" );
+    },
+    /**
+     * Confirm that FileStorage can read all blocks for a generation from the blockchain synchronously.
+     */
+    fileStorage_readsABlockchainFromStorage : function(test, log) {
+        let testBlock2 = unitTestingExporter.getTestBlocks()[1];
+        let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
+        test.assert(fsInjector != undefined, "Failed to create a file system injector");
+        let blocks = fsInjector.readBlockchainSync(1);
+        // blocks[1] and blocks[2] may or may not be partially written at this pint due to the being asynchronous,
+        // hpwever, block[0] should be fully written as it was synchronous
+        test.assertAreEqual(blocks[0], JSON.stringify(testBlock2), "The first block read should be valid" );
+    },
+    /**
+     * Confirm that FileStorage can read all blocks for all generations of blockchains synchronously.
+     */
+    fileStorage_readsAllBlockchainsFromStorage : function(test, log) {
+        let testBlock2 = unitTestingExporter.getTestBlocks()[1];
+        let fsInjector = module.exports.newFileSystemInjector(__dirname, "test");
+        test.assert(fsInjector != undefined, "Failed to create a file system injector");
+        let blocks = fsInjector.readBlockchainsSync();
+        // blocks[1] and blocks[2] may or may not be partially written at this pint due to the being asynchronous,
+        // hpwever, block[0] should be fully written as it was synchronous
+        test.assertAreEqual(blocks[0], JSON.stringify(testBlock2), "The first block read should be valid" );
     }
 }

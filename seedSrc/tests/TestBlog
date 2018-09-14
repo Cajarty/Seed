@@ -1,0 +1,252 @@
+Seed - Development Design - Extensive Unit Testing
+-----
+# Overview
+
+An often underappreciated task in development is the act of testing ones code. The only way to make sure every piece of the puzzle is working properly is by having every piece of code be tested, with automated unit tests (or a similar testing pattern). These tests allow for an easy way to determine whether a bug has accured in your code. Regions that previously worked may change when external files are modified, unit testing offerings a simple solution to guarantee each portion works exactly as intended.
+
+In this writeup, we are designing the unit tests that will be required for the LLAPI's subsystems. These are all the tests to make sure each piece of the Seed system works as intended. First we are going to go into the testing environment to build, and then into each unit test to be implemented.
+
+-----
+
+# Testing Environment
+
+The testing environment will be a simple testing suite development to aide with unit tests. 
+
+## Testing Suite File
+
+The file which houses the unit testing logic. This will be a JavaScript file which exports functions relating to testing code, such as various asserts and requires. This file will also house the logic surrounding loading testable modules.
+
+## Exporting Unit Tests Interface
+
+Any NodeJS module/file which chooses to be unit testable must simply implement a function named "runUnitTests". This function will take, as a parameter, a flag regarding whether to be verbose or not with regards to logging the tests. This function's implementation is expected to use the asserts and requires from the testing suite to run multiple tests. The function will return an object containing an array of fail messages (if any tests failed), as well as a variable counting how many tests were passed.
+
+-----
+
+# Unit Tests
+
+In total, fourteen different exports will be extensively unit tested in order to confirm Seed is in fully working order. Afterwards, these unit tests will act as a regression test, allowing us to confirm old functionality still works as intended while implementing future changes.
+
+In each section, we will outline which unit tests are too be created, along with what the procedure for implementing the unit test is.
+
+-----
+
+## Cryptography Subsystem
+
+**\#**  | **Description** | **Procedure**
+---- | ---- | ----
+**1** | Correctly hash with SHA256. | Access the cryptography subsystem and hash the string “Test #1”. Compare result with 3rd party proven SHA256 hasher.
+**2** | Correctly hashes small data with SHA256. | Repeat test #1, however pass in the string “1”
+**3** | Correctly hashes large data with SHA256. | Repeat test #1, however pass in the Seed literature review as input.
+**4** | Throws a error message when attempting to hash undefined data. | Repeat test #1, however pass in undefined, and try to catch the correct error message.
+**5** | Throws a error message when attempting to hash empty data. | Repeat test #4, however pass in an empty string.
+**6** | Correctly generates a private key | Access the crypto subsystem and generate a private key.
+**7** | Correctly generates a private key with user defined entropy. | Repeat test #6, however pass in as entropy the string“Test #7”.
+**8** | Correctly fetches the public key that belongs to a proposed private key. | Access the cryptography subsystem and request a public key, passing in a private key derived from the entropy “ABC”. Compared the result with the expected result.
+**9** | Throws a error message when attempting to fetch the public key for a undefined private key | Repeat test #8, however pass in undefined as the private key. Catch the error and compare it for the expected error message.
+**10** | Correctly takes a public key and correctly converts it to a public address. | Access the cryptography subsystem and request a conversation from public key to public address. Compare the result with the expected result.
+**11** | Throws a error message when a empty parameter is passed in instead of a valid public key. | Repeat test #10, however pass in undefined as the public key. Catch the error and compare it for the expected error message.
+**12** | Correctly signs data on behalf of a private key. | Access the cryptography subsystem and request a signature on behalf of the proposed private key. Compare the result with the expected result.
+**13** | Throws a error message when a undefined parameter is passed in instead of a valid private key. | Repeat test #12, however pass in undefined as the private key. Catch the error and compare it for the expected error message.
+**14** | Correctly verifies the validity of a signature.  | Repeat test #12, however afterwards, request from the cryptography subsystem for the verification of the signature.
+**15** | Catches invalid signatures when failing to validate them. | Access the cryptography subsystem and request the verification of a signature, however pass in an invalid signature. Check for a return value of false.
+**16** | Correctly generates the proper checksum when given a valid hash. | Access the cryptography subsystem and request the hash to checksum feature. Compare the result with the expected value.
+**17** | Throws a error message when a undefined parameter is passed in instead of a valid hash key. | Access the cryptographic subsystem and request the hash of undefined. Catch the thrown error and compare it to the expected error message.
+
+-----
+
+## Account Subsystem
+
+**\#**  | **Description** | **Procedure**
+---- | ---- | ----
+**18** | Creating an account out of a private key generates proper data (e.g. public key and public address) |  Access the account subsystem and request the creation of an account, passing in a private key created from the entropy “ABC”. Compare the results with the expected data.
+**19** | Throws a error message when a undefined parameter is passed in instead of a valid private key. | Access the account subsystem and request the creation of an account, passing in undefined as the private key. Catch the thrown error and compare it to the expected error message.
+**20** | Creating an account out of a public key generates a proper data (e.g. public address). | Access the account subsystem and request the creation of an account, passing in a public key created from the private key who’s entropy was “ABC”. Compare the results with the expected data.
+**21** | Throws a error message when a undefined parameter is passed in instead of a valid public key. | Access the account subsystem and request the creation of an account, passing in undefined as the public key. Catch the thrown error and compare it to the expected error message.
+**22** | Creating an account out of raw entropy generates a proper data (e.g. private key, public key and public address). | Access the account subsystem and request the creation of an account, passing in the entropy “ABC”. Compare the results with the expected data.
+**23** | Correctly identifies when a account has the capability to create signatures. | Create an account through a given private key, and request from the account subsystem whether the account can sign messages. Expect the result to be true.
+**24** | Correctly identifies when a account does not have the capability to create signatures | Create an account through a given public key, and request from the account subsystem whether the account can sign messages. Expect the result to be false.
+**25** | Accounts with signing capability sign signatures correctly. | Repeat test #23, however after confirming the account can sign, sign a message. Compare the results to an expected result.
+**26** | Accounts without signing capability cannot sign signatures. | Repeat test #24, however after confirming the account cannot sign messages, try and sign a message. Catch the thrown error message and compare it to the expected error.
+**27** | Differing accounts signing the same message will produce differing signatures. | Create two accounts from differing private keys, and have them sign the same message. Expect the signatures to not be the same.
+**28** | Accounts signing separate messages will produce differing signatures. | Create an account through a given private key, and sign two seperate messages. Expect the two signatures to not be the same.
+**29** | Accounts with signing capabilities can verify their signatures. | Repeat test #25, however afterwards, request from the account itself it validate the signature. Expect it to return true.
+**30** | Accounts without signing capabilities can verify their signatures. | Repeat test #23, however after signing the message, create another account from the first accounts public key. With the new account, request from it that it validate the original signature. Expect it to return true.
+**31** | Accounts cannot verify signatures which are invalid. | Create an account from the account subsystem, and verify an invalid signature. Catch for an error message and compare it to the expected error message.
+**32** | Accounts cannot verify signatures they did not sign. | Repeat test #30, however create the second account out of a different public address. With the new account, request from it that it validate the original signature. Expect it to return false.
+
+-----
+
+## Random Subsystem
+
+**\#**  | **Description** | **Procedure**
+---- | ---- | ----
+**33** | Generates the proper Seed out of passed in hashes. | Access the random subsystem and request a randomness seed value, passing in hashes. Compare the result with the expected result.
+**34** | Throws an error message upon passing in undefined input. | Repeat test #33, passing in undefined. Catch for errors and compare to the expected error message.
+**35** | Throws an error message upon passing in a empty array as input. | Repeat test #34, however passing in a empty array.
+**36** | Generates expected pseudo random values based on passed in seed. | Access the random subsystem and set the seed value to a set value. Request random ints and floats, comparing for expected values.
+**37** | Randomness falls under a valid distribution. | Access the random subsystem, set the seed value and request a random int from 1 to 10 one hundred thousand times. Compare the distribution, checking that there is no statistical significance between favouring numbers over each other.
+
+-----
+
+
+## Block Subsystem
+
+**\#**  | **Description** | **Procedure**
+---- | ---- | ----
+**38** | Block creation creates blocks with valid and accurate data, as well have as a correctly generated hash. | Access the block subsystem and request to make a block, passing in the block data. Compare the block’s data and hash with expected values.
+**39** | Validates that the block validation system is correct in positive cases. | Access the block subsystem and request the creation of a valid block. Next, request block validation for the block. Expect the result to be positive.
+**40** | Validates that the block validation system is correct in failing blocks which don’t meet block validation rule #1. | Access the block subsystem and request the creation of a valid block in accordance to rule #1.
+**41** | Validates that the block validation system is correct in failing blocks which don’t meet block validation rule #2. | Run test #40 however the check is in accordance of rule #2.
+**42** | An exception is thrown when an invalid block is checked for validation. | Access the block subsystem and request the validation of a block, however pass in undefined. Check for a thrown error and compare to expected error.
+
+-----
+
+## Transaction Subsystem
+
+**\#**  | **Description** | **Procedure**
+---- | ---- | ----
+**43** | Transaction creation creates transactions with valid and accurate data, as well have as a correctly generated hash. | Access the transaction subsystem and request to make a transaction, passing in the transaction data. Compare the transaction’s data and hash with expected values.
+**44** | Validates that the transaction validation system is correct in positive cases. | Access the transaction subsystem and request the creation of a valid transaction. Next, request transaction validation for the transaction. Expect the result to be positive.
+**45** | Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #1. | Access the transaction subsystem and request the creation of a valid transaction in accordance to rule #1.
+**46** | Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #2. | Run test #40 however the check is in accordance of rule #2.
+**47** | Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #3. | Run test #40 however the check is in accordance of rule #3.
+**48** | Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #4. | Run test #40 however the check is in accordance of rule #4.
+**49** | Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #5. | Run test #40 however the check is in accordance of rule #5.
+**50** | Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #6. | Run test #40 however the check is in accordance of rule #6.
+**51** | Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #7. | Run test #40 however the check is in accordance of rule #7.
+**52** | Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #8. | Run test #40 however the check is in accordance of rule #8.
+**53** | Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #9. | Run test #40 however the check is in accordance of rule #9.
+**54** | Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #10. | Run test #40 however the check is in accordance of rule #10.
+**55** | Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #11. | Run test #40 however the check is in accordance of rule #11.
+**56** | An exception is thrown when an invalid transaction is checked for validation. | Access the transaction subsystem and request the validation of a transaction, however pass in undefined. Check for a thrown error and compare to expected error.
+
+-----
+
+## Squasher Subsystem
+
+**\#**  | **Description** | **Procedure**
+---- | ---- | ----
+**57** | Confirms squasher would trigger on proper hashes for valid cases. | Access the squashing subsystem and invoke the trigger check, passing into it a positive case hash. Expect the result to return true.
+**58** | Confirms squasher would not trigger on a invalid hash. | Access the squashing subsystem and invoke the trigger check, passing into it a negative case hash. Expect the result to return false.
+**59** | Confirms squashing two objects works properly while following the “relative data” squashing rules. | Access the squashing subsystem and invoke the squashing mechanism, passing in two objects where all the variables are numbers. The squashed result should be one object with the relative values added, as if two vectors were added.
+**60** | Confirms squashing two objects works properly while following the “absolute data” squashing rules. | Run test #62, however have the variables in the objects be strings, and overwrite the strings assuming the later parameters were the recent changes.
+**61** | Confirms order matters with “absolute data” rules, with rearranging order changing the squashed result. | Run test #63, however run a second instance where the parameters were in a differing order, and then confirm that the squashed objects do not match.
+**62** | Confirm squashing transactions into a block produced a valid block. | Access the squashing subsystem and squash multiple transactions into a block. Confirm the block subsystem validates the newly created block.
+**63** | Confirm squashing blocks into a block produced a valid block | Access the squashing subsystem and squash multiple blocks into a block. Confirm the block subsystem validates the newly created block.
+
+-----
+
+## Entanglement Subsystem
+
+**\#**  | **Description** | **Procedure**
+---- | ---- | ----
+**64** | Confirms transactions can be added to the entanglement. | Access the entanglement subsystem and add a transaction to the entanglement. Confirm the transaction was added.
+**65** | Confirms adding transactions fails if the transaction is invalid. | Run test #64, however passing in a invalid transaction. Catch the thrown error, confirming  that the caught error matches the expected error.
+**66** | Confirms adding transactions fails if the transaction would cause a cycle in the directed acyclic graph. | Run test #65, however passing in a transaction which is valid, however causes a cycle if added to the DAG.
+**67** | Confirms adding transactions validates older ones. | Access the entanglement subsystem and add multiple transactions to the entanglement, until the first is validated. 
+
+-----
+
+## Blockchain
+
+**\#**  | **Description** | **Procedure**
+---- | ---- | ----
+**68** | Confirms blocks can be added to the blockchains. | Access the blockchains subsystem and add a block to the blockchain. Confirm the block was added.
+**69** | Confirms adding blocks fails if the block is invalid. | Run test #68, however passing in a invalid block. Catch the thrown error, confirming that the caught error matches the expected error.
+**70** | Confirm blocks can invoke the block squashing mechanism if they have the right hash. | Access the blockchains subsystem and add a block who’s hash would trigger squashing. Afterwards, confirm the added block does not exist in the blockchain, and that its transactions belong to a new block.
+
+-----
+
+## Ledger
+
+**\#**  | **Description** | **Procedure**
+---- | ---- | ----
+**71** | Confirm that the ledger can be read from. | Access the ledger subsystem and request a read, passing invalid parameters. Compare the results with the expected results.
+**72** | Confirm the ledger can have changes applied to it which change the state of the ledger. | Access the ledger subsystem and request to apply a “ChangeContext” object to it, modifying the ledgers state. Run test #71, reading for our newly saved information, confirming it was applied.
+**73** | Confirm the ledger can create a deep copy of module data. | Access the ledger subsystem and request a deep copy of module data. Confirm this data is proper. Afterwards, modify the data, and then read from the eldger. Confirm the ledger did not have its data change when the deep copy was changed.
+**74** | Confirm numerous transactions can have their changes applied and get the correct result. | Access the ledger subsystem and apply multiple transactions to the ledger. Confirm the state of the ledger matches expected results.
+**75** | Confirm a block can have its changes applied to the ledger and get the correct result. | Access the ledger subsystem and apply the block to the ledger. Confirm the state of the ledger matches expected results.
+
+-----
+
+## Virtual Machine
+
+**\#**  | **Description** | **Procedure**
+---- | ---- | ----
+**76** | Confirm the virtual machine can have modules added to it and be stored in the ledger. | Access the virtual machine subsystem and add a valid module to it. Access the ledger subsystem and validate that it has the modules data properly loaded.
+**77** | Confirm the virtual machine can read a modules data from the ledger. | Access the virtual machine subsystem and read module data. Confirm that the returned results matches expected results.
+**78** | Confirm “getter” functions can be invoked to fetch Module data. | Access the virtual machine subsystem and invoke a “getter” call to read a Module’s data. Compare the results with the expected results.
+**79** | Confirm “setters” can be simulated. | Access the virtual machine subsystem and invoke a “setter” call to modify a Modules state. Compare the results with the expected results.
+**80** | Confirm “setters” can be invoked and the ledger updates accordingly. | Access the virtual machine subsystem and invoke a “setter” call. Compare the results with the expected results, and confirm that the ledger change appropriately as well.
+**81** | Confirm transactions can be added to the virtual machine, executing them and storing their changes to the ledger. | Access the virtual machine subsystem and add a transaction too it. Confirm that the transaction was executed and it was added to the entanglement.
+**82** | Confirm transactions can trigger the squashing mechanism. | Access the virtual machine subsystem and add a transaction to it, whos hash should trigger the squashing mechanism. Afterwards, confirm that the squashing took place, and the transaction is in a block rather than the entanglement.
+
+-----
+
+## File Storage
+
+**\#**  | **Description** | **Procedure**
+---- | ---- | ----
+**83** | Confirm that transactions can be written to storage asynchronously. | Create a FileStorageInjector object and invoke the its save transaction asynchronously passing in a valid transaction. Confirm that the transaction was saved.
+**84** | Confirm that transactions can be written to storage synchronously. | Create a FileStorageInjector object and invoke the its save transaction synchronously passing in a valid transaction. Confirm that the transaction was saved.
+**85** | Confirm that blocks can be written to storage asynchronously. | Create a FileStorageInjector object and invoke the its save block asynchronously passing in a valid transaction. Confirm that the block was saved.
+**86** | Confirm that blocks can be written to storage synchronously. | Create a FileStorageInjector object and invoke the its save block synchronously passing in a valid transaction. Confirm that the block was saved.
+**87** | Confirm that FileStorage can read transactions synchronously. | Create a FileStorageInjector object and through it invoke reading transactions synchronously. Load a transaction and compare its loaded data against expected results.
+**88** | Confirm that FileStorage can read transactions asynchronously. | Create a FileStorageInjector object and through it invoke reading transactions asynchronously. Load a transaction and compare its loaded data against expected results.
+**89** | Confirm that FileStorage can read blocks synchronously. | Create a FileStorageInjector object and through it invoke reading blocks synchronously. Load a block and compare its loaded data against expected results.
+**90** | Confirm that FileStorage can read blocks asynchronously. | Create a FileStorageInjector object and through it invoke reading transactions asynchronously. Load a transaction and compare its loaded data against expected results.
+**91** | Confirm that transactions can be removed from storage. | Create a FileStorageInjector object and remove a transaction from storage. Confirm the transaction no longer exists.
+**92** | Confirm that blocks can be removed from storage. | Create a FileStorageInjector object and remove a block from storage. Confirm the block no longer exists.
+**93** | Confirm that FileStorage can read all transactions in the entanglement synchronously. | Create a FileStorageInjector object and read all transactions in storage, building an entanglement. Compare this with the expected state of the entanglement.
+**94** | Confirm that FileStorage can read all blocks for a generation from the blockchain synchronously. | Create a FileStorageInjector object and read all blocks in storage for a given generation, building a blockchain. Compare this with the expected state of the blockchain.
+**95** | Confirm that FileStorage can read all blocks for all generations of blockchains synchronously. | Create a FileStorageInjector object and read all blocks in storage, building the blockchains. Compare this with the expected state of the blockchains.
+
+-----
+
+## Local Storage
+
+**\#**  | **Description** | **Procedure**
+---- | ---- | ----
+**96** | Confirm that transactions can be written to storage asynchronously. | Create a LocalStorageInjector object and invoke the its save transaction asynchronously passing in a valid transaction. Confirm that the transaction was saved.
+**97** | Confirm that transactions can be written to storage synchronously. | Create a LocalStorageInjector object and invoke the its save transaction synchronously passing in a valid transaction. Confirm that the transaction was saved.
+**98** | Confirm that blocks can be written to storage asynchronously. | Create a LocalStorageInjector object and invoke the its save block asynchronously passing in a valid transaction. Confirm that the block was saved.
+**99** | Confirm that blocks can be written to storage synchronously. | Create a LocalStorageInjector object and invoke the its save block synchronously passing in a valid transaction. Confirm that the block was saved.
+**100** | Confirm that FileStorage can read transactions synchronously. | Create a LocalStorageInjector object and through it invoke reading transactions synchronously. Load a transaction and compare its loaded data against expected results.
+**101** | Confirm that FileStorage can read transactions asynchronously. | Create a LocalStorageInjector object and through it invoke reading transactions asynchronously. Load a transaction and compare its loaded data against expected results.
+**102** | Confirm that FileStorage can read blocks synchronously. | Create a LocalStorageInjector object and through it invoke reading blocks synchronously. Load a block and compare its loaded data against expected results.
+**103** | Confirm that FileStorage can read blocks asynchronously. | Create a LocalStorageInjector object and through it invoke reading transactions asynchronously. Load a transaction and compare its loaded data against expected results.
+**104** | Confirm that transactions can be removed from storage. | Create a LocalStorageInjector object and remove a transaction from storage. Confirm the transaction no longer exists.
+**105** | Confirm that blocks can be removed from storage. | Create a LocalStorageInjector object and remove a block from storage. Confirm the block no longer exists.
+**106** | Confirm that FileStorage can read all transactions in the entanglement synchronously. | Create a LocalStorageInjector object and read all transactions in storage, building an entanglement. Compare this with the expected state of the entanglement.
+**107** | Confirm that FileStorage can read all blocks for a generation from the blockchain synchronously. | Create a LocalStorageInjector object and read all blocks in storage for a given generation, building a blockchain. Compare this with the expected state of the blockchain.
+**108** | Confirm that FileStorage can read all blocks for all generations of blockchains synchronously. | Create a LocalStorageInjector object and read all blocks in storage, building the blockchains. Compare this with the expected state of the blockchains.
+
+-----
+
+## Storage
+
+**\#**  | **Description** | **Procedure**
+---- | ---- | ----
+**109** | Confirm that Storage can save a transaction to the file system using FileStorageInjector. | Access the storage subsystem and create a Storage object with a FIleStorageInjector, then save a transaction to file. Confirm the transaction was saved.
+**110** | Confirm that Storage can save a block to the file system using FileStorageInjector. | Access the storage subsystem and create a Storage object with a FIleStorageInjector, then save a block to file. Confirm the block was saved.
+**111** | Confirm that Storage, using FileStorageInjector, can load all the initial ledger state, reading all blockchains/entanglement and applying all blocks/transactions to the virtual machine. | Access the storage subsystem and create a Storage object with a FIleStorageInjector, then invoke the load from initial state function on the storage subsystem, then confirm the ledger, blockchain and entanglement states match the expected states.
+**112** | Confirm that Storage can save a transaction to local storage using LocalStorageInjector. | Access the storage subsystem and create a Storage object with a LocalStorageInjector, then save a transaction to local storage. Confirm the transaction was saved.
+**113** | Confirm that Storage can save a block to local storage using LocalStorageInjector. | Access the storage subsystem and create a Storage object with a LocalStorageInjector, then save a block to local storage. Confirm the block was saved.
+**114** | Confirm that Storage, using LocalStorageInjector, can load all the initial ledger state, reading all blockchains/entanglement and applying all blocks/transactions to the virtual machine. | Access the storage subsystem and create a Storage object with a LocalStorageInjector, then invoke the load from initial state function on the storage subsystem, then confirm the ledger, blockchain and entanglement states match the expected states.
+
+-----
+
+## Messages
+
+**\#**  | **Description** | **Procedure**
+---- | ---- | ----
+**115** | Confirm the ability to subscribe for messages relating to module function callbacks being executed in the ledger machine. | Access the messaging subsystem and subscribe for a function callback. Afterwards, invoke a transaction which matches the subscribed message. Confirm that the callback was invoked.
+**116** | Confirm the ability to subscribe for messages relating to module data changes callbacks being executed in the ledger machine. | Access the messaging subsystem and subscribe for a module data change callback. Afterwards, invoke a transaction which changes the piece of data the above is listening on. Confirm that the callback was invoked.
+**117** | Confirm the ability to unsubscribe from messaging. | Run tests #115 and #116, and then unsubscribe the two callbacks. Confirm that the callbacks were unsubscribed.
+**118** | Confirm, once unsubscribed, previously invokable callbacks stop being invoked. | Run test #117, however after unsubscribing, invoke a transaction which would trigger both callbacks. Confirm neither are invoked.
+
+-----
+
+## Conclusion
+
+Upon implementing the above 118 unit tests, we will be confident the Seed Low Level API (LLAPI) is functioning properly under the hood. These unit tests will be expanded as networking is implemented. Scenario testing for modules will be revamped in the future, allowing us to test the interactions between all subsystems within the higher level usecases of the product.

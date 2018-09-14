@@ -28,6 +28,12 @@ module.exports = {
      */
     createModule : function(info) {
         return new Module(info);
+    },
+    /**
+     * Creates a simple module used for unit testing by the virtual machine.
+     */
+    getTestModule : function() {
+        return testModule;
     }
  }
 
@@ -201,3 +207,21 @@ module.exports = {
         return this.fullHashFunction(info) == fullHash;
     }
 }
+
+const testModule = new Module( {
+    module : "Test",
+    initialData : {
+        testValue : 5
+    },
+    initialUserData : {    
+    },
+    functions : {
+        addToTestValue : function(container, changeContext) {
+            changeContext.add(container.args.value, { key : "testValue" });
+            return changeContext;
+        },
+        getTestValue : function(container) {
+            return container.getModuleData().testValue;
+        }
+    }
+} );
