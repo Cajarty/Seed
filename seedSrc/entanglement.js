@@ -438,7 +438,6 @@ const VALIDATION_LEVEL = {
     trustTransactions(transactionsToTrust) {
         for(let i = 0; i < transactionsToTrust.length; i++) {
             let hashToTrust = transactionsToTrust[i].transactionHash;
-            console.info("TRUST", hashToTrust);
             if (this.contains(hashToTrust) && this.vertices[hashToTrust].trust < 1) {
                 this.increaseTrust(hashToTrust);
             }

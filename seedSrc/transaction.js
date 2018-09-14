@@ -586,11 +586,20 @@ const transactionUnitTests = {
     /**
      * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #6.
      */
-    transactionValidation_failsTransactionsBreakingValidationRule6And7 : function(test, log) {
+    transactionValidation_failsTransactionsBreakingValidationRule6 : function(test, log) {
         // These tests are done together in code
         let testTransaction = unitTestingExporter.getSeedConstructorTransaction();
         let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
         newTransaction.execution.moduleChecksum += "G";
+        test.assertAreEqual(new TransactionValidator().doesFollowRules6And7(newTransaction), false, "Should not be able to match the checksums with any genuine loaded values.");
+    },
+    /**
+     * Validates that the transaction validation system is correct in failing transactions which don’t meet transaction validation rule #7.
+     */
+    transactionValidation_failsTransactionsBreakingValidationRule7 : function(test, log) {
+        // These tests are done together in code
+        let testTransaction = unitTestingExporter.getSeedConstructorTransaction();
+        let newTransaction = module.exports.createExistingTransaction(testTransaction.sender, testTransaction.execution, testTransaction.validatedTransactions, testTransaction.transactionHash, testTransaction.signature, testTransaction.timestamp )
         newTransaction.execution.functionChecksum += "3";
         test.assertAreEqual(new TransactionValidator().doesFollowRules6And7(newTransaction), false, "Should not be able to match the checksums with any genuine loaded values.");
     },
