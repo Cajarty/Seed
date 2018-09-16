@@ -169,7 +169,15 @@ ipcMain.once("runUnitTests", () => {
  * Runs unit tests. Assumes the state of the Seed cryptocurrency is already prepped for unit tests
  */
 ipcMain.once("loadFromDisk", () => {
-    seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false).loadInitialState();
+    let clientExporter = require("../seedSrc/networking/client.js");
+    let relayNodeExporter = require("../seedSrc/networking/relayNode.js");
+    let relayNode = relayNodeExporter.createRelayNode();
+    relayNode.listen();
+    let client = clientExporter.createClient();
+    setTimeout(() => {
+        client.connect('http://localhost:3000');
+    }, 1000);
+    //seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false).loadInitialState();
 });
 
 /**
