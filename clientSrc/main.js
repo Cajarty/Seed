@@ -173,10 +173,7 @@ ipcMain.once("loadFromDisk", () => {
     relayNode.listen();
     let client = clientExporter.createClient();
     setTimeout(() => {
-        client.connect('http://localhost:3000');
-        setTimeout(() => {
-            client.requestBlockchainHeaders();
-        }, 1000);
+        clientExporter.connectAndLoadState(client, 'http://localhost:3000');
     }, 1000);
     //seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false).loadInitialState();
 });

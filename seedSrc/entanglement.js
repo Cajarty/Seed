@@ -168,6 +168,9 @@ module.exports = {
     },
     clearAll : function() {
         entanglement = new Entanglement();
+    },
+    getEntanglementHeaders : function() {
+        return Object.keys(entanglement.transactions);
     }
  }
 

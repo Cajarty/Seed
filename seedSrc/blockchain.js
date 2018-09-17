@@ -77,6 +77,20 @@ module.exports = {
     },
     clearAll : function() {
         blockchain = {};
+    },
+    getBlockchainHeaders : function() {
+        let headers = {};
+        let generations = Object.keys(blockchain);
+        for(let i = 0; i < generations.length; i++) {
+            let generation = generations[i];
+            headers[generation] = [];
+            for(let j = 0; j < blockchain[generation].length; j++) {
+                let block = blockchain[generation][j];
+                console.info(block.blockHash);
+                headers[generation].push(block.blockHash);
+            }
+        }
+        return headers;
     }
  }
  

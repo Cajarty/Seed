@@ -21,6 +21,8 @@ module.exports = {
 const ioServer = require('socket.io');
 const http = require('http');
 const clientExporter = require('./client.js');
+const blockchainExporter = require("../blockchain.js");
+const entanglementExporter = require("../entanglement.js");
 
 class RelayNode {
     constructor(relayNodeIPs) {
@@ -57,8 +59,7 @@ class RelayNode {
 
             let onRequestBlockchainHeaders = () => {
                 console.info("SERVER: Received requestBlockchainHeaders");
-                // Fetch blockchain headers
-                let headers = [ "HEADER1" ];
+                let headers = blockchainExporter.getBlockchainHeaders();
                 console.info("SERVER: Sending responseBlockchainHeaders | ", headers );
                 client.emit('responseBlockchainHeaders', headers);
             }
@@ -66,17 +67,17 @@ class RelayNode {
             
             let onRequestEntanglementHeaders = () => {
                 console.info("SERVER: Received requestEntanglementHeaders | ");
-                // Fetch blockchain headers
-                let headers = [ "HEADER1" ];
+                let headers = entanglementExporter.getEntanglementHeaders();
                 console.info("SERVER: Sending responseEntanglementHeaders | ", headers );
                 client.emit('responseEntanglementHeaders', headers);
             }
-            client.on('requestEntanglementHeaders', onRequestBlockchainHeaders);
+            client.on('requestEntanglementHeaders', onRequestEntanglementHeaders);
 
-            let onRequestBlocks = () => {
+            let onRequestBlocks = (blockchainHeaders) => {
                 console.info("SERVER: Received requestBlocks | ");
                 // Fetch blockchain headers
-                let blocks = [ "BLOCK1" ];
+                
+                let blocks = blockchainExporter.getBlocks(blockchainHeaders);
                 console.info("SERVER: Sending responseBlocks | ", blocks );
                 client.emit('responseBlocks', blocks);
             }
@@ -89,7 +90,7 @@ class RelayNode {
                 console.info("SERVER: Sending responseTransactions | ", transactions );
                 client.emit('responseTransactions', transactions);
             }
-            client.on('requestTransactions', onRequestBlocks);
+            client.on('requestTransactions', onRequestTransactions);
 
             let onSendTransaction = (transaction) => {
                 console.info("SERVER: Received sendTransaction | ", transaction);
