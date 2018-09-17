@@ -52,8 +52,12 @@ class RelayNode {
 
             let onDisconnect = () => {
                 console.info("SERVER: Received disconnect");
-                client.removeListener('test', onTest);
                 client.removeListener('disconnect', onDisconnect);
+                client.removeListener('requestBlockchainHeaders', onRequestBlockchainHeaders);
+                client.removeListener('requestEntanglementHeaders', onRequestEntanglementHeaders);
+                client.removeListener('requestBlocks', onRequestBlocks);
+                client.removeListener('requestTransactions', onRequestTransactions);
+                client.removeListener('sendTransaction', onSendTransaction);
             };
             client.on('disconnect', onDisconnect);
 

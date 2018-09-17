@@ -91,6 +91,22 @@ module.exports = {
             }
         }
         return headers;
+    },
+    getBlocks: function(blockchainHeaders) {
+        let blocks = [];
+        let generations = Object.keys(blockchainHeaders);
+        for(let i = 0; i < generations.length; i++) {
+            let generation = generations[i];
+            if (blockchain[generation]) {
+                for(let j = 0; j < blockchain[generation].length; j++) {
+                    let blockToCheck = blockchain[generation][j];
+                    if (blockchainHeaders[generation].includes(blockToCheck.blockHash)) {
+                        blocks.push(blockToCheck);
+                    }
+                }
+            }
+        }
+        return blocks;
     }
  }
  
