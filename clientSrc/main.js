@@ -160,8 +160,6 @@ ipcMain.on("executeJavaScript", function(event, windowName, javaScriptString, ca
  * Runs unit tests. Assumes the state of the Seed cryptocurrency is already prepped for unit tests
  */
 ipcMain.once("runUnitTests", () => {
-    //let transactions = seed.getEntanglementExporter().getEntanglement();
-    //console.log(transactions);
     seed.getScenarioTestExporter().seedScenarioSetupTest();
 });
 
@@ -176,6 +174,9 @@ ipcMain.once("loadFromDisk", () => {
     let client = clientExporter.createClient();
     setTimeout(() => {
         client.connect('http://localhost:3000');
+        setTimeout(() => {
+            client.requestBlockchainHeaders();
+        }, 1000);
     }, 1000);
     //seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false).loadInitialState();
 });

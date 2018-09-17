@@ -48,19 +48,56 @@ class RelayNode {
         socket.on('connection', (client) => {
             console.info("SERVER: Received connection");
 
-            let onTest = (data) =>{
-                console.info("SERVER: Received test | ", data);
-                console.info("SERVER: Sending test | ", "Cheers, " + client.id);
-                client.emit('test', "Cheers, " + client.id);
-            };
-            client.on('test', onTest);
-
             let onDisconnect = () => {
                 console.info("SERVER: Received disconnect");
                 client.removeListener('test', onTest);
                 client.removeListener('disconnect', onDisconnect);
             };
             client.on('disconnect', onDisconnect);
+
+            let onRequestBlockchainHeaders = () => {
+                console.info("SERVER: Received requestBlockchainHeaders");
+                // Fetch blockchain headers
+                let headers = [ "HEADER1" ];
+                console.info("SERVER: Sending responseBlockchainHeaders | ", headers );
+                client.emit('responseBlockchainHeaders', headers);
+            }
+            client.on('requestBlockchainHeaders', onRequestBlockchainHeaders);
+            
+            let onRequestEntanglementHeaders = () => {
+                console.info("SERVER: Received requestEntanglementHeaders | ");
+                // Fetch blockchain headers
+                let headers = [ "HEADER1" ];
+                console.info("SERVER: Sending responseEntanglementHeaders | ", headers );
+                client.emit('responseEntanglementHeaders', headers);
+            }
+            client.on('requestEntanglementHeaders', onRequestBlockchainHeaders);
+
+            let onRequestBlocks = () => {
+                console.info("SERVER: Received requestBlocks | ");
+                // Fetch blockchain headers
+                let blocks = [ "BLOCK1" ];
+                console.info("SERVER: Sending responseBlocks | ", blocks );
+                client.emit('responseBlocks', blocks);
+            }
+            client.on('requestBlocks', onRequestBlocks);
+
+            let onRequestTransactions = () => {
+                console.info("SERVER: Received requestTransactions | ");
+                // Fetch blockchain headers
+                let transactions = [ "TRANSACTION1" ];
+                console.info("SERVER: Sending responseTransactions | ", transactions );
+                client.emit('responseTransactions', transactions);
+            }
+            client.on('requestTransactions', onRequestBlocks);
+
+            let onSendTransaction = (transaction) => {
+                console.info("SERVER: Received sendTransaction | ", transaction);
+                // Fetch blockchain headers
+                console.info("SERVER: Sending responseSendTransaction");
+                client.emit('responseSendTransaction');
+            }
+            client.on('sendTransaction', onSendTransaction);
         });
         server.listen(3000);
         
