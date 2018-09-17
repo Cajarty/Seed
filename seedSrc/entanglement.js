@@ -171,6 +171,17 @@ module.exports = {
     },
     getEntanglementHeaders : function() {
         return Object.keys(entanglement.transactions);
+    },
+    getTransactions : function(entanglementHeaders) {
+        let transactions = [];
+        for(let i = 0; i < entanglementHeaders.length; i++) {
+            let transactionHash = entanglementHeaders[i];
+            if (transactionHash) {
+                let transaction = entanglement.getTransaction(transactionHash);
+                transactions.push(transaction);
+            }
+        }
+        return transactions;
     }
  }
 

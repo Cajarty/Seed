@@ -83,16 +83,16 @@ class RelayNode {
                 
                 let blocks = blockchainExporter.getBlocks(blockchainHeaders);
                 console.info("SERVER: Sending responseBlocks | ", blocks );
-                client.emit('responseBlocks', blocks);
+                client.emit('responseBlocks', JSON.stringify(blocks));
             }
             client.on('requestBlocks', onRequestBlocks);
 
-            let onRequestTransactions = () => {
-                console.info("SERVER: Received requestTransactions | ");
+            let onRequestTransactions = (entanglementHeaders) => {
+                console.info("SERVER: Received requestTransactions | ", entanglementHeaders);
                 // Fetch blockchain headers
-                let transactions = [ "TRANSACTION1" ];
+                let transactions = entanglementExporter.getTransactions(entanglementHeaders);
                 console.info("SERVER: Sending responseTransactions | ", transactions );
-                client.emit('responseTransactions', transactions);
+                client.emit('responseTransactions', JSON.stringify(transactions));
             }
             client.on('requestTransactions', onRequestTransactions);
 
