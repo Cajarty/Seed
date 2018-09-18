@@ -40,7 +40,19 @@ let loadInitialStateTasks = function(client) {
     });
     // Handle determining which blocks to request
     client.addTask(() => {
-        console.info("For each block header, determine if we have it stored");
+        let blockHeaders = client.taskData["blockHeaders"];
+        if (blockHeaders) {
+            let unknownHeaders = [];
+            for(let i = 0; i < blockHeaders.length; i++) {
+                let blockHeader = blockHeaders[0];
+                // Check if we know of this block header
+                if (blockHeader.length >= 2 && !blockchainExporter.doesContainBlock(blockHeader[0], blockHeader[1])) {
+                    unknownHeaders.push(blockHeader);
+                }
+            }
+            client.taskData["blockHeaders"] = unknownHeaders;
+        }
+        console.info("For each block header, determiend we do not yet have stored: ", client.taskData["blockHeaders"]);
         // for each block header, determine if we have it stored
         client.tryRunNextTask();
     });
@@ -54,7 +66,19 @@ let loadInitialStateTasks = function(client) {
     });
     // Handle determining which transactions to request
     client.addTask(() => {
-        console.info("For each block header, determine if we have it stored");
+        let transactionHeaders = client.taskData["transactionHeaders"];
+        if (transactionHeaders) {
+            let unknownHeaders = [];
+            for(let i = 0; i < transactionHeaders.length; i++) {
+                let transactionHeader = transactionHeaders[0];
+                // Check if we know of this block header
+                if (!entanglementExporter.hasTransaction(transactionHeader) && !blockchainExporter.doesContainTransactions(transactionHeader)) {
+                    unknownHeaders.push(blockHeader);
+                }
+            }
+            client.taskData["transactionHeaders"] = unknownHeaders;
+        }
+        console.info("For each transaction header, determiend we do not yet have stored: ", client.taskData["transactionHeaders"]);
         // for each block header, determine if we have it stored
         client.tryRunNextTask();
     });
@@ -69,12 +93,16 @@ let loadInitialStateTasks = function(client) {
         storage.getStorage().loadInitialState(blocks, transactions);
         client.tryRunNextTask();
         delete client.taskData["blocks"];
+        delete client.taskData["blockHeaders"];
         delete client.taskData["transactions"];
+        delete client.taskData["transactionHeaders"];
     });
 }
 
 const ioClient = require('socket.io-client');
 const storage = require("../storage/storage.js");
+const blockchainExporter = require("../blockchain.js");
+const entanglementExporter = require("../entanglement.js");
 const transactionExporter = require("../transaction.js");
 const svmExporter = require("../virtualMachine/virtualMachine.js");
 

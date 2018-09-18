@@ -65,6 +65,18 @@ module.exports = {
     doesContainTransactions : function(transactionHash, generation) {
         return this.getTransaction(transactionHash, generation) != undefined;
     },
+    doesContainBlock : function(blockHash, generation) {
+        let chain = blockchain[generation];
+        if (chain) {
+            for(let i = 0; i < chain.length; i++) {
+                let block = chain[i];
+                if (block.blockHash == blockHash) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    },
     getTransactionSender : function(transactionHash, generation) {
         let leanTransactionData = this.getTransaction(transactionHash, generation);
         if (leanTransactionData && leanTransactionData.length > 0) {
