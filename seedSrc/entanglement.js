@@ -130,11 +130,13 @@ module.exports = {
                     //console.info("Failed to find ", tips[i], " in ", entanglement);
                 }
             }
-            if (sender != transaction.sender && entanglement.tips[transaction.transactionHash] > 0) {
+            if (transaction && sender != transaction.sender && entanglement.tips[transaction.transactionHash] > 0) {
                 result.push(transaction);
             }
         }
-        console.info("TIPS", result);
+        if (result.length < numberOfTips) {
+            console.info("ERROR: Only found TIPS::", result, " when requesting ", numberOfTips, " tips");
+        }
         return result;
     },
     /**
