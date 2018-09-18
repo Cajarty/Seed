@@ -95,21 +95,26 @@ class Storage {
 
     readInitialState() {
         let blocksJSON = this.databaseInjector.readBlockchainsSync();
+        let blocks = [];
+        for(let i = 0; i < blocksJSON.length; i++) {
+            blocks.push(this.tryDecompress(blocksJSON[i]));
+        }
         let transactionsJSON = this.databaseInjector.readEntanglementSync();
-        return { blocksJSON : blocksJSON, transactionsJSON : transactionsJSON };
+        let transactions = [];
+        for(let i = 0; i < transactionsJSON.length; i++) {
+            transactions.push(this.tryDecompress(transactionsJSON[i]));
+        }
+        return { blocks : blocks, transactions : transactions };
     }
 
     /**
      * Invokes the storage's loadInitialState function, which tries to load all transactions/blocks from storage
      */
-    loadInitialState(blocksJSON, transactionsJSON) {
+    loadInitialState(blocks, transactions) {
         let sortByTimestamp = function(a, b){
             return a.timestamp - b.timestamp
         };
-        let blocks = [];
-        for(let i = 0; i < blocksJSON.length; i++) {
-            blocks.push(this.tryDecompress(blocksJSON[i]));
-        }
+        
         blocks.sort(sortByTimestamp);
         for(let i = 0; i < blocks.length; i++) {
             if (blockExporter.isValid(blocks[i])) {
@@ -118,10 +123,6 @@ class Storage {
             } else {
                 throw "FAILED TO CHECK VALIDITY OF BLOCK";
             }
-        }
-        let transactions = [];
-        for(let i = 0; i < transactionsJSON.length; i++) {
-            transactions.push(this.tryDecompress(transactionsJSON[i]));
         }
         transactions.sort(sortByTimestamp);
         for(let i = 0; i < transactions.length; i++) {

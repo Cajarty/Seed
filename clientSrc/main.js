@@ -103,6 +103,8 @@ let menuTemplate = [
 app.on('ready', function() {
     let title = 'Seed Launcher';
 
+    let storage = seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false);
+
     if (commands.client) {
         let clientExporter = require("../seedSrc/networking/client.js");
         let client = clientExporter.createClient();
@@ -199,9 +201,9 @@ ipcMain.once("runUnitTests", () => {
  * Runs unit tests. Assumes the state of the Seed cryptocurrency is already prepped for unit tests
  */
 ipcMain.once("loadFromDisk", () => {
-    let storage = seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false);
+    let storage = seed.getStorage();
     let initialState = storage.readInitialState();
-    storage.loadInitialState(initialState.blocksJSON, initialState.transactionsJSON);
+    storage.loadInitialState(initialState.blocks, initialState.transactions);
 });
 
 /**

@@ -30,12 +30,6 @@ module.exports = {
             client.addTask(() => {
                 client.requestBlocks();
             });
-            // Add blocks to blockchain
-            client.addTask(() => {
-                // for each block, add it to blockchain
-                console.info("for each block, add it to blockchain");
-                client.tryRunNextTask();
-            });
             // Request "Entanglement Headers"
             client.addTask(() => {
                 client.requestEntanglementHeaders();
@@ -50,10 +44,11 @@ module.exports = {
             client.addTask(() => {
                 client.requestTransactions();
             });
-            // Add transactions to entanglement
+            // Load transactions and blocks into entanglement
             client.addTask(() => {
-                // for each transaction, add it to entanglement
-                console.info("for each transaction, add it to entanglement");
+                let blocks = JSON.parse(client.taskData["blocks"]);
+                let transactions = JSON.parse(client.taskData["transactions"]);
+                storage.getStorage().loadInitialState(blocks, transactions);
                 client.tryRunNextTask();
             });
 
@@ -63,6 +58,7 @@ module.exports = {
 }
 
 const ioClient = require('socket.io-client');
+const storage = require("../storage/storage.js");
 
 class Client {
     constructor() {
