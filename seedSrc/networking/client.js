@@ -65,6 +65,8 @@ let loadInitialStateTasks = function(client) {
         let transactions = JSON.parse(client.taskData["transactions"]);
         storage.getStorage().loadInitialState(blocks, transactions);
         client.tryRunNextTask();
+        delete client.taskData["blocks"];
+        delete client.taskData["transactions"];
     });
 }
 
@@ -111,6 +113,8 @@ class Client {
         this.socketClient.off('responseTransactions');
         this.socketClient.off('responseSendTransaction');
         this.socketClient.off('notifyTransaction');
+        this.taskChain = [];
+        this.taskData = {};
         delete this.socketClient;
     }
 
