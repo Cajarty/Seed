@@ -5,6 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "Electron .",
+    "client": "Electron . --client",
+    "relay": "Electron . --relay",
     "test": "node test.js --v"
   },
   "repository": {

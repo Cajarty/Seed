@@ -335,6 +335,9 @@ class TransactionValidator {
             }
             let result = JSON.stringify(svm.simulate(simulationInfo));
     
+            if (result != transaction.execution.changeSet) {
+                console.info("HERE", result, transaction.execution.changeSet);
+            }
             return result == transaction.execution.changeSet;
         } else {
             return false;

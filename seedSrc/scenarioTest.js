@@ -105,9 +105,15 @@ module.exports = {
         tester.switchUser("ABC");
         tester.createTransactionWithRelay("approve", { spender : tester.getAccount("DEF"), value : 250 });
         tester.relay();
+        tester.relay();
+        tester.relay();
+        tester.relay();
 
         tester.switchUser("DEF");
         tester.createTransactionWithRelay("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("DEF"), value : 100 });
+        tester.relay();
+        tester.relay();
+        tester.relay();
         tester.createTransactionWithRelay("transferFrom", { from : tester.getAccount("ABC"), to : tester.getAccount("GHI"), value : 100 });
         tester.relay();
         tester.relay();

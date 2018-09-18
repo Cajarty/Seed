@@ -17,6 +17,22 @@ const promiseIpc = require('electron-promise-ipc');
 const seed = require("../seedSrc/index.js");
 const moduleLoader = require("./moduleLoader");
 
+let hasCommand = (command) => {
+    if (process.argv.length >= 2) {
+        for(let i = 2; i < process.argv.length; i++) {
+            if (process.argv[i] == command) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+let commands = { 
+    client : hasCommand('--client'),
+    relay : hasCommand('--relay')
+}
+
 //'production': Release for public
 //'development': Development tools enabled
 //'debug': Debug tools active, e.g. print lines
@@ -85,7 +101,23 @@ let menuTemplate = [
  * and then modifies the Launcher window to add buttons regarding each loaded module.
  */
 app.on('ready', function() {
-    windows["Launcher"] = new BrowserWindow({width: 800, height: 500, title: 'Seed Launcher'});
+    let title = 'Seed Launcher';
+
+    if (commands.client) {
+        let clientExporter = require("../seedSrc/networking/client.js");
+        let client = clientExporter.createClient();
+        title += ' (Client)';
+        setTimeout(() => {
+            clientExporter.connectAndLoadState(client, 'http://localhost:3000');
+        }, 1000);
+    } else if (commands.relay) {
+        let relayNodeExporter = require("../seedSrc/networking/relayNode.js");
+        let relayNode = relayNodeExporter.createRelayNode();
+        relayNode.listen();
+        title += ' (Relay Node)';
+    }
+
+    windows["Launcher"] = new BrowserWindow({width: 800, height: 500, title: title});
     windows["Launcher"].loadURL(url.format({
         pathname: path.join(__dirname, 'launcher.html'),
         protocol: 'file:',
@@ -109,7 +141,7 @@ app.on('ready', function() {
     }
     windows["Launcher"].webContents.executeJavaScript(javascript);
 
-    // Launch DApp
+    
 });
 
 //If we're on a Mac, add an empty object to fix OS specific menubar issue
@@ -167,15 +199,9 @@ ipcMain.once("runUnitTests", () => {
  * Runs unit tests. Assumes the state of the Seed cryptocurrency is already prepped for unit tests
  */
 ipcMain.once("loadFromDisk", () => {
-    let clientExporter = require("../seedSrc/networking/client.js");
-    let relayNodeExporter = require("../seedSrc/networking/relayNode.js");
-    let relayNode = relayNodeExporter.createRelayNode();
-    relayNode.listen();
-    let client = clientExporter.createClient();
-    setTimeout(() => {
-        clientExporter.connectAndLoadState(client, 'http://localhost:3000');
-    }, 1000);
-    //seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false).loadInitialState();
+    let storage = seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false);
+    let initialState = storage.readInitialState();
+    storage.loadInitialState(initialState.blocksJSON, initialState.transactionsJSON);
 });
 
 /**

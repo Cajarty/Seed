@@ -93,14 +93,19 @@ class Storage {
         this.useCompression = useCompression;
     }
 
+    readInitialState() {
+        let blocksJSON = this.databaseInjector.readBlockchainsSync();
+        let transactionsJSON = this.databaseInjector.readEntanglementSync();
+        return { blocksJSON : blocksJSON, transactionsJSON : transactionsJSON };
+    }
+
     /**
      * Invokes the storage's loadInitialState function, which tries to load all transactions/blocks from storage
      */
-    loadInitialState() {
+    loadInitialState(blocksJSON, transactionsJSON) {
         let sortByTimestamp = function(a, b){
             return a.timestamp - b.timestamp
         };
-        let blocksJSON = this.databaseInjector.readBlockchainsSync();
         let blocks = [];
         for(let i = 0; i < blocksJSON.length; i++) {
             blocks.push(this.tryDecompress(blocksJSON[i]));
@@ -114,7 +119,6 @@ class Storage {
                 throw "FAILED TO CHECK VALIDITY OF BLOCK";
             }
         }
-        let transactionsJSON = this.databaseInjector.readEntanglementSync();
         let transactions = [];
         for(let i = 0; i < transactionsJSON.length; i++) {
             transactions.push(this.tryDecompress(transactionsJSON[i]));
