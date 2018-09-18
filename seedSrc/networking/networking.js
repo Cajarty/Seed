@@ -10,7 +10,7 @@ module.exports = {
     /**
      * Creates a client instance which can connect to a relay node IP
      */
-    createClient : function() {
+    newClient : function() {
 
     }
 }

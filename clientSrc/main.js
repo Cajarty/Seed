@@ -106,11 +106,10 @@ app.on('ready', function() {
     let storage = seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false);
 
     if (commands.client) {
-        let clientExporter = require("../seedSrc/networking/client.js");
-        let client = clientExporter.createClient();
+        let client = seed.getClientExporter().newClient();
         title += ' (Client)';
         setTimeout(() => {
-            clientExporter.connectAndLoadState(client, 'http://localhost:3000');
+            seed.getClientExporter().connectAndLoadState(client, 'http://localhost:3000');
         }, 1000);
     } else if (commands.relay) {
         let relayNodeExporter = require("../seedSrc/networking/relayNode.js");
@@ -262,6 +261,15 @@ promiseIpc.on("addTransaction", (jsonTransaction) => {
     let transaction = seed.getTransactionExporter().createExistingTransaction(jsonTransaction.sender, jsonTransaction.execution, jsonTransaction.validatedTransactions, jsonTransaction.transactionHash, jsonTransaction.signature);
     return seed.getSVMExporter().getVirtualMachine().incomingTransaction(transaction);
 });
+
+
+/**
+ * Receives a requests through the HLAPI to add a transaction to the entanglement
+ */
+promiseIpc.on("propagateTransaction", (jsonTransaction) => {
+    return seed.getClientExporter().newClient().sendTransaction(jsonTransaction);
+});
+
 
 /**
  * Receives a requests through the HLAPI to invoke a "getter" function inside the given module, passing in

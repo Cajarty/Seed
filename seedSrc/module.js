@@ -105,6 +105,7 @@ module.exports = {
      * @return - Returns true of false for whether the user already exists in this modules data
      */
     doesUserExist(user) {
+        
         return ledgerExporter.getLedger().getModuleData(this.module).userData[user] != undefined;
     }
 

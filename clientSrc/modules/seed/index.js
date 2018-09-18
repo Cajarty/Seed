@@ -173,7 +173,7 @@ function burnValueChange(newValue) {
  */
 function construct() {
     let value = inputData["constructor"].value;
-    seedHLAPI.createTransaction("Seed", "constructor", { initialSeed : value })
+    seedHLAPI.createAndPropagateTransaction("Seed", "constructor", { initialSeed : value })
         .then(() => {
             seedUpdate();
         });
@@ -187,7 +187,7 @@ function transfer() {
     let value = inputData["transfer"].value;
     let address = inputData["transfer"].address;
     if (value != 0 && address != "") {
-        seedHLAPI.createTransaction("Seed", "transfer", { to : address, value : value });
+        seedHLAPI.createAndPropagateTransaction("Seed", "transfer", { to : address, value : value });
     }
 }
 
@@ -201,7 +201,7 @@ function transferFrom() {
     let fromAddress = inputData["transferFrom"].fromAddress;
     let toAddress = inputData["transferFrom"].toAddress;
     if (value != 0 && fromAddress != "" && toAddress != "") {
-        seedHLAPI.createTransaction("Seed", "transferFrom", { from : fromAddress, to : toAddress, value : value });
+        seedHLAPI.createAndPropagateTransaction("Seed", "transferFrom", { from : fromAddress, to : toAddress, value : value });
     }
 }
 
@@ -213,7 +213,7 @@ function approve() {
     let value = inputData["approve"].value;
     let address = inputData["approve"].address;
     if (value != 0 && address != undefined) {
-        seedHLAPI.createTransaction("Seed", "approve", { spender : address, value : value });
+        seedHLAPI.createAndPropagateTransaction("Seed", "approve", { spender : address, value : value });
     }
 }
 
@@ -224,7 +224,11 @@ function approve() {
 function burn() {
     let value = inputData["burn"].value;
     if (value != 0) {
-        seedHLAPI.createTransaction("Seed", "burn", { value : value });
+        seedHLAPI.createAndPropagateTransaction("Seed", "burn", { value : value }).then((tx) => {
+            console.info("CREATED", tx);
+        }).catch((e) => {
+            console.info("ERROR: ", e);
+        });
     }
 }
 

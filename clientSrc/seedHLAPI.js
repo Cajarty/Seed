@@ -74,6 +74,33 @@ class SeedHLAPI {
     }
 
     /**
+     * Propagates a transaction accross whatever is the connected network
+     * 
+     * @param {*} transaction - The transaction to propagate
+     */
+    propagateTransaction(transaction) {
+        if (transaction) {
+            return this.ipcPromiseRenderer.send("propagateTransaction", JSON.stringify(transaction));
+        }
+    }
+
+    /**
+     * Requests the creation of a new transaction, which will instantly be invoked by the local virtual machine.
+     * Afterwards, propagates the transaction across whatever is the connected network
+     * 
+     * @param {*} moduleName - The name of the module the function belongs to
+     * @param {*} functionName - The function to invoke within the module
+     * @param {*} args - The arguments to pass to the function while invoking it
+     * @param {*} numOfValidations - The amount of transactions to validate
+     */
+    createAndPropagateTransaction(moduleName, functionName, args, numOfValidations) {
+        return this.createTransaction(moduleName, functionName, args, numOfValidations).then((transaction) => {
+            return this.propagateTransaction(transaction).then((result) => {
+            });
+        });
+    }
+
+    /**
      * Requests that a given transaction be added to the virtual machine
      * 
      * NOTE: Only use this if it was externally created by the Low Level API. The above "createTransaction" function

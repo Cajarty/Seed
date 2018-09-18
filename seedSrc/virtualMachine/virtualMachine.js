@@ -221,13 +221,19 @@ class VirtualMachine {
      * @param {*} transaction - The transaction to attempt to receive
      */
     incomingTransaction(transaction, saveToStorage) {
-        // If its a proper, formed transaction
-        if (transactionExporter.isTransactionProper(transaction)) {
-            // We add it to the entanglement
-            entanglement.tryAddTransaction(transaction, saveToStorage);
+        if (!entanglement.hasTransaction(transaction.transactionHash)) {
+            // If its a proper, formed transaction
+            if (transactionExporter.isTransactionProper(transaction)) {
+                // We add it to the entanglement
+                entanglement.tryAddTransaction(transaction, saveToStorage);
+                return true;
+            } else {
+                console.info("SVM::incomingTx::Rejected ", transaction.transactionHash, "::malformed transaction");
+            }
         } else {
-            console.info("IncomingTransaction::Malformed", transaction);
+            console.info("SVM::incomingTx::Rejected ", transaction.transactionHash, "::duplicate transaction");
         }
+        return false;
     }
 
     /**

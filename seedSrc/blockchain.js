@@ -92,15 +92,15 @@ module.exports = {
         }
         return headers;
     },
-    getBlocks: function(blockchainHeaders) {
+    getBlocks: function(blockHeaders) {
         let blocks = [];
-        let generations = Object.keys(blockchainHeaders);
+        let generations = Object.keys(blockHeaders);
         for(let i = 0; i < generations.length; i++) {
             let generation = generations[i];
             if (blockchain[generation]) {
                 for(let j = 0; j < blockchain[generation].length; j++) {
                     let blockToCheck = blockchain[generation][j];
-                    if (blockchainHeaders[generation].includes(blockToCheck.blockHash)) {
+                    if (blockHeaders[generation].includes(blockToCheck.blockHash)) {
                         blocks.push(blockToCheck);
                     }
                 }

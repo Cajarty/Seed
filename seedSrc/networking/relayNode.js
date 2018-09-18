@@ -23,6 +23,8 @@ const http = require('http');
 const clientExporter = require('./client.js');
 const blockchainExporter = require("../blockchain.js");
 const entanglementExporter = require("../entanglement.js");
+const transactionExporter = require("../transaction.js");
+const svmExporter = require("../virtualMachine/virtualMachine.js");
 
 class RelayNode {
     constructor(relayNodeIPs) {
@@ -31,7 +33,9 @@ class RelayNode {
         this.relayClients = [];
         for(let i = 0; i < relayNodeIPs.length; i++) {
             // Create a client for communicating with that other relay node
-            this.relayClients.push(clientExporter.createClient(relayNodeIPs[i]));
+            let client = clientExporter.newClient();
+            client.connect(relayNodeIPs[i]);
+            this.relayClients.push(client);
         }
     }
 
@@ -77,30 +81,40 @@ class RelayNode {
             }
             client.on('requestEntanglementHeaders', onRequestEntanglementHeaders);
 
-            let onRequestBlocks = (blockchainHeaders) => {
+            let onRequestBlocks = (blockHeaders) => {
                 console.info("SERVER: Received requestBlocks | ");
                 // Fetch blockchain headers
                 
-                let blocks = blockchainExporter.getBlocks(blockchainHeaders);
+                let blocks = blockchainExporter.getBlocks(blockHeaders);
                 console.info("SERVER: Sending responseBlocks | ", blocks );
                 client.emit('responseBlocks', JSON.stringify(blocks));
             }
             client.on('requestBlocks', onRequestBlocks);
 
-            let onRequestTransactions = (entanglementHeaders) => {
-                console.info("SERVER: Received requestTransactions | ", entanglementHeaders);
+            let onRequestTransactions = (txHeaders) => {
+                console.info("SERVER: Received requestTransactions | ", txHeaders);
                 // Fetch blockchain headers
-                let transactions = entanglementExporter.getTransactions(entanglementHeaders);
+                let transactions = entanglementExporter.getTransactions(txHeaders);
                 console.info("SERVER: Sending responseTransactions | ", transactions );
                 client.emit('responseTransactions', JSON.stringify(transactions));
             }
             client.on('requestTransactions', onRequestTransactions);
 
-            let onSendTransaction = (transaction) => {
-                console.info("SERVER: Received sendTransaction | ", transaction);
-                // Fetch blockchain headers
-                console.info("SERVER: Sending responseSendTransaction");
-                client.emit('responseSendTransaction');
+            let onSendTransaction = (transactionJSON) => {
+                console.info("SERVER: Received sendTransaction | ", transactionJSON);
+
+                let transactionParsed = JSON.parse(transactionJSON);
+                let transaction = transactionExporter.createExistingTransaction(transactionParsed.sender, transactionParsed.execution, transactionParsed.validatedTransactions, transactionParsed.transactionHash, transactionParsed.signature, transactionParsed.timestamp);
+                if (svmExporter.getVirtualMachine().incomingTransaction(transaction)) {
+                    console.info("ADDING TO SVM: ", transaction);
+                    // Relay transaction to every other connected client
+                    console.info("SERVER: Sending notifyTransaction");
+                    this.socketServer.emit('notifyTransaction', transactionJSON);
+
+                    // Fetch blockchain headers
+                    console.info("SERVER: Sending responseSendTransaction");
+                    client.emit('responseSendTransaction');
+                }
             }
             client.on('sendTransaction', onSendTransaction);
         });

@@ -6,9 +6,15 @@
  * Client NodeJS code which allows for the creation of clients who connect to relay nodes
  * 
  */
+
+ let client = undefined;
+
 module.exports = {
-    createClient : function() {
-        return new Client();
+    newClient : function() {
+        if (!client) {
+            client = new Client();
+        }
+        return client;
     },
     connectAndLoadState : function(client, relayIP) {
         if (client) {
@@ -59,6 +65,8 @@ module.exports = {
 
 const ioClient = require('socket.io-client');
 const storage = require("../storage/storage.js");
+const transactionExporter = require("../transaction.js");
+const svmExporter = require("../virtualMachine/virtualMachine.js");
 
 class Client {
     constructor() {
@@ -106,9 +114,9 @@ class Client {
         socket.on('reconnect_error', onError );
 
         // Crypto stuff
-        socket.on('responseBlockchainHeaders', (blockchainHeaders) => {
-            console.info("CLIENT: Received responseBlockchainHeaders | ", blockchainHeaders);
-            this.taskData["blockchainHeaders"] = blockchainHeaders;
+        socket.on('responseBlockchainHeaders', (blockHeaders) => {
+            console.info("CLIENT: Received responseBlockchainHeaders | ", blockHeaders);
+            this.taskData["blockHeaders"] = blockHeaders;
             // Compare with stored blockchain headers
             // For all headers we do not recognize, request blocks
             this.tryRunNextTask();
@@ -135,6 +143,15 @@ class Client {
         socket.on('responseSendTransaction', (response) => {
             console.info("CLIENT: Received responseSendTransaction | ", response);
             // Confirm everything was fine, or resend to a different relay node if it failed(?)
+            this.tryRunNextTask();
+        });
+        socket.on('notifyTransaction', (transactionJSON) => {
+            console.info("CLIENT: Received notifyTransaction |", transactionJSON);
+            let transactionParsed = JSON.parse(transactionJSON);
+            let transaction = transactionExporter.createExistingTransaction(transactionParsed.sender, transactionParsed.execution, transactionParsed.validatedTransactions, transactionParsed.transactionHash, transactionParsed.signature, transactionParsed.timestamp);
+            console.info("ADDING TO SVM: ", transaction);
+            svmExporter.getVirtualMachine().incomingTransaction(transaction);
+            // Add transaction to SVM
             this.tryRunNextTask();
         });
 
@@ -167,7 +184,7 @@ class Client {
      */
     requestBlocks(blockInfos) {
         if (!blockInfos) {
-            blockInfos = this.taskData["blockchainHeaders"];
+            blockInfos = this.taskData["blockHeaders"];
         }
         if (this.socketClient) {
             console.info("CLIENT: Sending requestBlocks");

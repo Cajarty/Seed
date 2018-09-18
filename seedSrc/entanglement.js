@@ -125,13 +125,16 @@ module.exports = {
         for(let i = 0; i < tips.length && result.length < numberOfTips; i++) {
             let transaction = entanglement.getTransaction(tips[i]);
             if (transaction == undefined) {
-                console.info("Failed to find ", JSON.stringify(tips[i]), " in ", entanglement);
+                transaction = entanglement.getTransaction(JSON.stringify(tips[i]));
+                if (transaction == undefined) {
+                    //console.info("Failed to find ", tips[i], " in ", entanglement);
+                }
             }
             if (sender != transaction.sender && entanglement.tips[transaction.transactionHash] > 0) {
                 result.push(transaction);
             }
         }
-
+        console.info("TIPS", result);
         return result;
     },
     /**
@@ -172,10 +175,10 @@ module.exports = {
     getEntanglementHeaders : function() {
         return Object.keys(entanglement.transactions);
     },
-    getTransactions : function(entanglementHeaders) {
+    getTransactions : function(txHeaders) {
         let transactions = [];
-        for(let i = 0; i < entanglementHeaders.length; i++) {
-            let transactionHash = entanglementHeaders[i];
+        for(let i = 0; i < txHeaders.length; i++) {
+            let transactionHash = txHeaders[i];
             if (transactionHash) {
                 let transaction = entanglement.getTransaction(transactionHash);
                 transactions.push(transaction);
@@ -242,7 +245,7 @@ let tryTrust = function(transactionHash, entanglement) {
                 args : toTransaction.execution.args,
                 txHashes : toTransaction.txHashes
             }, toTransaction.execution.changeSet);
-            entanglement.tips[transactionHash] = undefined;
+            delete entanglement.tips[transactionHash];
         if (squasherExporter.doesTriggerSquashing(transactionHash)) {
             let validatedParents = getAllValidatedParents(toTransaction, entanglement);
             let block = squasherExporter.transactionsToBlock(validatedParents);
