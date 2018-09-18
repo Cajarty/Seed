@@ -39,8 +39,14 @@ class RelayNode {
         }
     }
 
+    /**
+     * Ask the firstly created client for blockchain/entanglement data to get caught up to speed
+     */
     loadState() {
-        // Ask the firstly created client for blockchain/entanglement data to get caught up to speed
+        if (this.relayClients.length > 0) {
+            let client = this.relayClients[0];
+            clientExporter.loadInitialState(client);
+        }
     }
 
     /**

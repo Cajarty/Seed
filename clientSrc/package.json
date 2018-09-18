@@ -6,7 +6,7 @@
   "scripts": {
     "start": "Electron .",
     "client": "Electron . --client",
-    "relay": "Electron . --relay",
+    "relay": "Electron . --relay --storage",
     "test": "node test.js --v"
   },
   "repository": {

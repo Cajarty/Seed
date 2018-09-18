@@ -18,49 +18,54 @@ module.exports = {
     },
     connectAndLoadState : function(client, relayIP) {
         if (client) {
-            // Connect
-            client.addTask(() => {
-                client.connect(relayIP)
-            });
-            // Request "Blochchain Headers"
-            client.addTask(() => {
-                client.requestBlockchainHeaders();
-            });
-            // Handle determining which blocks to request
-            client.addTask(() => {
-                console.info("For each block header, determine if we have it stored");
-                // for each block header, determine if we have it stored
-                client.tryRunNextTask();
-            });
-            // Request Blocks
-            client.addTask(() => {
-                client.requestBlocks();
-            });
-            // Request "Entanglement Headers"
-            client.addTask(() => {
-                client.requestEntanglementHeaders();
-            });
-            // Handle determining which transactions to request
-            client.addTask(() => {
-                console.info("For each block header, determine if we have it stored");
-                // for each block header, determine if we have it stored
-                client.tryRunNextTask();
-            });
-            // Request transactions
-            client.addTask(() => {
-                client.requestTransactions();
-            });
-            // Load transactions and blocks into entanglement
-            client.addTask(() => {
-                let blocks = JSON.parse(client.taskData["blocks"]);
-                let transactions = JSON.parse(client.taskData["transactions"]);
-                storage.getStorage().loadInitialState(blocks, transactions);
-                client.tryRunNextTask();
-            });
-
+            loadInitialStateTasks(client);
+            client.connect(relayIP);
+        }
+    },
+    loadInitialState : function(client) {
+        if (client) {
+            loadInitialStateTasks(client);
             client.tryRunNextTask();
         }
     }
+}
+
+let loadInitialStateTasks = function(client) {
+    // Request "Blochchain Headers"
+    client.addTask(() => {
+        client.requestBlockchainHeaders();
+    });
+    // Handle determining which blocks to request
+    client.addTask(() => {
+        console.info("For each block header, determine if we have it stored");
+        // for each block header, determine if we have it stored
+        client.tryRunNextTask();
+    });
+    // Request Blocks
+    client.addTask(() => {
+        client.requestBlocks();
+    });
+    // Request "Entanglement Headers"
+    client.addTask(() => {
+        client.requestEntanglementHeaders();
+    });
+    // Handle determining which transactions to request
+    client.addTask(() => {
+        console.info("For each block header, determine if we have it stored");
+        // for each block header, determine if we have it stored
+        client.tryRunNextTask();
+    });
+    // Request transactions
+    client.addTask(() => {
+        client.requestTransactions();
+    });
+    // Load transactions and blocks into entanglement
+    client.addTask(() => {
+        let blocks = JSON.parse(client.taskData["blocks"]);
+        let transactions = JSON.parse(client.taskData["transactions"]);
+        storage.getStorage().loadInitialState(blocks, transactions);
+        client.tryRunNextTask();
+    });
 }
 
 const ioClient = require('socket.io-client');

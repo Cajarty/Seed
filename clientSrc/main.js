@@ -30,7 +30,8 @@ let hasCommand = (command) => {
 
 let commands = { 
     client : hasCommand('--client'),
-    relay : hasCommand('--relay')
+    relay : hasCommand('--relay'),
+    storage : hasCommand('--storage')
 }
 
 //'production': Release for public
@@ -113,8 +114,10 @@ app.on('ready', function() {
         }, 1000);
     } else if (commands.relay) {
         let relayNodeExporter = require("../seedSrc/networking/relayNode.js");
-        let relayNode = relayNodeExporter.createRelayNode();
+        let relayNode = relayNodeExporter.createRelayNode(); // If we had IPs to connect to, they get fed in here.
+        relayNode.loadInitialState();
         relayNode.listen();
+
         title += ' (Relay Node)';
     }
 
@@ -173,7 +176,9 @@ if (process.env.NODE_ENV !== 'production') {
  * and then the Main process launches the new window
  */
 ipcMain.on("launchModule", function(event, windowName, htmlFile) {
-    seed.newStorage(seed.newFileSystemInjector(__dirname), false);
+    if (commands.storage) {
+        seed.newStorage(seed.newFileSystemInjector(__dirname), false);
+    }
     windows[windowName] = new BrowserWindow({width: 800, height: 500, title: windowName});
     windows[windowName].loadURL(url.format({
         pathname: path.join(__dirname, htmlFile),
@@ -200,9 +205,11 @@ ipcMain.once("runUnitTests", () => {
  * Runs unit tests. Assumes the state of the Seed cryptocurrency is already prepped for unit tests
  */
 ipcMain.once("loadFromDisk", () => {
-    let storage = seed.getStorage();
-    let initialState = storage.readInitialState();
-    storage.loadInitialState(initialState.blocks, initialState.transactions);
+    if (commands.storage) {
+        let storage = seed.getStorage();
+        let initialState = storage.readInitialState();
+        storage.loadInitialState(initialState.blocks, initialState.transactions);
+    }
 });
 
 /**

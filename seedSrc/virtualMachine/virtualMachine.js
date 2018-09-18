@@ -220,12 +220,12 @@ class VirtualMachine {
      * 
      * @param {*} transaction - The transaction to attempt to receive
      */
-    incomingTransaction(transaction, saveToStorage) {
+    incomingTransaction(transaction) {
         if (!entanglement.hasTransaction(transaction.transactionHash)) {
             // If its a proper, formed transaction
             if (transactionExporter.isTransactionProper(transaction)) {
                 // We add it to the entanglement
-                entanglement.tryAddTransaction(transaction, saveToStorage);
+                entanglement.tryAddTransaction(transaction);
                 return true;
             } else {
                 console.info("SVM::incomingTx::Rejected ", transaction.transactionHash, "::malformed transaction");

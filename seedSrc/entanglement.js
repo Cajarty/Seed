@@ -39,10 +39,7 @@ module.exports = {
      * 
      * @param transaction - The transaction to add
      */
-    tryAddTransaction : function(transaction, saveToStorage) {
-        if (saveToStorage == undefined) {
-            saveToStorage = true;
-        }
+    tryAddTransaction : function(transaction) {
         if (!entanglement.contains(transaction.transactionHash)) {
             let children = [];
             for(let i = 0; i < transaction.validatedTransactions.length; i++) {
@@ -61,8 +58,9 @@ module.exports = {
             for(let i = 0; i < children.length; i++) {
                 entanglement.addEdge(transaction.transactionHash, children[i]);
             }
-            if (saveToStorage) {
-                storageExporter.getStorage().saveTransaction(transaction);
+            let storage = storageExporter.getStorage();
+            if (storage) {
+                storage.saveTransaction(transaction);
             }
         }
     },
