@@ -107,13 +107,13 @@ app.on('ready', function() {
     let storage = seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false);
 
     if (commands.client) {
-        let client = seed.getClientExporter().newClient();
+        let client = seed.getClientExporter().getClient();
         setTimeout(() => {
             seed.getClientExporter().connectAndLoadState(client, 'http://localhost:3000');
         }, 1000);
     } else if (commands.relay) {
         let relayNodeExporter = require("../seedSrc/networking/relayNode.js");
-        let relayNode = relayNodeExporter.createRelayNode(); // If we had IPs to connect to, they get fed in here.
+        let relayNode = relayNodeExporter.getRelayNode(); // If we had IPs to connect to, they get fed in here.
         relayNode.loadInitialState();
         relayNode.listen();
     }
@@ -271,7 +271,7 @@ promiseIpc.on("addTransaction", (jsonTransaction) => {
  * Receives a requests through the HLAPI to add a transaction to the entanglement
  */
 promiseIpc.on("propagateTransaction", (jsonTransaction) => {
-    return seed.getClientExporter().newClient().sendTransaction(jsonTransaction);
+    return seed.getClientExporter().getClient().sendTransaction(jsonTransaction);
 });
 
 
@@ -365,6 +365,42 @@ promiseIpc.on("createModule", (moduleName, initialStateData, initialUserStateDat
  */
 promiseIpc.on("getModule", (moduleName) => {
     return seed.getSVMExporter().getModule({ module : moduleName });
+});
+
+/**
+ * Disconnects the networked Client from any ongoing connections and
+ * then connects to the associated IP.
+ */
+promiseIpc.on("reconnectClientToNewIP", (relayIP) => {
+    if (command.client) {
+        let client = seed.getClientExporter().getClient();
+        client.disconnect();
+        client.connect(relayIP);
+    } else if (command.relay) {
+        let relayNode = seed.getRelayExporter().getRelayNode();
+        let newClient = seed.getClientExporter().newClient();
+        newClient.connect(relayIP);
+        relayNode.relayClients.push(newClient);
+    }
+});
+
+/**
+ * Reloads the networked Client's data, request from any connected relay node what blocks
+ * and transactions may be missing
+ */
+promiseIpc.on("reloadEntanglementAndBlockchainsState", () => {
+    let client = undefined;
+    if (command.client) {
+        client = seed.getClientExporter().getClient();
+    } else if (command.relay) {
+        let relayNode = seed.getRelayExporter().getRelayNode();
+        if (relayNode.relayClients.length > 0) {
+            client = relayNode.relayClients[0];
+        }
+    }
+    if (client) {
+        seed.getClientExporter().loadInitialState(client);
+    }
 });
 
 // Switch to the first user for testing

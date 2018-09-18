@@ -10,11 +10,14 @@
  let client = undefined;
 
 module.exports = {
-    newClient : function() {
+    getClient : function() {
         if (!client) {
             client = new Client();
         }
         return client;
+    },
+    newClient : function() {
+        return new Client();
     },
     connectAndLoadState : function(client, relayIP) {
         if (client) {

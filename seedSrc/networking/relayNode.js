@@ -10,7 +10,7 @@
  * 
  */
 module.exports = {
-    createRelayNode : function(otherRelayNodeIPs) {
+    getRelayNode : function(otherRelayNodeIPs) {
         if (!otherRelayNodeIPs) {
             otherRelayNodeIPs = [];
         }

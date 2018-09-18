@@ -197,4 +197,22 @@ class SeedHLAPI {
     getModule(moduleName) {
         return this.ipcPromiseRenderer.send("getModule", moduleName);
     }
+
+    /**
+     * Disconnects the networked Client from any ongoing connections and
+     * then connects to the associated IP.
+     * 
+     * @param {*} relayNodeIP - The IP of the relay node to connect to
+     */
+    reconnectClientToNewIP(relayNodeIP) {
+        return this.ipcPromiseRenderer.send("reconnectClientToNewIP", relayNodeIP);
+    }
+
+    /**
+     * Reloads the networked Client's data, request from any connected relay node what blocks
+     * and transactions may be missing
+     */
+    reloadEntanglementAndBlockchainsState() {
+        return this.ipcPromiseRenderer.send("reloadEntanglementAndBlockchainsState");
+    }
  }
