@@ -99,6 +99,21 @@ class Client {
         }
     }
 
+    disconnect() {
+        this.socketClient.off('forceClose');
+        this.socketClient.off('connect');
+        this.socketClient.off('disconnect');
+        this.socketClient.off('connect_error');
+        this.socketClient.off('reconnect_error');
+        this.socketClient.off('responseBlockchainHeaders');
+        this.socketClient.off('responseEntanglementHeaders');
+        this.socketClient.off('responseBlocks');
+        this.socketClient.off('responseTransactions');
+        this.socketClient.off('responseSendTransaction');
+        this.socketClient.off('notifyTransaction');
+        delete this.socketClient;
+    }
+
     connect(relayIP) {
         console.info("CLIENT: StartClient");
         let socket = ioClient(relayIP, {transports: ['websocket']});
@@ -111,6 +126,7 @@ class Client {
         });
         socket.on('disconnect', (evt) => {
             console.info("CLIENT: Received disconnect | ", evt);
+            this.disconnect();
         });
         let onError = (message) => {
             console.info("CLIENT: Received error | ", message);
