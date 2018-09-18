@@ -34,6 +34,8 @@ let commands = {
     storage : hasCommand('--storage')
 }
 
+let titleSuffix = (commands.client) ? " (Client)" : ( commands.relay ? "( Relay Node)" : "" );
+
 //'production': Release for public
 //'development': Development tools enabled
 //'debug': Debug tools active, e.g. print lines
@@ -102,13 +104,10 @@ let menuTemplate = [
  * and then modifies the Launcher window to add buttons regarding each loaded module.
  */
 app.on('ready', function() {
-    let title = 'Seed Launcher';
-
     let storage = seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false);
 
     if (commands.client) {
         let client = seed.getClientExporter().newClient();
-        title += ' (Client)';
         setTimeout(() => {
             seed.getClientExporter().connectAndLoadState(client, 'http://localhost:3000');
         }, 1000);
@@ -117,11 +116,9 @@ app.on('ready', function() {
         let relayNode = relayNodeExporter.createRelayNode(); // If we had IPs to connect to, they get fed in here.
         relayNode.loadInitialState();
         relayNode.listen();
-
-        title += ' (Relay Node)';
     }
 
-    windows["Launcher"] = new BrowserWindow({width: 800, height: 500, title: title});
+    windows["Launcher"] = new BrowserWindow({width: 800, height: 500, title: "Seed Launcher" + titleSuffix});
     windows["Launcher"].loadURL(url.format({
         pathname: path.join(__dirname, 'launcher.html'),
         protocol: 'file:',
@@ -179,7 +176,7 @@ ipcMain.on("launchModule", function(event, windowName, htmlFile) {
     if (commands.storage) {
         seed.newStorage(seed.newFileSystemInjector(__dirname), false);
     }
-    windows[windowName] = new BrowserWindow({width: 800, height: 500, title: windowName});
+    windows[windowName] = new BrowserWindow({width: 800, height: 500, title: windowName + titleSuffix});
     windows[windowName].loadURL(url.format({
         pathname: path.join(__dirname, htmlFile),
         protocol: 'file:',
