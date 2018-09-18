@@ -114,7 +114,7 @@ app.on('ready', function() {
     } else if (commands.relay) {
         let relayNodeExporter = require("../seedSrc/networking/relayNode.js");
         let relayNode = relayNodeExporter.getRelayNode(); // If we had IPs to connect to, they get fed in here.
-        relayNode.loadInitialState();
+        relayNode.loadState();
         relayNode.listen();
     }
 

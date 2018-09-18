@@ -44,7 +44,7 @@ let loadInitialStateTasks = function(client) {
         if (blockHeaders) {
             let unknownHeaders = [];
             for(let i = 0; i < blockHeaders.length; i++) {
-                let blockHeader = blockHeaders[0];
+                let blockHeader = blockHeaders[i];
                 // Check if we know of this block header
                 if (blockHeader.length >= 2 && !blockchainExporter.doesContainBlock(blockHeader[0], blockHeader[1])) {
                     unknownHeaders.push(blockHeader);
@@ -70,10 +70,10 @@ let loadInitialStateTasks = function(client) {
         if (transactionHeaders) {
             let unknownHeaders = [];
             for(let i = 0; i < transactionHeaders.length; i++) {
-                let transactionHeader = transactionHeaders[0];
+                let transactionHeader = transactionHeaders[i];
                 // Check if we know of this block header
                 if (!entanglementExporter.hasTransaction(transactionHeader) && !blockchainExporter.doesContainTransactions(transactionHeader)) {
-                    unknownHeaders.push(blockHeader);
+                    unknownHeaders.push(transactionHeader);
                 }
             }
             client.taskData["transactionHeaders"] = unknownHeaders;
