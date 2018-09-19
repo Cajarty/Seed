@@ -172,7 +172,7 @@ class RelayNode {
                             console.info("ADDING TO SVM: ", transaction.transactionHash);
                             // Relay transaction to every other connected client
                             console.info("RELAY NODE: Sending notifyTransaction: ", transaction.transactionHash);
-                            this.socketServer.emit('notifyTransaction', transactionParsed.transactionHash);
+                            this.socketServer.emit('notifyTransaction', transactionJSON);
         
                             console.info("RELAY NODE: Sending responseSendTransaction");
                             client.emit('responseSendTransaction');

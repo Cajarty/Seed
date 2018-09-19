@@ -73,7 +73,7 @@ module.exports = {
      * @param {*} objectA - Object to squash (who will have absolute values overwritten)
      * @param {*} objectB - Object to squash (who will have absolute power overwrite)
      */
-    squash(objectA, objectB) {
+    squash(objectA, objectB) { 
         return squashObjects(objectA, objectB);
     },
     /**
@@ -132,7 +132,8 @@ let transactionToLeanData = function(transaction) {
  */
 let squashObjects = function(objectA, objectB) {
     let result = {};
-    let keys = Object.keys(objectA).concat(Object.keys(objectB));
+    let keys = [ ...new Set(Object.keys(objectA).concat(Object.keys(objectB)))];
+    console.info("KEYS:", keys);
     for(let i = 0; i < keys.length; i++) {
         let key = keys[i];
 

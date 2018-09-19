@@ -134,7 +134,7 @@ app.on('ready', function() {
         relayNode.listen(port);
     }
 
-    windows["Launcher"] = new BrowserWindow({width: 800, height: 500, title: "Seed Launcher" + titleSuffix});
+    windows["Launcher"] = new BrowserWindow({width: 600, height: 400, title: "Seed Launcher" + titleSuffix});
     windows["Launcher"].loadURL(url.format({
         pathname: path.join(__dirname, 'launcher.html'),
         protocol: 'file:',
@@ -190,7 +190,7 @@ ipcMain.on("launchModule", function(event, windowName, htmlFile) {
     if (commands.storage) {
         seed.newStorage(seed.newFileSystemInjector(__dirname), false);
     }
-    windows[windowName] = new BrowserWindow({width: 800, height: 500, title: windowName + titleSuffix});
+    windows[windowName] = new BrowserWindow({width: 600, height: 400, title: windowName + titleSuffix});
     windows[windowName].loadURL(url.format({
         pathname: path.join(__dirname, htmlFile),
         protocol: 'file:',
