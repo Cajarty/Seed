@@ -281,10 +281,17 @@ function changeFunctionFormDisplay(formID, display) {
     ipc.send("executeJavaScript", "Seed", javascript);
 }
 
+/**
+ * If there was a previous subscription, this unsubscribes to the old callbacks regarding the last account,
+ * creates new subscription callbacks for the new user, and then updates the UI to fetch the new users' data.
+ * 
+ * @param {*} publicKey - The public key who's updates we are subscribing for
+ */
 function resubscribe(publicKey) {
     if (subscriptionReceipts["balance"]) {
         seedHLAPI.unsubscribe("Seed", "balance", subscriptionReceipts["balance"], lastUser);
         ipc.removeAllListeners("Seed" + "balance" + lastUser);
+        delete subscriptionReceipts["balance"];
     }
 
     seedHLAPI.subscribeToDataChange("Seed", "balance", publicKey)

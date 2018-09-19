@@ -17,6 +17,12 @@ const promiseIpc = require('electron-promise-ipc');
 const seed = require("../seedSrc/index.js");
 const moduleLoader = require("./moduleLoader");
 
+/**
+ * Checks the processes arguments for any that match the passed in argument.
+ * Returns true or false based on whether the selected command was present.
+ * 
+ * @param {*} command - The command title to search for
+ */
 let hasCommand = (command) => {
     if (process.argv.length >= 2) {
         for(let i = 2; i < process.argv.length; i++) {
@@ -28,12 +34,19 @@ let hasCommand = (command) => {
     return false;
 }
 
+/**
+ * Commands passed in via arguments 
+ */
 let commands = { 
     client : hasCommand('--client'),
     relay : hasCommand('--relay'),
     storage : hasCommand('--storage')
 }
 
+/**
+ * The suffix of the windows title. 
+ * Will add nothing, (Client) or (RelayNode) to the titles if we're running it in any special mdoe.
+ */
 let titleSuffix = (commands.client) ? " (Client)" : ( commands.relay ? "( Relay Node)" : "" );
 
 //'production': Release for public
