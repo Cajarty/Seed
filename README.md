@@ -24,7 +24,9 @@ The Client source code is an Electron wallet being created for both the Seed cry
 
 # How To Run
 
-To run the client, point your terminal to the [/clientSrc](/clientSrc) folder and invoke the command "npm start".
+After cloning the repository, you will need to run `npm i` inside both the clientSrc and seedSrc for all the dependencies to be installed.
+
+Then to run the client, point your terminal to the [/clientSrc](/clientSrc) folder and invoke the command "npm start".
 
 Once run, instructions will appear on the screen regarding how to open the console. The console will display the results of the unit tests being run, confirming the programs state.
 

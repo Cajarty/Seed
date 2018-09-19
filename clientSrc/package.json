@@ -4,9 +4,9 @@
   "description": "An Electorn interface for the seed protocol.",
   "main": "main.js",
   "scripts": {
-    "start": "Electron .",
-    "client": "Electron . --client",
-    "relay": "Electron . --relay --storage",
+    "start": "./node_modules/electron/dist/electron .",
+    "client": "./node_modules/electron/dist/electron . --client",
+    "relay": "./node_modules/electron/dist/electron . --relay --storage",
     "test": "node test.js --v"
   },
   "repository": {
