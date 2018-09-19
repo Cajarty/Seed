@@ -118,7 +118,9 @@ let menuTemplate = [
  */
 app.on('ready', function() {
     const port = 3000;
-    let storage = seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false);
+    if (commands.storage) {
+        seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false);
+    }
 
     if (commands.client) {
         let client = seed.getClientExporter().getClient();

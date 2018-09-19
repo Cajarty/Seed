@@ -234,7 +234,8 @@ const storageUnitTests = {
         let saved = unitTestingExporter.getTestBlocks()[0];
         let fsInjector = fileSystemInjector.newFileSystemInjector(__dirname, "storageTests");
         let testStorage = new Storage(fsInjector, false);
-        testStorage.loadInitialState();
+        let initialState = testStorage.readInitialState();
+        testStorage.loadInitialState(initialState.blocks, initialState.transactions);
         test.assertAreEqual(blockchainExporter.getBlockchains()[1].length, 1, "Should only have one generation-one block loaded");
         test.assertAreEqual(JSON.stringify(blockchainExporter.getBlockchains()[1][0]), JSON.stringify(saved), "The discovered block should be the one saved from earlier.");
         blockchainExporter.clearAll();
@@ -276,7 +277,8 @@ const storageUnitTests = {
         let saved = unitTestingExporter.getTestBlocks()[0];
         let lsInjector = localStorageInjector.newLocalStorageInjector(testLocalStorage);
         let testStorage = new Storage(lsInjector, false);
-        testStorage.loadInitialState();
+        let initialState = testStorage.readInitialState();
+        testStorage.loadInitialState(initialState.blocks, initialState.transactions);
         test.assertAreEqual(blockchainExporter.getBlockchains()[1].length, 1, "Should only have one generation-one block loaded");
         test.assertAreEqual(JSON.stringify(blockchainExporter.getBlockchains()[1][0]), JSON.stringify(saved), "The discovered block should be the one saved from earlier.");
         blockchainExporter.clearAll();
