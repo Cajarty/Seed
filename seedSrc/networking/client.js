@@ -119,11 +119,11 @@ let loadInitialStateTasks = function(client) {
     client.addTask(() => {
         let blocks = JSON.parse(client.taskData["blocks"]);
         let transactions = JSON.parse(client.taskData["transactions"]);
-        let storage = storage.getStorage();
+        let storage = storageExporter.getStorage();
         if (!storage) {
-            storage = storage.newStorage({});
+            storage = storageExporter.newStorage({});
         }
-        storage.loadInitialState(blocks, transactions);
+        storageExporter.loadInitialState(blocks, transactions);
         client.tryRunNextTask();
         delete client.taskData["blocks"];
         delete client.taskData["blockHeaders"];
@@ -133,7 +133,7 @@ let loadInitialStateTasks = function(client) {
 }
 
 const ioClient = require('socket.io-client');
-const storage = require("../storage/storage.js");
+const storageExporter = require("../storage/storage.js");
 const blockchainExporter = require("../blockchain.js");
 const entanglementExporter = require("../entanglement.js");
 const transactionExporter = require("../transaction.js");
