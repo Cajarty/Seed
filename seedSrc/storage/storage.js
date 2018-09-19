@@ -63,8 +63,22 @@ module.exports = {
             storage.saveTransaction(newTransaction);
         }
     },
+    /**
+     * Returns the mapping of unit tests for testing
+     * 
+     * @return - The mapping of unit tests
+     */
     getUnitTests : function() {
         return storageUnitTests;
+    },
+    /**
+     * Invokes the storage's loadInitialState function, which tries to load all transactions/blocks from storage
+     * 
+     * @param blocks - An array of instantiated blocks to load
+     * @param transactions - An array of instantiated transactions to load
+     */
+    loadInitialState : function(blocks, transactions) {
+        loadInitialState(blocks, transactions);
     }
 }
 
@@ -77,6 +91,34 @@ const blockExporter = require("../block.js");
 const unitTestingExporter = require("../tests/unitTesting.js");
 const fileSystemInjector = require("./fileSystemInjector.js");
 const localStorageInjector = require("./localStorageInjector.js");
+
+/**
+ * Invokes the storage's loadInitialState function, which tries to load all transactions/blocks from storage
+ * 
+ * @param blocks - An array of instantiated blocks to load
+ * @param transactions - An array of instantiated transactions to load
+ */
+let loadInitialState = function(blocks, transactions) {
+    let sortByTimestamp = function(a, b){
+        return a.timestamp - b.timestamp
+    };
+    
+    blocks.sort(sortByTimestamp);
+    for(let i = 0; i < blocks.length; i++) {
+        if (blockExporter.isValid(blocks[i])) {
+            blockchainExporter.addTestamentBlock(blocks[i], false);
+            ledgerExporter.getLedger().applyBlock(blocks[i]);
+        } else {
+            throw "FAILED TO CHECK VALIDITY OF BLOCK";
+        }
+    }
+    transactions.sort(sortByTimestamp);
+    for(let i = 0; i < transactions.length; i++) {
+        let txData = transactions[i];
+        let transaction = transactionExporter.createExistingTransaction(txData.sender, txData.execution, txData.validatedTransactions, txData.transactionHash, txData.signature, txData.timestamp);
+        svmExporter.getVirtualMachine().incomingTransaction(transaction, false);
+    }
+}
 
 /**
  * The implementation of the Storage object which wraps the logic regarding saving/loading transactions and blocks
@@ -109,27 +151,12 @@ class Storage {
 
     /**
      * Invokes the storage's loadInitialState function, which tries to load all transactions/blocks from storage
+     * 
+     * @param blocks - An array of instantiated blocks to load
+     * @param transactions - An array of instantiated transactions to load
      */
     loadInitialState(blocks, transactions) {
-        let sortByTimestamp = function(a, b){
-            return a.timestamp - b.timestamp
-        };
-        
-        blocks.sort(sortByTimestamp);
-        for(let i = 0; i < blocks.length; i++) {
-            if (blockExporter.isValid(blocks[i])) {
-                blockchainExporter.addTestamentBlock(blocks[i], false);
-                ledgerExporter.getLedger().applyBlock(blocks[i]);
-            } else {
-                throw "FAILED TO CHECK VALIDITY OF BLOCK";
-            }
-        }
-        transactions.sort(sortByTimestamp);
-        for(let i = 0; i < transactions.length; i++) {
-            let txData = transactions[i];
-            let transaction = transactionExporter.createExistingTransaction(txData.sender, txData.execution, txData.validatedTransactions, txData.transactionHash, txData.signature, txData.timestamp);
-            svmExporter.getVirtualMachine().incomingTransaction(transaction, false);
-        }
+        loadInitialState(blocks, transactions);
     }
 
     /**

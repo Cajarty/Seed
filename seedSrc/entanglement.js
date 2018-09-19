@@ -78,9 +78,7 @@ module.exports = {
             let child = transaction.validatedTransactions[i].transactionHash;
             children.push(child);
             if (!entanglement.contains(child)) {
-                if (blockchainExporter.doesContainTransactions(child)) {
-                    // It must exist in a previous block. If it does not exist in any 1st generaion block, consider it malformed
-                } else {
+                if (!blockchainExporter.doesContainTransactions(child)) {
                     console.info(transaction.transactionHash, "Failed To Find (1)", child);
                     throw new Error("Trying to check transaction who's childs do not exist");
                 }
@@ -124,9 +122,6 @@ module.exports = {
             let transaction = entanglement.getTransaction(tips[i]);
             if (transaction == undefined) {
                 transaction = entanglement.getTransaction(JSON.stringify(tips[i]));
-                if (transaction == undefined) {
-                    //console.info("Failed to find ", tips[i], " in ", entanglement);
-                }
             }
             if (transaction && sender != transaction.sender && entanglement.tips[transaction.transactionHash] > 0) {
                 result.push(transaction);

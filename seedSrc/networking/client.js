@@ -72,14 +72,24 @@ let loadInitialStateTasks = function(client) {
     // Handle determining which blocks to request
     client.addTask(() => {
         let blockHeaders = client.taskData["blockHeaders"];
+        console.info(blockHeaders);
         if (blockHeaders) {
-            let unknownHeaders = [];
-            for(let i = 0; i < blockHeaders.length; i++) {
-                let blockHeader = blockHeaders[i];
-                // Check if we know of this block header
-                if (blockHeader.length >= 2 && !blockchainExporter.doesContainBlock(blockHeader[0], blockHeader[1])) {
-                    unknownHeaders.push(blockHeader);
+            let unknownHeaders = {};
+            let generations = Object.keys(blockHeaders);
+            for(let i = 0; i < generations.length; i++) {
+                let generation = generations[i];
+                let blockHashes = blockHeaders[generation];
+                for(let j = 0; j < blockHashes.length; j++) {
+                    let blockHash = blockHashes[j];
+                    // Check if we know of this block header
+                    if (!blockchainExporter.doesContainBlock(blockHash, generation)) {
+                        if (!unknownHeaders[generation]) {
+                            unknownHeaders[generation] = [];
+                        }
+                        unknownHeaders[generation].push(blockHash);
+                    }
                 }
+                
             }
             client.taskData["blockHeaders"] = unknownHeaders;
         }
@@ -119,10 +129,6 @@ let loadInitialStateTasks = function(client) {
     client.addTask(() => {
         let blocks = JSON.parse(client.taskData["blocks"]);
         let transactions = JSON.parse(client.taskData["transactions"]);
-        let storage = storageExporter.getStorage();
-        if (!storage) {
-            storage = storageExporter.newStorage({});
-        }
         storageExporter.loadInitialState(blocks, transactions);
         client.tryRunNextTask();
         delete client.taskData["blocks"];

@@ -287,9 +287,9 @@ promiseIpc.on("addTransaction", (jsonTransaction) => {
 promiseIpc.on("propagateTransaction", (jsonTransaction) => {
     // TODO: Handle "If relay node" propagating transactions
     let client = undefined;
-    if (command.client) {
+    if (commands.client) {
         client = seed.getClientExporter().getClient();
-    } else if (command.relay) {
+    } else if (commands.relay) {
         let relayNode = seed.getRelayExporter().getRelayNode();
         if (relayNode.relayClients.length > 0) {
             client = relayNode.relayClients[0];

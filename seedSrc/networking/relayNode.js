@@ -144,9 +144,9 @@ class RelayNode {
         
                     // On receiving a 'requestBlocks' event, reply with all requested blocks
                     let onRequestBlocks = (blockHeaders) => {
-                        console.info("RELAY NODE: Received requestBlocks");
+                        console.info("RELAY NODE: Received requestBlocks | ", blockHeaders);
                         let blocks = blockchainExporter.getBlocks(blockHeaders);
-                        console.info("RELAY NODE: Sending responseBlocks | ", blocks );
+                        console.info("RELAY NODE: Sending responseBlocks" );
                         client.emit('responseBlocks', JSON.stringify(blocks));
                     }
                     client.on('requestBlocks', onRequestBlocks);
@@ -155,7 +155,7 @@ class RelayNode {
                     let onRequestTransactions = (txHeaders) => {
                         console.info("RELAY NODE: Received requestTransactions | ", txHeaders);
                         let transactions = entanglementExporter.getTransactions(txHeaders);
-                        console.info("RELAY NODE: Sending responseTransactions | ", transactions );
+                        console.info("RELAY NODE: Sending responseTransactions" );
                         client.emit('responseTransactions', JSON.stringify(transactions));
                     }
                     client.on('requestTransactions', onRequestTransactions);
@@ -165,17 +165,15 @@ class RelayNode {
                      * all other connected Clients 
                      */
                     let onSendTransaction = (transactionJSON) => {
-                        console.info("RELAY NODE: Received sendTransaction | ", transactionJSON);
-        
                         let transactionParsed = JSON.parse(transactionJSON);
+                        console.info("RELAY NODE: Received sendTransaction | ", transactionParsed.transactionHash);
                         let transaction = transactionExporter.createExistingTransaction(transactionParsed.sender, transactionParsed.execution, transactionParsed.validatedTransactions, transactionParsed.transactionHash, transactionParsed.signature, transactionParsed.timestamp);
                         if (svmExporter.getVirtualMachine().incomingTransaction(transaction)) {
                             console.info("ADDING TO SVM: ", transaction.transactionHash);
                             // Relay transaction to every other connected client
                             console.info("RELAY NODE: Sending notifyTransaction: ", transaction.transactionHash);
-                            this.socketServer.emit('notifyTransaction', transactionJSON);
+                            this.socketServer.emit('notifyTransaction', transactionParsed.transactionHash);
         
-                            // Fetch blockchain headers
                             console.info("RELAY NODE: Sending responseSendTransaction");
                             client.emit('responseSendTransaction');
                         }

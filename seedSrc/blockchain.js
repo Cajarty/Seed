@@ -149,6 +149,7 @@ module.exports = {
     getBlocks: function(blockHeaders) {
         let blocks = [];
         let generations = Object.keys(blockHeaders);
+        console.info(generations);
         for(let i = 0; i < generations.length; i++) {
             let generation = generations[i];
             if (blockchain[generation]) {
@@ -156,8 +157,12 @@ module.exports = {
                     let blockToCheck = blockchain[generation][j];
                     if (blockHeaders[generation].includes(blockToCheck.blockHash)) {
                         blocks.push(blockToCheck);
+                    } else {
+                        console.info("WRONG BLOCK: ", blockToCheck.blockHash);
                     }
                 }
+            } else {
+                console.info("WTF", blockchain);
             }
         }
         return blocks;
