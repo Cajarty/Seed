@@ -166,15 +166,33 @@ module.exports = {
         }
         return false;
     },
+    /**
+     * Returns the mapping of unit tests for testing
+     * 
+     * @return - The mapping of unit tests
+     */
     getUnitTests : function() {
         return entanglementUnitTests;
     },
+    /**
+     * Clears the stored Entanglement
+     */
     clearAll : function() {
         entanglement = new Entanglement();
     },
+    /**
+     * Turns the Entanglement DAG of transactions into an array of transaction headers
+     * 
+     * @return - A mapping of transaction headers
+     */
     getEntanglementHeaders : function() {
         return Object.keys(entanglement.transactions);
     },
+    /**
+     * Reads through the entanglement to find a matching transaction for each requested transaction header.
+     * 
+     * @return - Returns all found transactions.
+     */
     getTransactions : function(txHeaders) {
         let transactions = [];
         for(let i = 0; i < txHeaders.length; i++) {
