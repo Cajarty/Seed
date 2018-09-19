@@ -119,7 +119,11 @@ let loadInitialStateTasks = function(client) {
     client.addTask(() => {
         let blocks = JSON.parse(client.taskData["blocks"]);
         let transactions = JSON.parse(client.taskData["transactions"]);
-        storage.getStorage().loadInitialState(blocks, transactions);
+        let storage = storage.getStorage();
+        if (!storage) {
+            storage = storage.newStorage({});
+        }
+        storage.loadInitialState(blocks, transactions);
         client.tryRunNextTask();
         delete client.taskData["blocks"];
         delete client.taskData["blockHeaders"];
