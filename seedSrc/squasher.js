@@ -133,7 +133,6 @@ let transactionToLeanData = function(transaction) {
 let squashObjects = function(objectA, objectB) {
     let result = {};
     let keys = [ ...new Set(Object.keys(objectA).concat(Object.keys(objectB)))];
-    console.info("KEYS:", keys);
     for(let i = 0; i < keys.length; i++) {
         let key = keys[i];
 
