@@ -57,7 +57,7 @@ module.exports = {
      * @param {*} hash - Hash to check for squashing mechanism
      */
     doesTriggerSquashing(hash) {
-        if (hash.length > 0 && (hash[0] == '0' || hash[0] == '1' )) {
+        if (hash.length > 0 && (hash[0] == '0')) {
             return true;
         } else {
             return false;

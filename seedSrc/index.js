@@ -112,6 +112,7 @@ module.exports = {
      * @return - The receipt regarding where the subscription was stored
      */
     subscribeToFunctionCallback : function(moduleName, functionName, callback) {
+        console.info("SUBSRIBED::", moduleName, functionName, callback);
         return messagingExporter.subscribeToFunctionCallback(moduleName, functionName, callback);
     },
     /**
@@ -129,6 +130,7 @@ module.exports = {
      * @return - The receipt regarding where the subscription was stored
      */
     subscribeToDataChange : function(moduleName, dataKey, callback, user) {
+        console.info("SUBSRIBED::", moduleName, dataKey, callback, user);
         return messagingExporter.subscribeToDataChange(moduleName, dataKey, callback, user);
     },
     /**

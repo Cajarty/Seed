@@ -205,7 +205,7 @@ class Client {
             console.info("CLIENT: Received notifyTransaction |", transactionJSON);
             let transactionParsed = JSON.parse(transactionJSON);
             let transaction = transactionExporter.createExistingTransaction(transactionParsed.sender, transactionParsed.execution, transactionParsed.validatedTransactions, transactionParsed.transactionHash, transactionParsed.signature, transactionParsed.timestamp);
-            console.info("ADDING TO SVM: ", transaction);
+            console.info("ADDING TO SVM: ", transaction.transactionHash);
             svmExporter.getVirtualMachine().incomingTransaction(transaction);
             // Add transaction to SVM
             this.tryRunNextTask();

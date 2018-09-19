@@ -112,9 +112,9 @@ class RelayNode {
                 let transactionParsed = JSON.parse(transactionJSON);
                 let transaction = transactionExporter.createExistingTransaction(transactionParsed.sender, transactionParsed.execution, transactionParsed.validatedTransactions, transactionParsed.transactionHash, transactionParsed.signature, transactionParsed.timestamp);
                 if (svmExporter.getVirtualMachine().incomingTransaction(transaction)) {
-                    console.info("ADDING TO SVM: ", transaction);
+                    console.info("ADDING TO SVM: ", transaction.transactionHash);
                     // Relay transaction to every other connected client
-                    console.info("SERVER: Sending notifyTransaction");
+                    console.info("SERVER: Sending notifyTransaction: ", transaction.transactionHash);
                     this.socketServer.emit('notifyTransaction', transactionJSON);
 
                     // Fetch blockchain headers
