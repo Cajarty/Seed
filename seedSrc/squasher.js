@@ -76,6 +76,11 @@ module.exports = {
     squash(objectA, objectB) {
         return squashObjects(objectA, objectB);
     },
+    /**
+     * Returns the mapping of unit tests for testing
+     * 
+     * @return - The mapping of unit tests
+     */
     getUnitTests : function() {
         return squasherUnitTests;
     }

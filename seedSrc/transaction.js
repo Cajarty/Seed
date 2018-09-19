@@ -144,6 +144,11 @@ module.exports = {
     createTransactionValidator: function() {
         return  new TransactionValidator();
     },
+    /**
+     * Returns the mapping of unit tests for testing
+     * 
+     * @return - The mapping of unit tests
+     */
     getUnitTests : function() {
         return transactionUnitTests;
     }

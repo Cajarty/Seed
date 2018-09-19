@@ -38,11 +38,19 @@ module.exports = {
         }
     },
     /**
+     * Fetches the mapping of blockchains
+     * 
      * @return - Gets the blockchain mapping
      */
     getBlockchains : function() {
         return blockchain;
     },
+    /**
+     * Fetches a transaction if it exists in a generation of blocks.
+     * If no generation is requested, defaults to checking generaion 1 blocks
+     * 
+     * @return - The lean transaction data from the blockchain, if any
+     */
     getTransaction : function(transactionHash, generation) {
         if (!generation) {
             generation = 1;
@@ -62,9 +70,20 @@ module.exports = {
         }
         return undefined;
     },
+    /**
+     * Determines if a transaction exists within a block for a specific blockchain generation.
+     * If no generation is requested, defaults to checking generaion 1 blocks
+     * 
+     * @return - Whether or not it exists
+     */
     doesContainTransactions : function(transactionHash, generation) {
         return this.getTransaction(transactionHash, generation) != undefined;
     },
+    /**
+     * Determines whether a blockchain generation contains a certain block
+     * 
+     * @return - Whether or not the block exists
+     */
     doesContainBlock : function(blockHash, generation) {
         let chain = blockchain[generation];
         if (chain) {
@@ -77,6 +96,12 @@ module.exports = {
         }
         return false;
     },
+    /**
+     * Fetches a transaction sender, if the transaction exists in a generation of blocks.
+     * If no generation is requested, defaults to checking generaion 1 blocks
+     * 
+     * @return - The sender of the transaction (undefined if no transaction found)
+     */
     getTransactionSender : function(transactionHash, generation) {
         let leanTransactionData = this.getTransaction(transactionHash, generation);
         if (leanTransactionData && leanTransactionData.length > 0) {
@@ -84,12 +109,25 @@ module.exports = {
         }
         return undefined;
     },
+    /**
+     * Returns the mapping of unit tests for testing
+     * 
+     * @return - The mapping of unit tests
+     */
     getUnitTests : function() {
         return blockchainUnitTests;
     },
+    /**
+     * Clears the stored mapping of blockchains
+     */
     clearAll : function() {
         blockchain = {};
     },
+    /**
+     * Turns the blockchain mapping into a mapping of block headers
+     * 
+     * @return - A mapping of block headers
+     */
     getBlockchainHeaders : function() {
         let headers = {};
         let generations = Object.keys(blockchain);
@@ -98,12 +136,16 @@ module.exports = {
             headers[generation] = [];
             for(let j = 0; j < blockchain[generation].length; j++) {
                 let block = blockchain[generation][j];
-                console.info(block.blockHash);
                 headers[generation].push(block.blockHash);
             }
         }
         return headers;
     },
+    /**
+     * Takes a mapping of block headers and fetched a mapping of blocks for each block header found
+     * 
+     * @return - A mapping of blocks
+     */
     getBlocks: function(blockHeaders) {
         let blocks = [];
         let generations = Object.keys(blockHeaders);

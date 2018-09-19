@@ -157,6 +157,11 @@ module.exports = {
             
         }
     },
+    /**
+     * Returns the mapping of unit tests for testing
+     * 
+     * @return - The mapping of unit tests
+     */
     getUnitTests : function() {
         return messagingUnitTests;
     }
