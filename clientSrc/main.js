@@ -282,7 +282,19 @@ promiseIpc.on("addTransaction", (jsonTransaction) => {
  * Receives a requests through the HLAPI to add a transaction to the entanglement
  */
 promiseIpc.on("propagateTransaction", (jsonTransaction) => {
-    return seed.getClientExporter().getClient().sendTransaction(jsonTransaction);
+    // TODO: Handle "If relay node" propagating transactions
+    let client = undefined;
+    if (command.client) {
+        client = seed.getClientExporter().getClient();
+    } else if (command.relay) {
+        let relayNode = seed.getRelayExporter().getRelayNode();
+        if (relayNode.relayClients.length > 0) {
+            client = relayNode.relayClients[0];
+        }
+    }
+    if (client) {
+        return client.sendTransaction(jsonTransaction);
+    }
 });
 
 
