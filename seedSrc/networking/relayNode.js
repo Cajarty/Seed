@@ -79,9 +79,8 @@ class RelayNode {
     disconnectClients() {
         for(let i = 0; i < this.relayClients.length; i++) {
             // Create a client for communicating with that other relay node
-            let client = this.relayClients[i];
-            client.disconnect();
-            delete client;
+            this.relayClients[i].disconnect();
+            delete this.relayClients[i];
         }
         this.relayClients = [];
     }
