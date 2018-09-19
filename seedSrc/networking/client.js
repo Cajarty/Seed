@@ -52,7 +52,6 @@ let loadInitialStateTasks = function(client) {
             }
             client.taskData["blockHeaders"] = unknownHeaders;
         }
-        console.info("For each block header, determiend we do not yet have stored: ", client.taskData["blockHeaders"]);
         // for each block header, determine if we have it stored
         client.tryRunNextTask();
     });
@@ -78,7 +77,6 @@ let loadInitialStateTasks = function(client) {
             }
             client.taskData["transactionHeaders"] = unknownHeaders;
         }
-        console.info("For each transaction header, determiend we do not yet have stored: ", client.taskData["transactionHeaders"]);
         // for each block header, determine if we have it stored
         client.tryRunNextTask();
     });
@@ -125,7 +123,6 @@ class Client {
             // Grab the task, removing new task from list
             let currentTask = this.taskChain.splice(0, 1);
             // Make Socket Call
-            console.info(currentTask);
             if (currentTask.length > 0) {
                 currentTask[0]();
             }
@@ -185,25 +182,25 @@ class Client {
             this.tryRunNextTask();
         });
         socket.on('responseBlocks', (blocks) => {
-            console.info("CLIENT: Received responseBlocks | ", blocks);
+            console.info("CLIENT: Received responseBlocks");
             this.taskData["blocks"] = blocks;
             // Try and add them to the blockchain, sorting by oldest to newest
             this.tryRunNextTask();
         });
         socket.on('responseTransactions', (transactions) => {
-            console.info("CLIENT: Received responseTransactions | ", transactions);
+            console.info("CLIENT: Received responseTransactions");
             this.taskData["transactions"] = transactions;
             // Try and add them to the entanglement, sorting by newest to oldest
             this.tryRunNextTask();
         });
-        socket.on('responseSendTransaction', (response) => {
-            console.info("CLIENT: Received responseSendTransaction | ", response);
+        socket.on('responseSendTransaction', () => {
+            console.info("CLIENT: Received responseSendTransaction");
             // Confirm everything was fine, or resend to a different relay node if it failed(?)
             this.tryRunNextTask();
         });
         socket.on('notifyTransaction', (transactionJSON) => {
-            console.info("CLIENT: Received notifyTransaction |", transactionJSON);
             let transactionParsed = JSON.parse(transactionJSON);
+            console.info("CLIENT: Received notifyTransaction |", transactionParsed.transactionHash);
             let transaction = transactionExporter.createExistingTransaction(transactionParsed.sender, transactionParsed.execution, transactionParsed.validatedTransactions, transactionParsed.transactionHash, transactionParsed.signature, transactionParsed.timestamp);
             console.info("ADDING TO SVM: ", transaction.transactionHash);
             svmExporter.getVirtualMachine().incomingTransaction(transaction);

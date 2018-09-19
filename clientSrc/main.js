@@ -314,7 +314,6 @@ promiseIpc.on("subscribeToFunctionCallback", (moduleName, functionName, optional
         optionalWindow = moduleName;
     }
     return seed.subscribeToFunctionCallback(moduleName, functionName, () => {
-        console.info("CALLBACK SENDING:", (moduleName+functionName), message);
         windows[optionalWindow].webContents.send((moduleName+functionName), message);
     });
 });
@@ -332,7 +331,6 @@ promiseIpc.on("subscribeToDataChange", (moduleName, dataKey, user, optionalWindo
         optionalWindow = moduleName;
     }
     return seed.subscribeToDataChange(moduleName, dataKey, (message) => {
-        console.info("CALLBACK SENDING:", (moduleName+dataKey+user), message);
         windows[optionalWindow].webContents.send((moduleName+dataKey+user), message);
     }, user);
 });
