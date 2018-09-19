@@ -117,18 +117,19 @@ let menuTemplate = [
  * and then modifies the Launcher window to add buttons regarding each loaded module.
  */
 app.on('ready', function() {
+    const port = 3000;
     let storage = seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false);
 
     if (commands.client) {
         let client = seed.getClientExporter().getClient();
         setTimeout(() => {
-            seed.getClientExporter().connectAndLoadState(client, 'http://localhost:3000');
+            seed.getClientExporter().connectAndLoadState(client, 'http://localhost:' + port);
         }, 1000);
     } else if (commands.relay) {
         let relayNodeExporter = require("../seedSrc/networking/relayNode.js");
         let relayNode = relayNodeExporter.getRelayNode(); // If we had IPs to connect to, they get fed in here.
         relayNode.loadState();
-        relayNode.listen();
+        relayNode.listen(port);
     }
 
     windows["Launcher"] = new BrowserWindow({width: 800, height: 500, title: "Seed Launcher" + titleSuffix});
