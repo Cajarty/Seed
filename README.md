@@ -26,7 +26,11 @@ The Client source code is an Electron wallet being created for both the Seed cry
 
 After cloning the repository, you will need to run `npm i` inside both the clientSrc and seedSrc for all the dependencies to be installed.
 
-Then to run the client, point your terminal to the [/clientSrc](/clientSrc) folder and invoke the command "npm start".
+Then the simplified client, point your terminal to the [/clientSrc](/clientSrc) folder and invoke the command "npm start".
+
+In order to run the client as a RelayNode, run the command "npm run relay:osx", with your operating system listed after the "relay" command (e.g. relay:osx or relay:linux).
+
+In order to run the client as a networked Client, run the command "npm run client:osx", with your operating system listed after the "relay" command (e.g. relay:osx or relay:linux).
 
 Once run, instructions will appear on the screen regarding how to open the console. The console will display the results of the unit tests being run, confirming the programs state.
 
@@ -34,7 +38,17 @@ In the near future, a proper UI will be implemented for the client.
 
 ## Run Unit Tests
 
-In order to run the unit tests, instead run the command "npm test"
+In order to run the unit tests, instead run the command "npm test".
+
+If that fails to run, your OS may require a different setup. Try "npm run test:osx", with your operating system listed after the "test" command (e.g. test:osx or test:linux)
+
+## Sample Commands
+
+npm run test:osx
+
+npm run relay:linux
+
+npm run client:osx
 
 -----
 
@@ -113,8 +127,8 @@ In order to run the unit tests, instead run the command "npm test"
 - [x] Design UI For Seed Module
 - [x] Create Simple UI For Seed Module
 - [ ] Style UI For Seed Module
-- [ ] Design Client Networking & Routing Portion
-- [ ] Implement Networking
+- [x] Design Client Networking & Routing Portion
+- [x] Implement Networking
 
 -----
 

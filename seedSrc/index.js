@@ -22,6 +22,7 @@ const blockchainExporter = require("./blockchain.js");
 const fileSystemInjectorExporter = require("./storage/fileSystemInjector.js");
 const localStorageInjectorExporter = require("./storage/localStorageInjector.js");
 const unitTestingExporter = require("./tests/unitTesting.js");
+const clientExporter = require("./networking/client.js");
 
 module.exports = {
     /**
@@ -93,6 +94,12 @@ module.exports = {
      */
     getUnitTestingExporter : function() {
         return unitTestingExporter;
+    },
+    /**
+     * @return - The Client exporter for networking with Relay Nodes
+     */
+    getClientExporter : function() {
+        return clientExporter;
     },
     /**
      * Subscribes for callback to be invoked whenever the given module has the given function validated

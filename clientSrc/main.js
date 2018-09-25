@@ -17,6 +17,38 @@ const promiseIpc = require('electron-promise-ipc');
 const seed = require("../seedSrc/index.js");
 const moduleLoader = require("./moduleLoader");
 
+/**
+ * Checks the processes arguments for any that match the passed in argument.
+ * Returns true or false based on whether the selected command was present.
+ * 
+ * @param {*} command - The command title to search for
+ */
+let hasCommand = (command) => {
+    if (process.argv.length >= 2) {
+        for(let i = 2; i < process.argv.length; i++) {
+            if (process.argv[i] == command) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ * Commands passed in via arguments 
+ */
+let commands = { 
+    client : hasCommand('--client'),
+    relay : hasCommand('--relay'),
+    storage : hasCommand('--storage')
+}
+
+/**
+ * The suffix of the windows title. 
+ * Will add nothing, (Client) or (RelayNode) to the titles if we're running it in any special mdoe.
+ */
+let titleSuffix = (commands.client) ? " (Client)" : ( commands.relay ? "( Relay Node)" : "" );
+
 //'production': Release for public
 //'development': Development tools enabled
 //'debug': Debug tools active, e.g. print lines
@@ -85,7 +117,24 @@ let menuTemplate = [
  * and then modifies the Launcher window to add buttons regarding each loaded module.
  */
 app.on('ready', function() {
-    windows["Launcher"] = new BrowserWindow({width: 800, height: 500, title: 'Seed Launcher'});
+    const port = 3000;
+    if (commands.storage) {
+        seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false);
+    }
+
+    if (commands.client) {
+        let client = seed.getClientExporter().getClient();
+        setTimeout(() => {
+            seed.getClientExporter().connectAndLoadState(client, 'http://localhost:' + port);
+        }, 1000);
+    } else if (commands.relay) {
+        let relayNodeExporter = require("../seedSrc/networking/relayNode.js");
+        let relayNode = relayNodeExporter.getRelayNode(); // If we had IPs to connect to, they get fed in here.
+        relayNode.loadState();
+        relayNode.listen(port);
+    }
+
+    windows["Launcher"] = new BrowserWindow({width: 600, height: 400, title: "Seed Launcher" + titleSuffix});
     windows["Launcher"].loadURL(url.format({
         pathname: path.join(__dirname, 'launcher.html'),
         protocol: 'file:',
@@ -108,8 +157,6 @@ app.on('ready', function() {
         javascript += "moduleButtonsDiv.appendChild(" + moduleButtonName + ");\n";
     }
     windows["Launcher"].webContents.executeJavaScript(javascript);
-
-    // Launch DApp
 });
 
 //If we're on a Mac, add an empty object to fix OS specific menubar issue
@@ -140,8 +187,10 @@ if (process.env.NODE_ENV !== 'production') {
  * and then the Main process launches the new window
  */
 ipcMain.on("launchModule", function(event, windowName, htmlFile) {
-    seed.newStorage(seed.newFileSystemInjector(__dirname), false);
-    windows[windowName] = new BrowserWindow({width: 800, height: 500, title: windowName});
+    if (commands.storage) {
+        seed.newStorage(seed.newFileSystemInjector(__dirname), false);
+    }
+    windows[windowName] = new BrowserWindow({width: 600, height: 400, title: windowName + titleSuffix});
     windows[windowName].loadURL(url.format({
         pathname: path.join(__dirname, htmlFile),
         protocol: 'file:',
@@ -160,8 +209,6 @@ ipcMain.on("executeJavaScript", function(event, windowName, javaScriptString, ca
  * Runs unit tests. Assumes the state of the Seed cryptocurrency is already prepped for unit tests
  */
 ipcMain.once("runUnitTests", () => {
-    //let transactions = seed.getEntanglementExporter().getEntanglement();
-    //console.log(transactions);
     seed.getScenarioTestExporter().seedScenarioSetupTest();
 });
 
@@ -169,7 +216,11 @@ ipcMain.once("runUnitTests", () => {
  * Runs unit tests. Assumes the state of the Seed cryptocurrency is already prepped for unit tests
  */
 ipcMain.once("loadFromDisk", () => {
-    seed.newStorage(seed.newFileSystemInjector(__dirname, "data"), false).loadInitialState();
+    if (commands.storage) {
+        let storage = seed.getStorage();
+        let initialState = storage.readInitialState();
+        storage.loadInitialState(initialState.blocks, initialState.transactions);
+    }
 });
 
 /**
@@ -228,6 +279,27 @@ promiseIpc.on("addTransaction", (jsonTransaction) => {
     let transaction = seed.getTransactionExporter().createExistingTransaction(jsonTransaction.sender, jsonTransaction.execution, jsonTransaction.validatedTransactions, jsonTransaction.transactionHash, jsonTransaction.signature);
     return seed.getSVMExporter().getVirtualMachine().incomingTransaction(transaction);
 });
+
+
+/**
+ * Receives a requests through the HLAPI to add a transaction to the entanglement
+ */
+promiseIpc.on("propagateTransaction", (jsonTransaction) => {
+    // TODO: Handle "If relay node" propagating transactions
+    let client = undefined;
+    if (commands.client) {
+        client = seed.getClientExporter().getClient();
+    } else if (commands.relay) {
+        let relayNode = seed.getRelayExporter().getRelayNode();
+        if (relayNode.relayClients.length > 0) {
+            client = relayNode.relayClients[0];
+        }
+    }
+    if (client) {
+        return client.sendTransaction(jsonTransaction);
+    }
+});
+
 
 /**
  * Receives a requests through the HLAPI to invoke a "getter" function inside the given module, passing in
@@ -319,6 +391,42 @@ promiseIpc.on("createModule", (moduleName, initialStateData, initialUserStateDat
  */
 promiseIpc.on("getModule", (moduleName) => {
     return seed.getSVMExporter().getModule({ module : moduleName });
+});
+
+/**
+ * Disconnects the networked Client from any ongoing connections and
+ * then connects to the associated IP.
+ */
+promiseIpc.on("reconnectClientToNewIP", (relayIP) => {
+    if (command.client) {
+        let client = seed.getClientExporter().getClient();
+        client.disconnect();
+        client.connect(relayIP);
+    } else if (command.relay) {
+        let relayNode = seed.getRelayExporter().getRelayNode();
+        let newClient = seed.getClientExporter().newClient();
+        newClient.connect(relayIP);
+        relayNode.relayClients.push(newClient);
+    }
+});
+
+/**
+ * Reloads the networked Client's data, request from any connected relay node what blocks
+ * and transactions may be missing
+ */
+promiseIpc.on("reloadEntanglementAndBlockchainsState", () => {
+    let client = undefined;
+    if (command.client) {
+        client = seed.getClientExporter().getClient();
+    } else if (command.relay) {
+        let relayNode = seed.getRelayExporter().getRelayNode();
+        if (relayNode.relayClients.length > 0) {
+            client = relayNode.relayClients[0];
+        }
+    }
+    if (client) {
+        seed.getClientExporter().loadInitialState(client);
+    }
 });
 
 // Switch to the first user for testing

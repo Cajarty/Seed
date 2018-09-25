@@ -173,9 +173,11 @@ function burnValueChange(newValue) {
  */
 function construct() {
     let value = inputData["constructor"].value;
-    seedHLAPI.createTransaction("Seed", "constructor", { initialSeed : value })
+    seedHLAPI.createAndPropagateTransaction("Seed", "constructor", { initialSeed : value })
         .then(() => {
             seedUpdate();
+        }).catch((e) => {
+            console.info("ERROR: ", e);
         });
 }
 
@@ -187,7 +189,9 @@ function transfer() {
     let value = inputData["transfer"].value;
     let address = inputData["transfer"].address;
     if (value != 0 && address != "") {
-        seedHLAPI.createTransaction("Seed", "transfer", { to : address, value : value });
+        seedHLAPI.createAndPropagateTransaction("Seed", "transfer", { to : address, value : value }).catch((e) => {
+            console.info("ERROR: ", e);
+        });
     }
 }
 
@@ -201,7 +205,9 @@ function transferFrom() {
     let fromAddress = inputData["transferFrom"].fromAddress;
     let toAddress = inputData["transferFrom"].toAddress;
     if (value != 0 && fromAddress != "" && toAddress != "") {
-        seedHLAPI.createTransaction("Seed", "transferFrom", { from : fromAddress, to : toAddress, value : value });
+        seedHLAPI.createAndPropagateTransaction("Seed", "transferFrom", { from : fromAddress, to : toAddress, value : value }).catch((e) => {
+            console.info("ERROR: ", e);
+        });
     }
 }
 
@@ -213,7 +219,9 @@ function approve() {
     let value = inputData["approve"].value;
     let address = inputData["approve"].address;
     if (value != 0 && address != undefined) {
-        seedHLAPI.createTransaction("Seed", "approve", { spender : address, value : value });
+        seedHLAPI.createAndPropagateTransaction("Seed", "approve", { spender : address, value : value }).catch((e) => {
+            console.info("ERROR: ", e);
+        });
     }
 }
 
@@ -224,7 +232,9 @@ function approve() {
 function burn() {
     let value = inputData["burn"].value;
     if (value != 0) {
-        seedHLAPI.createTransaction("Seed", "burn", { value : value });
+        seedHLAPI.createAndPropagateTransaction("Seed", "burn", { value : value }).catch((e) => {
+            console.info("ERROR: ", e);
+        });
     }
 }
 
@@ -235,6 +245,9 @@ function burn() {
 function seedUpdate() {
     seedHLAPI.getAccount()
         .then((account) => {
+            if (lastUser != account.publicKey) {
+                resubscribe(account.publicKey);
+            }
             lastUser = account.publicKey;
             seedHLAPI.getter("Seed", "getBalanceOf", { owner : lastUser })
                 .then((balance) => {
@@ -268,23 +281,22 @@ function changeFunctionFormDisplay(formID, display) {
     ipc.send("executeJavaScript", "Seed", javascript);
 }
 
-// ####### IPC Receivers ###########
 /**
- * on receiving an "accountChanged" message, this unsubscribes to the old callbacks regarding the last account,
- * creates new subscription callbacks for the new user, and then updates the UI to fetch the new users' data
+ * If there was a previous subscription, this unsubscribes to the old callbacks regarding the last account,
+ * creates new subscription callbacks for the new user, and then updates the UI to fetch the new users' data.
+ * 
+ * @param {*} publicKey - The public key who's updates we are subscribing for
  */
-ipc.on("accountChanged", (main, publicKey) => {
-    if (!lastUser) {
-        if (subscriptionReceipts["balance"]) {
-            seedHLAPI.unsubscribe("Seed", "balance", subscriptionReceipts["balance"], lastUser);
-            ipc.removeAllListeners("Seed" + "balance" + lastUser);
-        }
+function resubscribe(publicKey) {
+    if (subscriptionReceipts["balance"]) {
+        seedHLAPI.unsubscribe("Seed", "balance", subscriptionReceipts["balance"], lastUser);
+        ipc.removeAllListeners("Seed" + "balance" + lastUser);
+        delete subscriptionReceipts["balance"];
     }
 
     seedHLAPI.subscribeToDataChange("Seed", "balance", publicKey)
         .then((receipt) => {
             subscriptionReceipts["balance"] = receipt;
-            console.info("Subscribed for ", "Seed" + "balance" + publicKey);
             ipc.on("Seed" + "balance" + publicKey, (main, message) => {
                 seedUpdate(); // Balance changed so reload
             });
@@ -292,7 +304,14 @@ ipc.on("accountChanged", (main, publicKey) => {
         .catch((e) => {
             console.info("Failed to subscribe: ", e);
         });
-    
+}
+
+// ####### IPC Receivers ###########
+/**
+ * on receiving an "accountChanged" message, this unsubscribes to the old callbacks regarding the last account,
+ * creates new subscription callbacks for the new user, and then updates the UI to fetch the new users' data
+ */
+ipc.on("accountChanged", (main, publicKey) => {
     seedUpdate();
 
     lastUser = publicKey;

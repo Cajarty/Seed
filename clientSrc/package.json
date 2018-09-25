@@ -4,8 +4,16 @@
   "description": "An Electorn interface for the seed protocol.",
   "main": "main.js",
   "scripts": {
-    "start": "./node_modules/electron/dist/electron .",
-    "test": "node test.js --v"
+    "start": "Electron .",
+    "start:osx": "Electron .",
+    "start:linux": "./node_modules/electron/dist/electron .",
+    "client:osx": "Electron . --client",
+    "client:linux": "./node_modules/electron/dist/electron . --client",
+    "relay:osx": "Electron . --relay --storage",
+    "relay:linux": "./node_modules/electron/dist/electron . --relay --storage",
+    "test": "node test.js --v",
+    "test:osx": "node test.js --v",
+    "test:linux": "node test.js --v"
   },
   "repository": {
     "type": "git",

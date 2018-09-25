@@ -29,6 +29,11 @@ module.exports = {
         }
         return virtualMachine;
     },
+    /**
+     * Returns the mapping of unit tests for testing
+     * 
+     * @return - The mapping of unit tests
+     */
     getUnitTests : function() {
         return virtualMachineUnitTests;
     }
@@ -220,14 +225,20 @@ class VirtualMachine {
      * 
      * @param {*} transaction - The transaction to attempt to receive
      */
-    incomingTransaction(transaction, saveToStorage) {
-        // If its a proper, formed transaction
-        if (transactionExporter.isTransactionProper(transaction)) {
-            // We add it to the entanglement
-            entanglement.tryAddTransaction(transaction, saveToStorage);
+    incomingTransaction(transaction) {
+        if (!entanglement.hasTransaction(transaction.transactionHash)) {
+            // If its a proper, formed transaction
+            if (transactionExporter.isTransactionProper(transaction)) {
+                // We add it to the entanglement
+                entanglement.tryAddTransaction(transaction);
+                return true;
+            } else {
+                console.info("SVM::incomingTx::Rejected ", transaction.transactionHash, "::malformed transaction");
+            }
         } else {
-            console.info("IncomingTransaction::Malformed", transaction);
+            console.info("SVM::incomingTx::Rejected ", transaction.transactionHash, "::duplicate transaction");
         }
+        return false;
     }
 
     /**

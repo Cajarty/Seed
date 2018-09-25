@@ -56,6 +56,11 @@ module.exports = {
             throw new Error("Trying to log into an account that is not valid");
         }
     },
+    /**
+     * Returns the mapping of unit tests for testing
+     * 
+     * @return - The mapping of unit tests
+     */
     getUnitTests: function() {
         return accountUnitTests;
     }

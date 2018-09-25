@@ -57,7 +57,7 @@ module.exports = {
      * @param {*} hash - Hash to check for squashing mechanism
      */
     doesTriggerSquashing(hash) {
-        if (hash.length > 0 && (hash[0] == '0' || hash[0] == '1' )) {
+        if (hash.length > 0 && (hash[0] == '0')) {
             return true;
         } else {
             return false;
@@ -73,9 +73,14 @@ module.exports = {
      * @param {*} objectA - Object to squash (who will have absolute values overwritten)
      * @param {*} objectB - Object to squash (who will have absolute power overwrite)
      */
-    squash(objectA, objectB) {
+    squash(objectA, objectB) { 
         return squashObjects(objectA, objectB);
     },
+    /**
+     * Returns the mapping of unit tests for testing
+     * 
+     * @return - The mapping of unit tests
+     */
     getUnitTests : function() {
         return squasherUnitTests;
     }
@@ -127,7 +132,7 @@ let transactionToLeanData = function(transaction) {
  */
 let squashObjects = function(objectA, objectB) {
     let result = {};
-    let keys = Object.keys(objectA).concat(Object.keys(objectB));
+    let keys = [ ...new Set(Object.keys(objectA).concat(Object.keys(objectB)))];
     for(let i = 0; i < keys.length; i++) {
         let key = keys[i];
 

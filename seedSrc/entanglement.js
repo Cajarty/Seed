@@ -39,10 +39,7 @@ module.exports = {
      * 
      * @param transaction - The transaction to add
      */
-    tryAddTransaction : function(transaction, saveToStorage) {
-        if (saveToStorage == undefined) {
-            saveToStorage = true;
-        }
+    tryAddTransaction : function(transaction) {
         if (!entanglement.contains(transaction.transactionHash)) {
             let children = [];
             for(let i = 0; i < transaction.validatedTransactions.length; i++) {
@@ -61,8 +58,9 @@ module.exports = {
             for(let i = 0; i < children.length; i++) {
                 entanglement.addEdge(transaction.transactionHash, children[i]);
             }
-            if (saveToStorage) {
-                storageExporter.getStorage().saveTransaction(transaction);
+            let storage = storageExporter.getStorage();
+            if (storage) {
+                storage.saveTransaction(transaction);
             }
         }
     },
@@ -80,9 +78,7 @@ module.exports = {
             let child = transaction.validatedTransactions[i].transactionHash;
             children.push(child);
             if (!entanglement.contains(child)) {
-                if (blockchainExporter.doesContainTransactions(child)) {
-                    // It must exist in a previous block. If it does not exist in any 1st generaion block, consider it malformed
-                } else {
+                if (!blockchainExporter.doesContainTransactions(child)) {
                     console.info(transaction.transactionHash, "Failed To Find (1)", child);
                     throw new Error("Trying to check transaction who's childs do not exist");
                 }
@@ -125,13 +121,15 @@ module.exports = {
         for(let i = 0; i < tips.length && result.length < numberOfTips; i++) {
             let transaction = entanglement.getTransaction(tips[i]);
             if (transaction == undefined) {
-                console.info("Failed to find ", JSON.stringify(tips[i]), " in ", entanglement);
+                transaction = entanglement.getTransaction(JSON.stringify(tips[i]));
             }
-            if (sender != transaction.sender && entanglement.tips[transaction.transactionHash] > 0) {
+            if (transaction && sender != transaction.sender && entanglement.tips[transaction.transactionHash] > 0) {
                 result.push(transaction);
             }
         }
-
+        if (result.length < numberOfTips) {
+            console.info("ERROR: Only found TIPS::", result, " when requesting ", numberOfTips, " tips");
+        }
         return result;
     },
     /**
@@ -163,11 +161,43 @@ module.exports = {
         }
         return false;
     },
+    /**
+     * Returns the mapping of unit tests for testing
+     * 
+     * @return - The mapping of unit tests
+     */
     getUnitTests : function() {
         return entanglementUnitTests;
     },
+    /**
+     * Clears the stored Entanglement
+     */
     clearAll : function() {
         entanglement = new Entanglement();
+    },
+    /**
+     * Turns the Entanglement DAG of transactions into an array of transaction headers
+     * 
+     * @return - A mapping of transaction headers
+     */
+    getEntanglementHeaders : function() {
+        return Object.keys(entanglement.transactions);
+    },
+    /**
+     * Reads through the entanglement to find a matching transaction for each requested transaction header.
+     * 
+     * @return - Returns all found transactions.
+     */
+    getTransactions : function(txHeaders) {
+        let transactions = [];
+        for(let i = 0; i < txHeaders.length; i++) {
+            let transactionHash = txHeaders[i];
+            if (transactionHash) {
+                let transaction = entanglement.getTransaction(transactionHash);
+                transactions.push(transaction);
+            }
+        }
+        return transactions;
     }
  }
 
@@ -228,7 +258,7 @@ let tryTrust = function(transactionHash, entanglement) {
                 args : toTransaction.execution.args,
                 txHashes : toTransaction.txHashes
             }, toTransaction.execution.changeSet);
-            entanglement.tips[transactionHash] = undefined;
+            delete entanglement.tips[transactionHash];
         if (squasherExporter.doesTriggerSquashing(transactionHash)) {
             let validatedParents = getAllValidatedParents(toTransaction, entanglement);
             let block = squasherExporter.transactionsToBlock(validatedParents);

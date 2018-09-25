@@ -149,7 +149,9 @@ module.exports = {
                     if (userDataCallbacks[udcKey] != undefined) {
                         let userDataKeys = Object.keys(userDataCallbacks[udcKey]);
                         for(let k = 0; k < userDataKeys.length; k++) {
-                            userDataCallbacks[udcKey][userDataKeys[k]](message);
+                            if (userDataCallbacks[udcKey][userDataKeys[k]]) {
+                                userDataCallbacks[udcKey][userDataKeys[k]](message);
+                            }
                         }
                     }
                 }
@@ -157,6 +159,11 @@ module.exports = {
             
         }
     },
+    /**
+     * Returns the mapping of unit tests for testing
+     * 
+     * @return - The mapping of unit tests
+     */
     getUnitTests : function() {
         return messagingUnitTests;
     }

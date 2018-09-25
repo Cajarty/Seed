@@ -144,6 +144,11 @@ module.exports = {
     createTransactionValidator: function() {
         return  new TransactionValidator();
     },
+    /**
+     * Returns the mapping of unit tests for testing
+     * 
+     * @return - The mapping of unit tests
+     */
     getUnitTests : function() {
         return transactionUnitTests;
     }
@@ -335,6 +340,9 @@ class TransactionValidator {
             }
             let result = JSON.stringify(svm.simulate(simulationInfo));
     
+            if (result != transaction.execution.changeSet) {
+                console.info("HERE", result, transaction.execution.changeSet);
+            }
             return result == transaction.execution.changeSet;
         } else {
             return false;

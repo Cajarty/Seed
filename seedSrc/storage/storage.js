@@ -63,8 +63,22 @@ module.exports = {
             storage.saveTransaction(newTransaction);
         }
     },
+    /**
+     * Returns the mapping of unit tests for testing
+     * 
+     * @return - The mapping of unit tests
+     */
     getUnitTests : function() {
         return storageUnitTests;
+    },
+    /**
+     * Invokes the storage's loadInitialState function, which tries to load all transactions/blocks from storage
+     * 
+     * @param blocks - An array of instantiated blocks to load
+     * @param transactions - An array of instantiated transactions to load
+     */
+    loadInitialState : function(blocks, transactions) {
+        loadInitialState(blocks, transactions);
     }
 }
 
@@ -77,6 +91,34 @@ const blockExporter = require("../block.js");
 const unitTestingExporter = require("../tests/unitTesting.js");
 const fileSystemInjector = require("./fileSystemInjector.js");
 const localStorageInjector = require("./localStorageInjector.js");
+
+/**
+ * Invokes the storage's loadInitialState function, which tries to load all transactions/blocks from storage
+ * 
+ * @param blocks - An array of instantiated blocks to load
+ * @param transactions - An array of instantiated transactions to load
+ */
+let loadInitialState = function(blocks, transactions) {
+    let sortByTimestamp = function(a, b){
+        return a.timestamp - b.timestamp
+    };
+    
+    blocks.sort(sortByTimestamp);
+    for(let i = 0; i < blocks.length; i++) {
+        if (blockExporter.isValid(blocks[i])) {
+            blockchainExporter.addTestamentBlock(blocks[i], false);
+            ledgerExporter.getLedger().applyBlock(blocks[i]);
+        } else {
+            throw "FAILED TO CHECK VALIDITY OF BLOCK";
+        }
+    }
+    transactions.sort(sortByTimestamp);
+    for(let i = 0; i < transactions.length; i++) {
+        let txData = transactions[i];
+        let transaction = transactionExporter.createExistingTransaction(txData.sender, txData.execution, txData.validatedTransactions, txData.transactionHash, txData.signature, txData.timestamp);
+        svmExporter.getVirtualMachine().incomingTransaction(transaction, false);
+    }
+}
 
 /**
  * The implementation of the Storage object which wraps the logic regarding saving/loading transactions and blocks
@@ -93,38 +135,28 @@ class Storage {
         this.useCompression = useCompression;
     }
 
-    /**
-     * Invokes the storage's loadInitialState function, which tries to load all transactions/blocks from storage
-     */
-    loadInitialState() {
-        let sortByTimestamp = function(a, b){
-            return a.timestamp - b.timestamp
-        };
+    readInitialState() {
         let blocksJSON = this.databaseInjector.readBlockchainsSync();
         let blocks = [];
         for(let i = 0; i < blocksJSON.length; i++) {
             blocks.push(this.tryDecompress(blocksJSON[i]));
-        }
-        blocks.sort(sortByTimestamp);
-        for(let i = 0; i < blocks.length; i++) {
-            if (blockExporter.isValid(blocks[i])) {
-                blockchainExporter.addTestamentBlock(blocks[i], false);
-                ledgerExporter.getLedger().applyBlock(blocks[i]);
-            } else {
-                throw "FAILED TO CHECK VALIDITY OF BLOCK";
-            }
         }
         let transactionsJSON = this.databaseInjector.readEntanglementSync();
         let transactions = [];
         for(let i = 0; i < transactionsJSON.length; i++) {
             transactions.push(this.tryDecompress(transactionsJSON[i]));
         }
-        transactions.sort(sortByTimestamp);
-        for(let i = 0; i < transactions.length; i++) {
-            let txData = transactions[i];
-            let transaction = transactionExporter.createExistingTransaction(txData.sender, txData.execution, txData.validatedTransactions, txData.transactionHash, txData.signature, txData.timestamp);
-            svmExporter.getVirtualMachine().incomingTransaction(transaction, false);
-        }
+        return { blocks : blocks, transactions : transactions };
+    }
+
+    /**
+     * Invokes the storage's loadInitialState function, which tries to load all transactions/blocks from storage
+     * 
+     * @param blocks - An array of instantiated blocks to load
+     * @param transactions - An array of instantiated transactions to load
+     */
+    loadInitialState(blocks, transactions) {
+        loadInitialState(blocks, transactions);
     }
 
     /**
@@ -229,7 +261,8 @@ const storageUnitTests = {
         let saved = unitTestingExporter.getTestBlocks()[0];
         let fsInjector = fileSystemInjector.newFileSystemInjector(__dirname, "storageTests");
         let testStorage = new Storage(fsInjector, false);
-        testStorage.loadInitialState();
+        let initialState = testStorage.readInitialState();
+        testStorage.loadInitialState(initialState.blocks, initialState.transactions);
         test.assertAreEqual(blockchainExporter.getBlockchains()[1].length, 1, "Should only have one generation-one block loaded");
         test.assertAreEqual(JSON.stringify(blockchainExporter.getBlockchains()[1][0]), JSON.stringify(saved), "The discovered block should be the one saved from earlier.");
         blockchainExporter.clearAll();
@@ -271,7 +304,8 @@ const storageUnitTests = {
         let saved = unitTestingExporter.getTestBlocks()[0];
         let lsInjector = localStorageInjector.newLocalStorageInjector(testLocalStorage);
         let testStorage = new Storage(lsInjector, false);
-        testStorage.loadInitialState();
+        let initialState = testStorage.readInitialState();
+        testStorage.loadInitialState(initialState.blocks, initialState.transactions);
         test.assertAreEqual(blockchainExporter.getBlockchains()[1].length, 1, "Should only have one generation-one block loaded");
         test.assertAreEqual(JSON.stringify(blockchainExporter.getBlockchains()[1][0]), JSON.stringify(saved), "The discovered block should be the one saved from earlier.");
         blockchainExporter.clearAll();
